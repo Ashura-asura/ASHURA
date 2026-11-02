@@ -1,0 +1,57 @@
+# ASHURA configuration. Values marked TBD must be filled after Phase 0 measurements.
+
+[foundation]
+backend = "ollama"             # "echo" (test stub) | "llama_cpp" | "ollama"
+family = "see ollama show ref-base:7b"
+checkpoint = "ref-base:7b"
+quantization = "TBD"           # e.g. Q4_K_M
+licence = "TBD"                # fill in after checking the base model licence; is_pinned stays False until then
+path = ""                      # local .gguf path (not committed)
+sha256 = ""                    # pinned hash of the stable checkpoint
+n_ctx = 2048
+n_threads = 4                  # i7-1165G7: 4 cores / 8 threads
+# --- backend = "ollama" (see config/ashura.ollama.toml for a ready-made example) ---
+model = "ref-base:7b"          # candidate baseline; confirm with evaluation.ollama_baseline
+host = "http://127.0.0.1:11434"
+digest = "130777f43a36"        # ID column of `ollama list`; pins the exact weights (mismatch => refuse to run)
+keep_alive = "10m"
+
+[memory]
+db_path = "data/ashura.db"
+working_memory_slots = 8
+working_memory_ttl_s = 600
+
+[ama]
+# Experimental weights. NOT calibrated yet (see research/hypotheses.md H-AMA).
+w_novelty = 1.0
+w_surprise = 0.5
+w_reliability = 1.0
+w_utility = 0.7
+w_conflict = 0.8
+w_cost = 0.3
+discard_threshold = 0.45
+duplicate_similarity = 0.9
+reliable_fact_threshold = 0.8
+
+[nfd]
+# Experimental weights for P = aE + bU + cR + dI - eK. NOT calibrated yet.
+a_error = 1.0
+b_uncertainty = 0.6
+c_recurrence = 0.5
+d_importance = 1.0
+e_cost = 0.8
+activation_threshold = 0.25
+ram_headroom_mb = 1500
+cpu_busy_percent = 85          # optional heavy modules are deferred above this system-wide CPU load
+heavy_latency_ms = 500
+
+[ngr]
+# Tolerances are fixed BEFORE evaluation (spec section 11.3).
+default_epsilon = 0.02
+min_target_gain = 0.05
+critical_epsilon = 0.0
+
+[retention]
+# Forgetting policy (memory/retention.py). Only unverified, never-reinforced, unrelated records are ever forgotten.
+max_age_days = 30
+max_rows = 0                   # 0 = no cap

@@ -1,0 +1,30 @@
+# Failures and limitations found so far
+
+**F-001 - AMA discard branch nearly unreachable at default weights.** Items >= 0.9 similar are merged before scoring; items below that have novelty >= ~0.1, and an unverified item then scores >= ~0.5, above the 0.45 threshold. Found when my "chatter is discarded" test failed. I did not retune the threshold to pass the test. Action: calibrate on realistic data (EXP-001 sweep is a start).
+
+**F-002 - False conflicts on rewordings. FIXED (with limits), see below.** Same question + differently-worded but equivalent answer (Jaccard < 0.9) is treated as a contradiction: stored as evidence, not indexed, flagged for review. 63% of rewordings in EXP-001. Needs a semantic/number-aware comparison (e.g. compare extracted values) rather than token overlap.
+  *Fix:* `learning/ama.py::answers_agree` - answer values (digit-bearing tokens not already in the question) must be identical, negation parity must match, and value-free answers must share >= 75% of their content words. EXP-001 rewording false-conflict rate 63.1% -> 0.0%; 8 adversarial contradictions (transposed digits, negation, hedged extra value, value-vs-none, different city/weekday) are all still caught (tests/test_ama.py). *Remaining limits:* number words vs digits ("four" vs 4), units ("5 km" vs "5 miles"), and paraphrases with no shared content words are NOT understood - they fall back to "disagree" (stored as evidence, never silently merged). The reworded test cases were again written by the same author.
+
+**F-003 - Router RAM guard rejected the already-loaded model (fixed).** With ~4 GB free, the 2.5 GB language model failed the headroom check and nothing could answer. Fix: `resident` modules cost no additional RAM. Found by smoke test, then covered by `test_low_ram_...`.
+
+**F-004 - AMA overhead.** Default AMA is ~5x slower per admission and the DB is larger than store-everything (EXP-001). Acceptable off the response path, but worth reducing before claiming "resource efficient".
+
+**F-005 - Benchmark judge is substring-based and gameable** (see EXP-000). **FIXED:** `evaluation/judge.py` strips copied prompt text, matches whole tokens, and reports a strict score (first line / first word) beside the lenient one; the echo stub now scores 0% (was 18.75%). `baseline_v2.jsonl` fixes the "buenos d" prefix accept and marks yes/no items first-word. Residual: strict mode can under-credit models that think aloud before answering; the suite is still 16 items by one author.
+
+**F-006 - Arithmetic verification is only independent for + - * /.** For % ** sqrt the verifier reports "no independent check" and the result is NOT marked verified (so it cannot become a DREAM training label).
+
+**F-007 - Adaptive memory has no demonstrated advantage over FTS5.** On lexical lookups FTS5 scored 1.000 everywhere; the neural memory ties only if capacity (dimension) is large relative to the number of facts, and degrades beyond it (EXP-004). Not a bug; a negative-leaning result that must stay visible. Need a semantic-generalisation task and a pretrained/learned encoder to find a case where it earns its place.
+
+**F-008 - Raw hashed-token keys are nearly useless without IDF weighting** (shared template tokens dominate). Any future featuriser must handle common-token dominance.
+
+**F-009 - Same-key conflicting updates** for the adaptive memory: **TESTED (EXP-005).** The neural memory has no reliability gate: the latest write wins at every lr/passes setting tried, so a wrong claim would overwrite a right one. Protection comes entirely from AMA, which never queues a weaker conflicting claim. Long-run interference over many updates is still untested.
+
+**F-010 - Deleted experiences stayed searchable and quotable (FIXED).** `EpisodicMemory.delete` removed only the `experiences` row, leaving its FTS5 entry (still returned by search) AND any derived `facts` row (still quoted as reliable semantic memory). Violated the Phase 1 completion criterion "deleted correctly". Found by reviewing the code, reproduced before fixing. *Fix:* database triggers (`trg_exp_delete_facts`, `trg_exp_delete_fts`) so no path - including raw SQL - can bypass it; `delete()` now runs in one transaction, scrubs the id from other records' `related_ids`, and returns False for unknown ids; `EpisodicMemory.reconcile_index()` repairs databases written before the fix. `admission_log` is intentionally kept as an audit trail. 6 regression tests.
+
+**F-011 - Router checked only RAM (FIXED) and used placeholder costs (PARTLY FIXED).** `NeedField` now defers optional, non-resident, heavy (>= 500 ms) modules when system CPU > 85%; the resident language model is never starved. `default_registry` reads `config/module_costs.json` (written by `ollama_baseline --calibrate`) for the language module; until that is run on the laptop the figures remain placeholders. Costs of non-language modules are still estimates.
+
+**F-012 - AMA surprise was never computed (FIXED, narrowly).** `surprise_from_prior`: 1.0 if memory already held a *different* answer for this exact question, 0.0 if it agreed or held nothing. This is prediction error against memory, not against the language model, and it only fires on exact-question matches.
+
+**F-013 - Forgetting policy missing (FIXED).** `memory/retention.py`: only unverified, never-reinforced, unrelated, non-queued records older than `max_age_days` (or beyond an optional row cap) are forgotten; every removal is logged. The 30-day default and any cap are guesses, not tuned.
+
+**Still open (not fixable without real data or hardware):** F-001 (AMA discard branch / weight calibration needs a realistic stream that includes useful unverified items), F-004 (AMA is ~6x slower per item and its DB is ~24% larger than store-everything), F-006 (only + - * / are independently verified), F-007 (adaptive memory has no demonstrated advantage over FTS5; the semantic-generalisation test needs a real encoder), F-008, and Phase 0 itself (no real-model baseline has been run: `python -m evaluation.ollama_baseline` on the laptop).

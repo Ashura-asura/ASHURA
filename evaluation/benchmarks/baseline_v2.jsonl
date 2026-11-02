@@ -1,0 +1,16 @@
+{"id": "arith-1", "prompt": "What is 17 * 23?", "accept": ["391"], "category": "arithmetic"}
+{"id": "arith-2", "prompt": "What is 1000 - 387?", "accept": ["613"], "category": "arithmetic"}
+{"id": "arith-3", "prompt": "What is 144 divided by 12?", "accept": ["12"], "category": "arithmetic"}
+{"id": "arith-4", "prompt": "What is 2 to the power of 10?", "accept": ["1024"], "category": "arithmetic"}
+{"id": "arith-5", "prompt": "What is 99 + 101?", "accept": ["200"], "category": "arithmetic"}
+{"id": "fact-1", "prompt": "What is the capital of France?", "accept": ["paris"], "category": "factual"}
+{"id": "fact-2", "prompt": "What is the chemical symbol for water?", "accept": ["h2o"], "category": "factual"}
+{"id": "fact-3", "prompt": "How many days are in a leap year?", "accept": ["366"], "category": "factual"}
+{"id": "fact-4", "prompt": "Which planet is known as the Red Planet?", "accept": ["mars"], "category": "factual"}
+{"id": "fact-5", "prompt": "Who wrote the play Romeo and Juliet?", "accept": ["shakespeare"], "category": "factual"}
+{"id": "inst-1", "prompt": "Reply with exactly one word: yes or no. Is the sun a star?", "accept": ["yes"], "category": "instruction", "match": "first_word"}
+{"id": "inst-2", "prompt": "Translate 'good morning' into Spanish.", "accept": ["buenos días", "buenos dias"], "category": "instruction"}
+{"id": "inst-3", "prompt": "What is the plural of 'mouse' (the animal)?", "accept": ["mice"], "category": "instruction"}
+{"id": "inst-4", "prompt": "Spell the word 'cat' backwards.", "accept": ["tac"], "category": "instruction"}
+{"id": "reason-1", "prompt": "If all bloops are razzies and all razzies are lazzies, are all bloops lazzies? Answer yes or no.", "accept": ["yes"], "category": "reasoning", "match": "first_word"}
+{"id": "reason-2", "prompt": "I have 3 apples and eat 1, then buy 4 more. How many apples do I have?", "accept": ["6"], "category": "reasoning"}

@@ -1,0 +1,16 @@
+# Installed Ollama models on the target laptop, as reported by `ollama list` (recorded by the user).
+# Informational: `python -m evaluation.ollama_baseline` reads the live list from Ollama itself.
+# Roles are NOT assumed here; fill them in once the baseline shows what each model is good at.
+
+model = [
+  { tag = "ref-base:7b",       id = "130777f43a36", size_gb = 4.7,   note = "default reference for comparisons" },
+  { tag = "tony:7b",           id = "f15ad0b762ce", size_gb = 4.7 },
+  { tag = "tony_ctx8192:7b",   id = "85f8f1f74396", size_gb = 4.7 },
+  { tag = "tony_domain:7b",    id = "2f4e42d5c3a9", size_gb = 4.7 },
+  { tag = "tony_domain_v2:7b", id = "00ecc3ce1650", size_gb = 4.7 },
+  { tag = "tony_tools:7b",     id = "ad2fba8e11c4", size_gb = 4.7 },
+  { tag = "tony_persona:7b",   id = "f5f4eb0d5b23", size_gb = 4.7 },
+  { tag = "tony_control:7b",   id = "c20c7b08841f", size_gb = 4.7 },
+  { tag = "tony:latest",       id = "8a5326b45236", size_gb = 0.986, note = "~1B-class: not size-comparable with the 7B models" },
+  { tag = "lfm3:latest",       id = "b36a103fe2f8", size_gb = 1.1,   note = "pulled only to test; NOT fine-tuned by the user" },
+]
