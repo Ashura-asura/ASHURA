@@ -55,8 +55,10 @@ def sign_test_p(wins: int, losses: int) -> float:
     return min(1.0, p)
 
 
-def run_model(host: str, tag: str, suite: list[dict], max_tokens: int, n_ctx: int, digests: dict) -> dict:
-    cfg = ModelConfig(backend="ollama", model=tag, host=host, n_ctx=n_ctx, keep_alive="10m", timeout_s=600)
+def run_model(host: str, tag: str, suite: list[dict], max_tokens: int, n_ctx: int, digests: dict,
+              think: bool = False) -> dict:
+    cfg = ModelConfig(backend="ollama", model=tag, host=host, n_ctx=n_ctx, keep_alive="10m", timeout_s=600,
+                      think=think)
     model = OllamaModel(cfg)
     rows, lat, tps, load_ms = [], [], [], 0.0
     for i, item in enumerate(suite):
@@ -151,9 +153,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--n-ctx", type=int, default=2048)
     ap.add_argument("--out-dir", default="results")
     ap.add_argument("--calibrate", metavar="TAG", help="write config/module_costs.json from this model's run")
+    ap.add_argument("--think", action="store_true", help="allow thinking models to reason before answering")
     a = ap.parse_args(argv)
 
     installed = {m["name"]: m["digest"] for m in list_models(a.host)}
+    if a.reference not in installed and installed:
+        fallback = "qwen3.5:2b" if "qwen3.5:2b" in installed else next(iter(installed))
+        print(f"reference {a.reference!r} is not installed; using {fallback!r}", file=sys.stderr)
+        a.reference = fallback
     tags = [t for t in (a.models or list(installed)) if t not in a.exclude]
     missing = [t for t in tags + [a.reference] if t not in installed]
     if missing:
@@ -168,7 +175,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[{len(results) + 1}/{len(tags)}] {t} ...", flush=True)
         for m in running_models(a.host):                      # measure each model's footprint alone
             unload(a.host, m["name"])
-        results[t] = run_model(a.host, t, suite, a.max_tokens, a.n_ctx, installed)
+        results[t] = run_model(a.host, t, suite, a.max_tokens, a.n_ctx, installed, a.think)
         r = results[t]
         print(f"    strict {r['strict']:.2f}  lenient {r['lenient']:.2f}  p50 {r['latency_ms_p50_excl_first']:.0f} ms  "
               f"{r['tokens_per_s_median']:.1f} tok/s  {r['server_mem_mb']:.0f} MB", flush=True)

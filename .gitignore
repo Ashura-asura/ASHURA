@@ -17,3 +17,5 @@ checkpoints/stable/*
 *.db-journal
 config/module_costs.json
 .env
+
+*.log

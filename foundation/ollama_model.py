@@ -83,10 +83,13 @@ class OllamaModel(LanguageModel):
                                f"pinned {cfg.digest[:12]}; refusing to use a modified model")
 
     def generate(self, prompt: str, max_tokens: int = 128) -> str:
-        r = _call(self.cfg.host, "/api/generate", {
+        payload = {
             "model": self.cfg.model, "prompt": prompt, "stream": False, "keep_alive": self.cfg.keep_alive,
             "options": {"temperature": 0, "seed": 0, "num_predict": max_tokens, "num_ctx": self.cfg.n_ctx},
-        }, timeout=self.cfg.timeout_s)
+        }
+        if self.cfg.think is not None:
+            payload["think"] = self.cfg.think
+        r = _call(self.cfg.host, "/api/generate", payload, timeout=self.cfg.timeout_s)
         self.last_stats = GenStats(r.get("eval_count", 0), r.get("eval_duration", 0), r.get("prompt_eval_count", 0),
                                    r.get("prompt_eval_duration", 0), r.get("load_duration", 0), r.get("total_duration", 0))
         return r.get("response", "").strip()

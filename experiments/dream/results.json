@@ -1,0 +1,32 @@
+{
+  "experiment": "EXP-006",
+  "hypothesis": "H-DREAM",
+  "n_facts": 20,
+  "dim": 256,
+  "results": {
+    "new_only": {
+      "new": 1.0,
+      "old_retention": 0.0,
+      "stable_new": 0.0,
+      "stable_old": 1.0,
+      "promoted": false,
+      "ngr": [
+        "regression on old: 1.000 -> 0.000 (eps 0.02)"
+      ],
+      "train_n": 20,
+      "seconds": 0.063
+    },
+    "dream_replay": {
+      "new": 1.0,
+      "old_retention": 1.0,
+      "stable_new": 0.0,
+      "stable_old": 1.0,
+      "promoted": true,
+      "ngr": [
+        "all promotion conditions met"
+      ],
+      "train_n": 40,
+      "seconds": 0.073
+    }
+  }
+}

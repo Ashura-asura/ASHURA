@@ -13,6 +13,7 @@ from pathlib import Path
 
 from foundation.language_model import LanguageModel
 from learning.ama import AMA, surprise_from_prior
+from learning.cage import CAGE
 from memory.episodic import Experience, normalize
 from memory.fts import FTS5Index
 from skills.arithmetic import exact
@@ -57,17 +58,19 @@ class Response:
     trace: ExecutionTrace
     verified: bool | None = None
     admission: str | None = None
+    attribution: str | None = None
 
 
 class Controller:
     def __init__(self, model: LanguageModel, db=None, ama: AMA | None = None, nfd: NeedField | None = None,
-                 wm: WorkingMemory | None = None, routing_mode: str = "nfd"):
+                 wm: WorkingMemory | None = None, routing_mode: str = "nfd", cage: CAGE | None = None):
         self.model, self.ama = model, ama
         self.registry = nfd.registry if nfd else default_registry()
         self.nfd = nfd or NeedField(self.registry)
         self.wm = wm or WorkingMemory()
         self.fts = FTS5Index(ama.db) if ama else None
         self.routing_mode = routing_mode
+        self.cage = cage
 
     def handle(self, task: Task | str) -> Response:
         task = Task(task) if isinstance(task, str) else task
@@ -133,6 +136,15 @@ class Controller:
         trace.total_ms = (time.perf_counter() - t0) * 1000
         self.nfd.report(outcomes)
 
+        attribution = None
+        if self.cage is not None and outcomes and not all(outcomes.values()):
+            expected = exact.format_value(value) if value is not None else None
+            verifiers = {"arithmetic": (lambda out, e=expected: out == e)} if expected is not None else {}
+            attr = self.cage.attribute(trace, expected=expected, verifiers=verifiers)
+            decision = self.cage.authorise(attr, verified=False)   # a failure is not a verified learning signal
+            attribution = (f"{attr.module or 'unattributed'} ({attr.confidence:.2f}): {attr.reason}; "
+                           f"update allowed={decision.allowed}")
+
         admission = None
         if self.ama:                                         # learning path (separate from answering)
             if value is not None and verified:
@@ -144,7 +156,7 @@ class Controller:
             e = Experience(task.text, text, task_category=category, source="interaction",
                            verification_status=status, outcome="success" if verified else "unknown")
             admission = self.ama.admit(e, surprise=surprise_from_prior(task.text, text, prior)).decision
-        return Response(text, trace, verified, admission)
+        return Response(text, trace, verified, admission, attribution)
 
 
 def format_value_safe(v) -> str:

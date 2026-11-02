@@ -121,3 +121,33 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 ---
 ## EXP-000b - Baseline harness after the judge fix
 - Echo stub: 18.75% (old substring judge) -> **0.0%** lenient and strict (new judge, v1 and v2 suites). Still no real-model baseline: run `python -m evaluation.ollama_baseline` on the target laptop. Its output (results/baseline_*.md) belongs here as EXP-000c.
+
+---
+## EXP-006 - DREAM replay vs new-only training (H-DREAM, Phase 6)
+- **Hypothesis:** H-DREAM. **Baseline:** candidate trained only on the new capability. **Proposed:** DREAM replay + NGR.
+- **Setup:** synthetic, 20 old + 20 new facts (plus reordered held-out variants), dim 256 linear adaptive memory; both arms start from the same stable old-capability memory; `experiments/dream/run.py`. Single seed, author-written. **Not** the target hardware.
+- **Results:**
+
+| arm | new capability | old retention | NGR | promoted |
+|---|---|---|---|---|
+| new-only | 1.00 | **0.00** | rejected: old 1.00 -> 0.00 | no |
+| DREAM replay | 1.00 | **1.00** | all conditions met | yes |
+
+- **Supports:** in this task, replay prevents catastrophic interference and the NGR rejects the candidate that forgets. Candidate promotion and stable retention are real (files + manifest).
+- **Does not support:** generalisation beyond reordered lexical variants; the memory is still the Phase 4 NumPy module, not a language-model adapter. Single seed, same-author data. Replay proportions are uncalibrated. **Decision:** keep the pipeline; treat the result as a pipeline demonstration, not evidence that DREAM improves Qwen.
+
+---
+## EXP-000c - Real Phase 0 baseline on the target laptop (Windows 11, i7-1165G7, 16.9 GB, MX350 2 GB)
+- **Suite:** `baseline_v2.jsonl` (16 items, hash de09e3c57acd647d), greedy, `think=false` for Qwen3.5.
+- **Hardware:** target laptop, Python 3.13, Ollama local server. Results: `results/baseline_20261102_*.md/.json`.
+
+| model | quant | strict | lenient | p50 ms | p95 ms | tok/s | server MB | verdict |
+|---|---|---|---|---|---|---|---|---|
+| tony_control:7b (Qwen2 7.6B fine-tune) | Q4_K_M | **0.94** | 0.94 | **50,717** | 90,331 | 7.3 | 4,636 | accurate but unusable interactively |
+| qwen3.5:2b (Qwen3.5 1.9B, vision) | Q8_0 | 0.56 | 0.69 | **4,497** | 4,566 | 16.5 | 2,341 | selected fast foundation |
+| lfm3:latest (1.7B) | Q4_K_M | 0.12 | 0.12 | 3,226 | 4,002 | 22.2 | 1,404 | not a foundation candidate |
+
+- Qwen3.5 per-category strict: arithmetic 0.20, factual 0.80, instruction 0.75, reasoning 0.50.
+- **Finding:** the 7B model does not fit the 2 GB MX350; `server_vram_mb` reported 4,636 and latency was dominated by CPU/GPU thrashing, not generation (19.5 generated tokens at 7.3 tok/s). The 2B model fits the budget and is the only measured model that is both usable and non-trivial.
+- **Limits:** 16 author-written questions; Wilson CIs are wide (Qwen3.5 0.33-0.77). `tony_control:7b` was deleted after measurement, so its row is not reproducible without re-pulling. Qwen3.5 arithmetic is weak; ASHURA's exact-arithmetic route answers those without the LLM (smoke test: verified 391 in 1.1 ms).
+- **Decision:** pin `qwen3.5:2b` as the Phase 0 stable foundation. Keep the 7B result as the quality baseline; re-pull only for offline adapter experiments.

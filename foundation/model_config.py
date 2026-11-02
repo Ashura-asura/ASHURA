@@ -26,6 +26,7 @@ class ModelConfig:
     digest: str = ""                # ID column of `ollama list` (12+ hex chars); pins the exact weights
     keep_alive: str = "10m"
     timeout_s: float = 300.0
+    think: bool | None = None       # Ollama thinking models: False for the fast response path, None = model default
 
     @property
     def is_pinned(self) -> bool:

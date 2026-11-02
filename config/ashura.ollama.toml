@@ -2,19 +2,20 @@
 
 [foundation]
 backend = "ollama"             # "echo" (test stub) | "llama_cpp" | "ollama"
-family = "see ollama show ref-base:7b"
-checkpoint = "ref-base:7b"
-quantization = "TBD"           # e.g. Q4_K_M
-licence = "TBD"                # fill in after checking the base model licence; is_pinned stays False until then
+family = "qwen35"               # `ollama show qwen3.5:2b`
+checkpoint = "qwen3.5:2b"
+quantization = "Q8_0"          # from `ollama show qwen3.5:2b`
+licence = "Apache-2.0"         # from `ollama show qwen3.5:2b --modelfile`
 path = ""                      # local .gguf path (not committed)
 sha256 = ""                    # pinned hash of the stable checkpoint
 n_ctx = 2048
 n_threads = 4                  # i7-1165G7: 4 cores / 8 threads
 # --- backend = "ollama" (see config/ashura.ollama.toml for a ready-made example) ---
-model = "ref-base:7b"          # candidate baseline; confirm with evaluation.ollama_baseline
+model = "qwen3.5:2b"           # selected foundation: fits the 2 GB VRAM budget
 host = "http://127.0.0.1:11434"
-digest = "130777f43a36"        # ID column of `ollama list`; pins the exact weights (mismatch => refuse to run)
+digest = "0689d44085e0"        # ID column of `ollama list`; pins the exact weights (mismatch => refuse to run)
 keep_alive = "10m"
+think = false                  # fast response path; route hard tasks to a thinking model later
 
 [memory]
 db_path = "data/ashura.db"
