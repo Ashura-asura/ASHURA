@@ -1,0 +1,1759 @@
+ASHURA
+
+Adaptive Self-modifying Hierarchical Unified Reasoning Architecture
+
+Engineering specification · Version 1.0 · Research and implementation blueprint
+
+Primary objective: Build a local, resource-efficient cognitive learning architecture that can acquire new capabilities, adapt through experience, consolidate useful learning into persistent neural parameters, and retain previously acquired capabilities.
+
+Target environment: Windows 11 / Linux, Intel i7-1165G7, 16 GB RAM, Intel integrated graphics and NVIDIA MX350 with approximately 2 GB VRAM.
+
+Design philosophy: Reuse mature engineering wherever it is already good. Develop original algorithms where there is a meaningful research question. Never sacrifice existing capabilities merely to demonstrate that a component can learn.
+
+⸻
+
+1. Vision and definition of completion
+
+ASHURA is not intended to be another chatbot wrapper, an ordinary RAG application, or a collection of independent AI agents.
+
+It is intended to be a modular, local learning system composed of:
+
+* A language foundation capable of understanding and generating language.
+* A working-memory and experience-management system.
+* A neural adaptive-memory mechanism.
+* A fast adaptation mechanism for temporary learning.
+* A slow consolidation mechanism for persistent learning.
+* A routing system that decides which cognitive resources to activate.
+* A verification and evaluation system that protects existing capabilities.
+* Independent specialist skills for arithmetic, OCR, perception, reasoning and other tasks.
+* A resource manager that makes decisions according to available CPU, RAM, storage and latency.
+
+The system should gradually become more capable through controlled experience rather than requiring complete retraining whenever it encounters something new.
+
+1.1 What does “complete” mean?
+
+ASHURA is considered complete when it satisfies the following engineering definition.
+
+Functional completion
+
+1. It can operate locally without requiring an external LLM API.
+2. It can answer using its language foundation.
+3. It can store, retrieve, update and forget appropriately selected experiences.
+4. It can learn temporary associations through a separate adaptive mechanism.
+5. It can consolidate verified experience into persistent trainable parameters.
+6. It can route requests to specialist skills.
+7. It can process images through an OCR/perception subsystem.
+8. It can run arithmetic operations through verified specialist modules.
+9. It can evaluate proposed learning against previous capabilities.
+10. It can reject or roll back harmful updates.
+
+Learning completion
+
+The system must demonstrate all of the following:
+
+* It learns from a previously unseen example.
+* The learned information improves performance on a later, related example.
+* It can generalise beyond merely repeating the original example.
+* The learning survives a restart when it is supposed to be persistent.
+* Temporary learning can be discarded without corrupting persistent learning.
+* Repeated learning does not continuously degrade unrelated capabilities.
+
+Performance completion
+
+The system must have documented latency, memory and CPU measurements on the target laptop.
+
+It must not require all subsystems to run for every request.
+
+Research completion
+
+Every proposed original algorithm must have:
+
+* A written hypothesis.
+* A baseline implementation.
+* A controlled experiment.
+* A measured result.
+* A documented failure analysis.
+* A decision to keep, modify or reject it.
+
+Completion does not mean that every research hypothesis succeeds. A hypothesis that fails a properly designed experiment is a completed experiment, not a successful feature.
+
+1.2 What completion does not mean
+
+ASHURA Version 1 does not need:
+
+* Human-level intelligence.
+* Consciousness or self-awareness.
+* A new foundation model trained from scratch.
+* A replacement for every existing neural architecture.
+* A custom tensor engine, autograd engine or database.
+* Unrestricted self-modification of the language model.
+* Guaranteed preservation of every possible capability on every possible input.
+
+The goal is a working, measurable, extensible learning architecture.
+
+⸻
+
+2. Core design principles
+
+Principle 1 — Preserve the foundation
+
+The original language model must remain recoverable.
+
+The base model is immutable during initial development. New learning is introduced through isolated components and adapters.
+
+Principle 2 — Separate memory from learning
+
+Storing a fact is not the same as learning a skill.
+
+ASHURA must distinguish:
+
+* Episodic memory: what happened.
+* Semantic memory: what information is represented.
+* Working memory: what is currently relevant.
+* Neural adaptive memory: associations learned by a neural memory module.
+* Model knowledge: behaviour encoded in persistent model parameters.
+
+Principle 3 — Two timescales of learning
+
+Fast learning adapts to recent experience.
+
+Slow learning consolidates selected experience into persistent parameters.
+
+Neither process should be allowed to modify the stable language foundation without evaluation.
+
+Principle 4 — Conditional computation
+
+Do not activate expensive modules unless the request requires them.
+
+A simple factual question should not trigger OCR, neural-memory training, arithmetic experts and consolidation.
+
+Principle 5 — Resource-aware design
+
+Prefer embedded components, local libraries, small specialist models and asynchronous processing.
+
+Benchmark before adding infrastructure.
+
+Principle 6 — Non-regression
+
+An update is not an improvement simply because it learns something new.
+
+It must also retain previously demonstrated abilities within defined tolerances.
+
+Principle 7 — Evidence before promotion
+
+Generated answers are not automatically reliable training labels.
+
+Use verified calculations, executable tests, explicit corrections, trusted local material and other grounded outcomes as learning signals.
+
+⸻
+
+3. High-level architecture
+
+ASHURA has eight logical layers.
+
+Layer	Responsibility
+1. Interface	Accept text, image and other input
+2. Cognitive controller	Determine intent, needs and required skills
+3. Memory system	Manage working, episodic, semantic and adaptive memory
+4. Skill system	Execute language, arithmetic, OCR and other capabilities
+5. Plasticity system	Manage temporary and persistent adaptation
+6. DREAM	Replay, verify and consolidate experiences
+7. Evolution system	Investigate capacity allocation and architecture growth
+8. Evaluation and safety	Benchmark, protect, promote and roll back
+
+The language model is a foundation used by the architecture, not the architecture itself.
+
+3.1 Main data flow
+
+flowchart TD
+    A[Input: Text / Image / Task] --> B[Input Normalization]
+    B --> C[Need and Intent Analysis]
+    C --> D[Resource-Aware Router]
+    D --> E[Working Memory]
+    E --> F[Memory Retrieval]
+    F --> G[Skill Selection]
+    G --> H[Language Foundation / Specialist Skill]
+    H --> I[Verification and Response]
+    I --> J[User Response]
+    I --> K[Experience Recorder]
+    K --> L[Adaptive Memory Admission]
+    L --> M[Experience Buffer]
+    M --> N[DREAM Consolidation]
+    N --> O[Candidate Model / Adapter]
+    O --> P[Non-Regression Gate]
+    P -->|Pass| Q[Promote Candidate]
+    P -->|Fail| R[Reject and Roll Back]
+
+The response path and learning path are separate.
+
+The user should not have to wait for slow consolidation before receiving an answer.
+
+⸻
+
+4. Language foundation
+
+4.1 Initial foundation
+
+Use a pretrained Qwen Instruct model as the initial language engine.
+
+The exact checkpoint, size and quantization must be selected after measuring inference performance and checking its licence.
+
+The initial implementation should use:
+
+* llama.cpp for quantized local inference.
+* Python for orchestration and experiments.
+* Transformers for model inspection and compatible training experiments.
+* PEFT for LoRA-style adapters.
+* PyTorch for neural experiments.
+
+The existing model remains frozen during the first development stages.
+
+4.2 Why not train a foundation model from scratch?
+
+Training a useful multi-billion-parameter language model requires substantial data, compute and experimentation.
+
+The target laptop is not an appropriate machine for training a 7B foundation model.
+
+That does not prevent us from researching learning architectures. It means we should train the components that are feasible and reuse a mature foundation for language.
+
+4.3 Language foundation responsibilities
+
+The language model handles:
+
+* Natural-language understanding.
+* Explanation and generation.
+* Communication with the cognitive controller.
+* Interpreting specialist outputs.
+* Producing structured reasoning requests.
+
+It should not be trusted as the sole verifier of its own outputs.
+
+Arithmetic, code execution and other objectively verifiable tasks should use independent verification mechanisms.
+
+⸻
+
+5. Memory architecture — LAMS
+
+LAMS: Layered Adaptive Memory System
+
+LAMS is the proposed memory subsystem.
+
+It deliberately avoids making a vector database the centre of the architecture.
+
+5.1 Five memory types
+
+A. Working memory
+
+Temporary information required by the current task.
+
+Examples:
+
+* Current question.
+* Current reasoning state.
+* Recently retrieved memories.
+* Active specialist results.
+* Current task constraints.
+
+Implementation: RAM-based bounded structures.
+
+Working memory should be cheap to access and automatically expire when no longer required.
+
+B. Episodic memory
+
+A record of what happened.
+
+Examples:
+
+* A question was asked.
+* The model produced an answer.
+* The answer was corrected.
+* An arithmetic operation was verified.
+* An OCR result was rejected.
+
+Implementation: SQLite.
+
+Each experience should contain:
+
+* Unique ID.
+* Timestamp.
+* Input.
+* Output.
+* Task category.
+* Source.
+* Verification status.
+* Confidence or reliability.
+* Outcome.
+* Links to related experiences.
+
+C. Semantic memory
+
+Information that should be searchable by meaning or exact terminology.
+
+Initial implementation:
+
+* SQLite tables.
+* SQLite FTS5 for indexed text retrieval.
+* Optional local vector extension later.
+
+Do not calculate embeddings for every stored interaction.
+
+D. Adaptive neural memory
+
+A small neural module that learns associations from experience.
+
+This is the experimental Titans-inspired subsystem.
+
+It is not a replacement for SQLite.
+
+Its purpose is to encode useful historical patterns in trainable neural parameters rather than relying exclusively on retrieving stored text.
+
+E. Persistent model knowledge
+
+Knowledge and behaviour encoded in model parameters.
+
+Initially this is represented by the language foundation and its separately versioned adapters.
+
+Changes require DREAM and NGR approval.
+
+5.2 Why SQLite first?
+
+SQLite provides local persistence without a separate database service.
+
+FTS5 provides full-text search with token, phrase, prefix and ranking capabilities.
+
+The first version should therefore use:
+
+* SQLite for records and metadata.
+* FTS5 for text retrieval.
+* Normal SQL indexes for filters.
+* RAM caches for frequently accessed records.
+
+Vector search is an optional extension, not a mandatory dependency.
+
+Potential future choices include sqlite-vec, SQLite vec1 or another embedded vector implementation.
+
+Do not add Qdrant, Chroma or Milvus unless measured workloads demonstrate a real need.
+
+5.3 Memory retrieval interface
+
+All retrieval engines must implement the same interface.
+
+class MemoryIndex:
+    def add(self, memory_id, text):
+        raise NotImplementedError
+    def search(self, query, limit=5):
+        raise NotImplementedError
+    def delete(self, memory_id):
+        raise NotImplementedError
+
+This prevents the rest of the architecture from depending on a specific retrieval technology.
+
+5.4 Memory retrieval flow
+
+flowchart TD
+    A[Incoming Query] --> B{Working Context Sufficient?}
+    B -->|Yes| C[Use Working Memory]
+    B -->|No| D[Search Structured SQLite Data]
+    D --> E[Search FTS5]
+    E --> F{Enough Relevant Results?}
+    F -->|Yes| G[Rank and Filter]
+    F -->|No| H{Semantic Search Worth Its Cost?}
+    H -->|No| I[Proceed Without Additional Retrieval]
+    H -->|Yes| J[Optional Vector Search]
+    J --> G
+    C --> K[Provide Context to Skill]
+    G --> K
+    I --> K
+
+The system must support a fast path where retrieval is skipped entirely if the current context already contains the necessary information.
+
+⸻
+
+6. Proposed algorithm 1 — AMA
+
+Adaptive Memory Admission
+
+Purpose: Decide which experiences deserve storage, indexing, neural adaptation or rejection.
+
+The problem is that indiscriminately storing every interaction creates noise, unnecessary retrieval work and larger memory requirements.
+
+AMA is intended to improve the usefulness of retained experience per unit of computational cost.
+
+6.1 Inputs
+
+For every experience x, estimate:
+
+* Novelty N: how different it is from existing information.
+* Surprise S: how unexpected the result was.
+* Reliability R: how well supported the experience is.
+* Utility U: how likely it is to be useful again.
+* Conflict C: whether it contradicts an existing record.
+* Resource cost K: storage, indexing and processing expense.
+
+Proposed admission score:
+
+A(x) = wN·N + wS·S + wR·R + wU·U - wC·C - wK·K
+
+The weights are experimental parameters.
+
+They must be calibrated rather than assumed to be optimal.
+
+6.2 Algorithm
+
+1. Receive a completed experience.
+2. Extract task type, result and outcome.
+3. Compare it with relevant existing records.
+4. Estimate novelty and repetition.
+5. Determine whether the result is verified, user-corrected or unverified.
+6. Estimate future usefulness.
+7. Detect contradictions.
+8. Calculate admission score.
+9. Select the least expensive suitable memory destination.
+10. Record the decision and its reason.
+
+6.3 Decision policy
+
+Condition	Destination
+Low usefulness and low novelty	Discard or retain only in a short-lived log
+Reliable factual information	SQLite
+Important searchable text	SQLite + FTS5
+Semantic retrieval has demonstrated value	Optional vector index
+Repeated useful association	Adaptive neural memory
+Verified general improvement	DREAM candidate buffer
+Unverified generated claim	Do not treat as established truth
+
+6.4 Pseudocode
+
+def admit_experience(x):
+    features = analyse_experience(x)
+    score = calculate_admission_score(features)
+    if features.is_duplicate:
+        update_existing_record(x)
+        return "MERGED"
+    if features.conflict_detected:
+        store_as_conflicting_evidence(x)
+        return "REVIEW_REQUIRED"
+    if score < DISCARD_THRESHOLD:
+        return "DISCARDED"
+    if features.is_reliable_fact:
+        store_sqlite(x)
+    if features.needs_exact_search:
+        index_fts5(x)
+    if features.is_repeated_association:
+        queue_neural_memory(x)
+    if features.has_verified_learning_signal:
+        queue_for_dream(x)
+    return "ADMITTED"
+
+6.5 Research questions
+
+* Does surprise improve admission decisions?
+* Can reliability be estimated without expensive model calls?
+* Does AMA retain more useful knowledge than storing everything?
+* Does it reduce retrieval latency and memory growth?
+* Can it detect contradictory information without deleting valid historical evidence?
+
+AMA is a proposed algorithm, not a proven improvement.
+
+⸻
+
+7. Proposed algorithm 2 — NFD
+
+Need Field Dynamics
+
+Purpose: Determine what the system should spend computation on.
+
+Instead of activating every module for every request, NFD creates a resource-aware representation of the system’s current needs.
+
+7.1 Need dimensions
+
+A task can require:
+
+* Language understanding.
+* Exact memory retrieval.
+* Semantic memory retrieval.
+* Arithmetic.
+* OCR.
+* Reasoning.
+* Verification.
+* Learning.
+
+Each need receives an estimated priority.
+
+Proposed priority:
+
+Pᵢ = aEᵢ + bUᵢ + cRᵢ + dIᵢ - eKᵢ
+
+Where:
+
+* E = observed error.
+* U = uncertainty.
+* R = recurrence or repeated demand.
+* I = importance.
+* K = estimated execution cost.
+
+The system then selects modules according to priority and available resources.
+
+7.2 Algorithm
+
+1. Receive the task.
+2. Classify its type.
+3. Estimate uncertainty and complexity.
+4. Identify required capabilities.
+5. Estimate module execution cost.
+6. Check available resources.
+7. Select the smallest adequate combination of skills.
+8. Execute.
+9. Measure the result.
+10. Update future need estimates.
+
+7.3 Flowchart
+
+flowchart TD
+    A[Task Arrives] --> B[Analyse Task Requirements]
+    B --> C[Calculate Need Scores]
+    C --> D[Estimate CPU / RAM / Latency]
+    D --> E[Rank Available Skills]
+    E --> F{Can a Cheap Skill Handle It?}
+    F -->|Yes| G[Execute Cheap Skill]
+    F -->|No| H[Activate More Capable Skill]
+    G --> I[Verify Result]
+    H --> I
+    I --> J[Update Need Statistics]
+
+7.4 Important constraint
+
+NFD must not confuse low confidence with high importance.
+
+A simple question may be uncertain but not worth activating a large reasoning subsystem.
+
+Likewise, a rare but critical error may deserve attention even if it has not occurred repeatedly.
+
+This balance requires experimentation.
+
+⸻
+
+8. Proposed algorithm 3 — DPF
+
+Dual Plasticity Field
+
+Purpose: Separate fast adaptation from persistent learning.
+
+This is central to the entire architecture.
+
+The system must have two different learning timescales.
+
+8.1 Fast plasticity
+
+Fast plasticity represents temporary adaptation.
+
+Examples:
+
+* Learning a temporary association.
+* Adapting to a current task.
+* Adjusting a small neural memory.
+* Updating a temporary low-rank state.
+
+The base Qwen weights remain frozen.
+
+The fast state must be independently resettable.
+
+Proposed structure:
+
+W_effective = W_base + ΔW_fast
+
+Where ΔW_fast is a temporary parameter contribution.
+
+The first experiment should update a small independent neural memory module, not Qwen itself.
+
+Later experiments may test a small fast adapter if the runtime and memory budgets permit.
+
+8.2 Slow plasticity
+
+Slow plasticity represents persistent learning.
+
+It uses experiences selected by AMA and verified by DREAM.
+
+A candidate adapter can be trained using PEFT/LoRA.
+
+Conceptually:
+
+W_candidate = W_base + ΔW_slow
+
+The stable foundation is not overwritten.
+
+Only the separately stored adapter changes.
+
+8.3 Fast versus slow
+
+Property	Fast	Slow
+Purpose	Temporary adaptation	Persistent learning
+Timescale	During or between tasks	Consolidation cycle
+Parameters	Small isolated state	Candidate adapter
+Reset	Easy	Requires version rollback
+Verification	Local outcome checks	Full benchmark suite
+Base model	Frozen	Frozen initially
+Promotion	Not directly promoted	NGR controlled
+
+8.4 Learning flow
+
+flowchart TD
+    A[New Experience] --> B[AMA Admission]
+    B --> C{Learning Signal Reliable?}
+    C -->|No| D[Store as Evidence Only]
+    C -->|Yes| E[Fast Adaptation]
+    E --> F[Evaluate on Related New Example]
+    F --> G[Record Improvement]
+    G --> H[DREAM Replay Buffer]
+    H --> I[Slow Candidate Training]
+    I --> J[NGR Evaluation]
+    J -->|Pass| K[Promote Slow Adapter]
+    J -->|Fail| L[Reject Candidate]
+
+8.5 Research questions
+
+* Can fast adaptation improve later related tasks?
+* Does fast adaptation cause interference between unrelated tasks?
+* How quickly should temporary memory decay?
+* When should temporary adaptation become persistent?
+* Can slow learning consolidate fast learning without reproducing its mistakes?
+
+These are experimental questions, not assumptions.
+
+⸻
+
+9. Proposed algorithm 4 — CAGE
+
+Causal Attribution and Gradient Eligibility
+
+Purpose: Avoid updating every learning component when only one component caused the failure.
+
+A system with multiple skills needs a mechanism to identify where a correction belongs.
+
+Example:
+
+The system gives an incorrect multiplication result.
+
+Possible causes:
+
+* Arithmetic specialist failure.
+* Incorrect task routing.
+* Incorrect input parsing.
+* Language model misinterpreting the arithmetic result.
+* Verification failure.
+
+Updating the language model for an arithmetic specialist failure would be wasteful and could cause unrelated regression.
+
+9.1 Proposed mechanism
+
+CAGE records the active execution path and evaluates the contribution of each component.
+
+For a task, maintain:
+
+* Active modules.
+* Inputs and outputs.
+* Intermediate results.
+* Verification outcomes.
+* Module-specific error indicators.
+* Available training signals.
+
+Then estimate which module is eligible for adaptation.
+
+9.2 Algorithm
+
+1. Record the execution path.
+2. Identify the first verifiable divergence from the expected result.
+3. Compare intermediate outputs.
+4. Determine whether the error is local or propagated.
+5. Assign an eligibility score to responsible components.
+6. Allow updates only to eligible components.
+7. Record the attribution decision.
+8. Re-test the full task after updating.
+
+9.3 Flowchart
+
+flowchart TD
+    A[Incorrect Result Detected] --> B[Retrieve Execution Trace]
+    B --> C[Compare Intermediate Outputs]
+    C --> D[Find First Divergence]
+    D --> E[Estimate Responsible Component]
+    E --> F{Attribution Confidence Sufficient?}
+    F -->|No| G[Do Not Update Weights]
+    F -->|Yes| H[Mark Component Eligible]
+    H --> I[Apply Isolated Candidate Update]
+    I --> J[Run Regression Tests]
+
+9.4 Critical limitation
+
+CAGE cannot automatically prove causality from a single execution trace.
+
+It provides a structured attribution hypothesis.
+
+Counterfactual testing, component ablation and controlled experiments are needed before making stronger causal claims.
+
+⸻
+
+10. Proposed algorithm 5 — DREAM
+
+Deferred Replay, Evaluation, Adaptation and Memory
+
+Purpose: Consolidate useful experiences into persistent learning without blocking normal inference.
+
+DREAM is the slow-learning coordinator.
+
+It is not a background process that blindly retrains the model on every conversation.
+
+10.1 DREAM stages
+
+Stage A — Collect
+
+Receive admitted experiences from AMA.
+
+Stage B — Filter
+
+Remove duplicates, unreliable labels and contradictory or ambiguous examples from direct training.
+
+Stage C — Replay
+
+Construct a balanced training set containing new examples and selected historical examples.
+
+Stage D — Train
+
+Train an isolated candidate module or adapter.
+
+Stage E — Verify
+
+Test whether the candidate learned the intended behaviour.
+
+Stage F — Retention evaluation
+
+Test previous capabilities.
+
+Stage G — Promotion
+
+Submit the candidate to NGR.
+
+10.2 DREAM flowchart
+
+flowchart TD
+    A[Experience Buffer] --> B[Quality Filter]
+    B --> C[Deduplication]
+    C --> D[Replay Set Construction]
+    D --> E[Train Candidate]
+    E --> F[New Capability Tests]
+    F --> G[Old Capability Tests]
+    G --> H{Candidate Meets Requirements?}
+    H -->|Yes| I[Submit to NGR]
+    H -->|No| J[Reject / Revise]
+    I --> K{NGR Pass?}
+    K -->|Yes| L[Promote Candidate]
+    K -->|No| M[Keep Stable Version]
+
+10.3 Replay composition
+
+The replay set should contain:
+
+* New verified experiences.
+* Historical examples from previously learned capabilities.
+* Difficult examples.
+* Examples where previous candidates failed.
+* Held-out examples that are never used for training.
+
+The proportions must be experimentally determined.
+
+10.4 Preventing self-reinforcement
+
+A generated answer must not become a correct training target merely because the model generated it.
+
+Acceptable learning signals include:
+
+* Explicit user correction.
+* Verified arithmetic.
+* Successful executable code tests.
+* Deterministic environment outcomes.
+* Trusted local educational material.
+* Carefully validated labels.
+
+Unverified self-generated content remains unverified.
+
+⸻
+
+11. Proposed algorithm 6 — NGR
+
+Non-Regression Gate
+
+Purpose: Protect stable capabilities whenever a candidate is introduced.
+
+NGR is a mandatory engineering control.
+
+It is not an optional experiment.
+
+11.1 Three model states
+
+State	Description
+Stable	Last validated version
+Candidate	New proposed version
+Experimental	Unvalidated research version
+
+The stable version is never overwritten by an unvalidated candidate.
+
+11.2 Evaluation dimensions
+
+Each candidate must be tested for:
+
+* New task performance.
+* Previously learned task performance.
+* Generalisation.
+* Accuracy.
+* Calibration or confidence quality where measurable.
+* Latency.
+* RAM consumption.
+* CPU consumption.
+* Failure rate.
+
+11.3 Promotion rule
+
+For each capability i:
+
+Score_candidate(i) ≥ Score_stable(i) − εᵢ
+
+The candidate must also demonstrate a meaningful improvement in its intended target capability.
+
+The tolerances εᵢ must be defined before evaluation, not adjusted after seeing a bad result.
+
+For critical capabilities, the tolerance may be zero.
+
+11.4 Flowchart
+
+flowchart TD
+    A[Stable Version] --> B[Create Candidate]
+    B --> C[Run New Capability Tests]
+    C --> D[Run Retention Tests]
+    D --> E[Run Performance Tests]
+    E --> F{All Promotion Conditions Met?}
+    F -->|Yes| G[Promote Candidate]
+    F -->|No| H[Reject Candidate]
+    G --> I[Stable Version Updated]
+    H --> J[Restore Previous Stable Version]
+
+11.5 What NGR cannot guarantee
+
+It cannot mathematically guarantee that no possible unseen input will ever regress.
+
+It guarantees only that the candidate passes the defined evaluation suite and deployment conditions.
+
+Therefore, benchmark quality is fundamental.
+
+⸻
+
+12. Arithmetic specialist — HARN
+
+Hybrid Adaptive Reasoning Network
+
+Purpose: Investigate a modular arithmetic learning system rather than forcing all numerical work through a language model.
+
+HARN builds on the earlier idea of multiple arithmetic specialists working through a shared interface.
+
+12.1 Operations
+
+Initial operation families:
+
+* Addition.
+* Subtraction.
+* Multiplication.
+* Division.
+* Modulo.
+* Exponentiation.
+* Square roots.
+* Integer comparisons.
+
+Each operation can have a specialist implementation.
+
+The architecture should not assume every operation requires the same neural model.
+
+12.2 Shared representation
+
+A shared input representation handles:
+
+* Number parsing.
+* Sign.
+* Magnitude.
+* Precision.
+* Integer versus floating-point type.
+* Operation identification.
+
+Specialist modules then handle the operation.
+
+12.3 Routing
+
+flowchart TD
+    A[Numerical Input] --> B[Parse and Normalize]
+    B --> C[Identify Operation]
+    C --> D[Arithmetic Router]
+    D --> E[Addition Expert]
+    D --> F[Subtraction Expert]
+    D --> G[Multiplication Expert]
+    D --> H[Division Expert]
+    D --> I[Other Experts]
+    E --> J[Independent Verification]
+    F --> J
+    G --> J
+    H --> J
+    I --> J
+    J --> K[Return Result]
+    J --> L[Record Error and Learning Signal]
+
+12.4 Exact arithmetic versus neural arithmetic
+
+For ordinary numerical computation, native CPU arithmetic is faster and more reliable than a small neural network.
+
+Therefore, HARN must include an exact numerical execution path.
+
+The neural experts are research components intended to investigate:
+
+* Learning arithmetic patterns.
+* Generalisation to unseen number combinations.
+* Compositional operations.
+* Representation learning.
+* Adaptive specialist routing.
+
+The exact implementation should remain the fallback and verifier.
+
+12.5 Shared versus independent experts
+
+Do not decide in advance that all experts should be tiny.
+
+Compare:
+
+1. Independent specialists.
+2. Shared representation with independent heads.
+3. Shared network with conditional experts.
+4. Existing vM multiplication model as a baseline.
+5. Exact CPU arithmetic.
+
+Measure model size, generalisation, accuracy and latency.
+
+A smaller model is not automatically better if it loses capability.
+
+12.6 Completion criteria for HARN
+
+* All supported operations produce correct outputs through the exact path.
+* Neural experts are evaluated independently.
+* Generalisation tests use unseen operand combinations.
+* Experts do not silently replace exact arithmetic.
+* Routing overhead is measured.
+* A neural expert is retained only when it demonstrates a measurable advantage for its intended role.
+
+⸻
+
+13. Perception and OCR
+
+Purpose
+
+Allow ASHURA to interpret images and extract useful information.
+
+OCR is the first perception capability.
+
+Face recognition and other visual identity capabilities are not required for Version 1.
+
+13.1 OCR pipeline
+
+flowchart TD
+    A[Image Input] --> B[Image Validation]
+    B --> C[Preprocessing]
+    C --> D[OCR Engine]
+    D --> E[Text and Confidence Extraction]
+    E --> F[Text Normalization]
+    F --> G[Language Foundation]
+    G --> H[Interpretation]
+    H --> I[Verification / User Correction]
+    I --> J[Memory Admission]
+
+13.2 Components
+
+Reuse an existing local OCR engine rather than training one from scratch.
+
+Possible candidates include Tesseract and PaddleOCR.
+
+The selection must be based on:
+
+* CPU performance.
+* RAM requirements.
+* Accuracy on relevant document types.
+* Language support.
+* Installation complexity.
+* Licence compatibility.
+
+13.3 OCR learning
+
+The system should record:
+
+* Original image reference.
+* Extracted text.
+* Confidence.
+* Corrections.
+* Document type.
+* OCR engine version.
+
+Corrections can become training or evaluation examples for the perception subsystem.
+
+OCR errors must not automatically become language-model training labels.
+
+⸻
+
+14. Proposed algorithm 7 — PACE
+
+Plasticity-Aware Capacity Evolution
+
+Purpose: Investigate whether neural capacity can be allocated dynamically according to demonstrated learning needs.
+
+This is a long-term research experiment.
+
+The architecture must not automatically grow or destroy neural units in the first implementation.
+
+14.1 Motivation
+
+Some neural components may become overloaded.
+
+Others may be underused.
+
+PACE investigates whether measured learning demand can guide selective capacity changes.
+
+14.2 Possible signals
+
+* Persistent prediction error.
+* Gradient activity.
+* Activation statistics.
+* Repeated interference.
+* Underutilised parameters.
+* Performance saturation.
+* Resource cost.
+
+14.3 Proposed procedure
+
+1. Monitor a specialist module.
+2. Collect activation and learning statistics.
+3. Detect persistent underperformance.
+4. Determine whether routing or data quality is the actual problem.
+5. Test whether additional capacity is justified.
+6. Create a candidate architecture.
+7. Train and evaluate it.
+8. Promote only if NGR passes.
+
+14.4 Research options
+
+* Selective neuron reinitialisation.
+* Adapter expansion.
+* Additional specialist heads.
+* Expert allocation.
+* Capacity pruning.
+* Conditional activation.
+
+Do not assume that a dormant neuron is useless or that adding neurons automatically improves generalisation.
+
+PACE remains experimental until evidence supports a specific strategy.
+
+⸻
+
+15. Titans and Engram research integration
+
+ASHURA should learn from existing research rather than blindly reproduce it.
+
+15.1 Titans-inspired adaptive memory
+
+Titans explores neural long-term memory that learns from historical context.
+
+Its design uses surprise-related updates, momentum and data-dependent decay.
+
+ASHURA should first build a small independent neural memory module with:
+
+* Bounded parameter count.
+* Explicit update rules.
+* Resettable state.
+* Persistent checkpointing.
+* Measurable retrieval quality.
+* CPU profiling.
+
+The first implementation is Titans-inspired, not a reproduction of the complete Titans architecture.
+
+A later research phase can compare:
+
+* Ordinary retrieval memory.
+* A simple recurrent memory.
+* A Titans-inspired neural memory.
+* A memory with learned update gating.
+
+15.2 Engram-inspired conditional lookup
+
+Engram explores hashed n-gram lookup and contextual fusion.
+
+ASHURA can investigate a smaller independent lookup module for:
+
+* Repeated terminology.
+* Frequently used token patterns.
+* Common identifiers.
+* Stable phrase associations.
+
+However, injecting an Engram module into Qwen’s internal layers requires compatible integration and training.
+
+The first experiment should operate as an external specialist, not modify Qwen’s architecture.
+
+15.3 Research boundary
+
+Neither Titans nor Engram should be advertised as an original invention of this project.
+
+The research contribution must come from measurable new combinations, mechanisms or results developed and tested in ASHURA.
+
+⸻
+
+16. Resource and latency architecture
+
+The target is a local laptop with 16 GB RAM and a low-memory GPU.
+
+This imposes important constraints.
+
+16.1 Runtime strategy
+
+Component	Execution strategy
+Language inference	Quantized local inference
+SQLite	Embedded, local
+FTS5	On-demand indexed search
+Working memory	RAM
+AMA	Lightweight CPU processing
+NFD	Lightweight CPU processing
+Adaptive memory	Small CPU model initially
+OCR	On-demand CPU processing
+Arithmetic	Native CPU path
+DREAM	Deferred background processing
+LoRA training	Small experiments only
+PACE	Offline experimental process
+
+16.2 Never run everything simultaneously
+
+The router should consider:
+
+* Current CPU utilisation.
+* Available RAM.
+* Model loading state.
+* Queue length.
+* Task priority.
+* Expected latency.
+
+A normal answer should not be delayed by background consolidation.
+
+16.3 Latency budget
+
+Establish baseline measurements before setting strict targets.
+
+Record:
+
+* Input processing time.
+* Routing time.
+* Retrieval time.
+* Model inference time.
+* Specialist execution time.
+* Verification time.
+* End-to-end latency.
+* p50 and p95 latency.
+* Peak RAM.
+* CPU utilisation.
+
+The goal is to minimise additional architecture overhead, not to pretend that the architecture can eliminate the language model’s inference cost.
+
+16.4 Background work policy
+
+DREAM should run when:
+
+* The system is idle.
+* The user explicitly requests learning.
+* A sufficient verified experience batch exists.
+* Resource availability permits it.
+
+It should pause or defer when the system is under load.
+
+⸻
+
+17. Technology stack
+
+Use established tools for established problems.
+
+Responsibility	Initial technology
+Main language	Python
+Neural experiments	PyTorch
+Language model	Qwen Instruct
+Quantized inference	llama.cpp
+Model integration	Transformers
+Parameter-efficient training	PEFT / LoRA
+Persistent storage	SQLite
+Text search	SQLite FTS5
+Optional vector search	sqlite-vec or SQLite vec1
+OCR	Tesseract or PaddleOCR
+Numerical verification	Python standard library / NumPy
+Testing	pytest
+Profiling	cProfile, psutil and system monitoring
+Configuration	TOML or YAML
+Checkpoint format	Safetensors where compatible
+Version control	Git
+
+Do not create custom versions of:
+
+* Autograd.
+* Tensor operations.
+* Matrix multiplication.
+* Tokenization.
+* Database engines.
+* Standard optimizers.
+* OCR engines.
+
+The original research should concentrate on the learning controller, memory admission, adaptive update policies, attribution, consolidation and evaluation.
+
+⸻
+
+18. Proposed repository structure
+
+ASHURA/
+│
+├── app/
+│   ├── main.py
+│   ├── interface.py
+│   └── session.py
+│
+├── foundation/
+│   ├── language_model.py
+│   ├── inference.py
+│   ├── model_config.py
+│   └── adapters.py
+│
+├── brain/
+│   ├── controller.py
+│   ├── need_field.py
+│   ├── router.py
+│   ├── working_memory.py
+│   └── execution_trace.py
+│
+├── memory/
+│   ├── database.py
+│   ├── schema.sql
+│   ├── episodic.py
+│   ├── semantic.py
+│   ├── fts.py
+│   ├── vector_optional.py
+│   ├── adaptive_memory.py
+│   └── admission.py
+│
+├── plasticity/
+│   ├── fast_weights.py
+│   ├── slow_weights.py
+│   ├── update_policy.py
+│   └── eligibility.py
+│
+├── skills/
+│   ├── language/
+│   ├── arithmetic/
+│   │   ├── parser.py
+│   │   ├── router.py
+│   │   ├── exact.py
+│   │   ├── addition.py
+│   │   ├── subtraction.py
+│   │   ├── multiplication.py
+│   │   └── division.py
+│   │
+│   ├── perception/
+│   │   ├── image_input.py
+│   │   ├── preprocessing.py
+│   │   └── ocr.py
+│   │
+│   ├── reasoning/
+│   └── planning/
+│
+├── learning/
+│   ├── ama.py
+│   ├── nfd.py
+│   ├── cage.py
+│   ├── dream.py
+│   └── replay.py
+│
+├── evolution/
+│   ├── pace.py
+│   └── capacity_monitor.py
+│
+├── evaluation/
+│   ├── benchmark_runner.py
+│   ├── retention.py
+│   ├── generalization.py
+│   ├── latency.py
+│   ├── memory_usage.py
+│   └── ngr.py
+│
+├── checkpoints/
+│   ├── stable/
+│   ├── candidates/
+│   └── experimental/
+│
+├── experiments/
+│   ├── ama/
+│   ├── nfd/
+│   ├── adaptive_memory/
+│   ├── fast_slow_learning/
+│   ├── harn/
+│   └── pace/
+│
+├── research/
+│   ├── hypotheses.md
+│   ├── literature.md
+│   ├── experiment_log.md
+│   ├── failures.md
+│   └── decisions.md
+│
+├── tests/
+│
+├── config/
+│
+└── README.md
+
+This is the intended destination structure, not a requirement to create every directory immediately.
+
+⸻
+
+19. Implementation roadmap
+
+The architecture should be built in controlled stages.
+
+Phase 0 — Baseline and reproducibility
+
+Objective: Establish a trustworthy starting point.
+
+Tasks:
+
+1. Select the language foundation.
+2. Record its exact version, licence and quantization.
+3. Run inference locally.
+4. Create a fixed benchmark suite.
+5. Record baseline accuracy and latency.
+6. Save a read-only stable checkpoint.
+7. Create automated regression tests.
+
+Deliverable: A reproducible local language model with a known baseline.
+
+Completion: The same benchmark can be run repeatedly and produces comparable measurements.
+
+Phase 1 — Memory foundation
+
+Objective: Build useful local memory without neural training.
+
+Tasks:
+
+1. Create SQLite schema.
+2. Implement episodic records.
+3. Implement FTS5.
+4. Add metadata filters.
+5. Add working memory.
+6. Implement memory retrieval interface.
+7. Measure retrieval latency.
+8. Test persistence across restarts.
+
+Deliverable: A functional local memory subsystem.
+
+Completion: Experiences can be stored, retrieved, filtered and deleted correctly without requiring an external database service.
+
+Phase 2 — Cognitive controller and NFD
+
+Objective: Control what runs and when.
+
+Tasks:
+
+1. Implement task classification.
+2. Implement module registry.
+3. Implement resource estimates.
+4. Implement NFD scoring.
+5. Implement conditional skill routing.
+6. Record execution traces.
+7. Compare routed execution with a simple always-run baseline.
+
+Deliverable: A working resource-aware controller.
+
+Completion: Unnecessary modules are skipped, required modules are activated, and routing overhead is measured.
+
+Phase 3 — AMA
+
+Objective: Prevent memory from becoming a dumping ground.
+
+Tasks:
+
+1. Implement experience analysis.
+2. Implement duplicate detection.
+3. Implement reliability tracking.
+4. Implement conflict detection.
+5. Implement admission scoring.
+6. Compare AMA with unconditional storage.
+7. Measure storage growth and retrieval quality.
+
+Deliverable: An adaptive memory admission mechanism.
+
+Completion: AMA demonstrates measurable value against the unconditional-storage baseline.
+
+Phase 4 — Fast adaptive memory
+
+Objective: Demonstrate real learning from experience.
+
+Tasks:
+
+1. Build a small independent neural memory.
+2. Define its input and output representations.
+3. Implement a bounded update rule.
+4. Experiment with surprise-driven updates.
+5. Add momentum and decay.
+6. Test unseen related examples.
+7. Test interference between unrelated examples.
+8. Measure CPU and memory cost.
+
+Deliverable: A trainable adaptive-memory prototype.
+
+Completion: It demonstrates improved performance on subsequent related examples and can be reset independently.
+
+Phase 5 — DPF and CAGE
+
+Objective: Introduce controlled fast plasticity.
+
+Tasks:
+
+1. Separate temporary and persistent parameter states.
+2. Add execution-trace recording.
+3. Implement attribution eligibility.
+4. Test whether updates are applied to the correct specialist.
+5. Measure interference.
+6. Ensure the language foundation remains unchanged.
+
+Deliverable: An isolated fast-learning subsystem.
+
+Completion: Temporary adaptation works, can be reset and does not overwrite the stable foundation.
+
+Phase 6 — DREAM and NGR
+
+Objective: Consolidate experience safely.
+
+Tasks:
+
+1. Implement replay buffers.
+2. Build verified training examples.
+3. Train a small candidate module.
+4. Add historical retention examples.
+5. Run new capability benchmarks.
+6. Run old capability benchmarks.
+7. Implement candidate promotion and rollback.
+8. Record every decision.
+
+Deliverable: A complete controlled learning and promotion cycle.
+
+Completion: The system can learn persistently, reject harmful candidates and restore a known stable state.
+
+Phase 7 — HARN
+
+Objective: Develop and evaluate specialist arithmetic.
+
+Tasks:
+
+1. Implement exact arithmetic.
+2. Create a shared operation interface.
+3. Preserve the existing vM model as a comparison baseline.
+4. Implement one neural arithmetic specialist.
+5. Test generalisation.
+6. Add additional specialists only when justified.
+7. Measure routing overhead and accuracy.
+
+Deliverable: A hybrid arithmetic subsystem.
+
+Completion: Exact operations are reliable and neural experts have independently demonstrated their intended benefits.
+
+Phase 8 — OCR and perception
+
+Objective: Add visual input.
+
+Tasks:
+
+1. Select local OCR engine.
+2. Implement image preprocessing.
+3. Extract text and confidence.
+4. Pass extracted information to the language foundation.
+5. Record corrections.
+6. Build a held-out OCR benchmark.
+7. Profile CPU and RAM.
+
+Deliverable: A local image-to-understanding pipeline.
+
+Completion: OCR results can be interpreted, verified and corrected without requiring an external vision API.
+
+Phase 9 — Slow adapter learning
+
+Objective: Experiment with persistent learning in the language foundation.
+
+Tasks:
+
+1. Establish a stable adapter-free baseline.
+2. Select a small, carefully curated training set.
+3. Attach a LoRA adapter.
+4. Freeze the base model.
+5. Train a candidate.
+6. Run NGR.
+7. Compare adapter performance with memory-only and fast-memory approaches.
+8. Promote only after evaluation.
+
+Deliverable: A validated persistent language-model adapter, if the experiment succeeds.
+
+Completion: The adapter demonstrates an actual benefit and passes the retention suite.
+
+Phase 10 — PACE and architecture evolution
+
+Objective: Investigate dynamic capacity.
+
+Tasks:
+
+1. Monitor specialist utilisation.
+2. Detect persistent bottlenecks.
+3. Test pruning and expansion hypotheses.
+4. Compare with fixed-capacity baselines.
+5. Measure performance per unit of resource.
+6. Keep only strategies that demonstrate improvement.
+
+Deliverable: An experimentally evaluated capacity-evolution mechanism.
+
+Completion: At least one dynamic capacity strategy demonstrates reproducible improvement without unacceptable regression or resource cost.
+
+⸻
+
+20. Challenges and unrealistic assumptions
+
+The following challenges must be treated honestly.
+
+Challenge	Why it is difficult	Strategy
+Online neural learning	Updates can destabilise representations	Isolate small adaptive modules
+Catastrophic forgetting	New training can damage old behaviour	Replay, adapters and NGR
+Self-generated labels	Models can reinforce their own errors	Require grounded verification
+Causal attribution	Multiple modules can contribute to an error	Trace execution and use controlled ablations
+Titans integration	Existing Qwen was not trained with Titans memory	Experiment independently first
+Engram integration	Internal fusion requires compatible training	Begin with external specialist lookup
+Vector retrieval	Embeddings cost compute and memory	Use only when semantic search adds measurable value
+CPU training	Large-model training is expensive	Train small modules first
+OCR errors	Poor extraction contaminates later processing	Track confidence and corrections
+Dynamic network growth	Added capacity can overfit	Compare against fixed-capacity baselines
+Latency	More modules create more overhead	Conditional routing and background execution
+Evaluation leakage	Training examples may contaminate tests	Separate held-out evaluation data
+Adapter compatibility	Adapter training and inference formats differ	Version and test each runtime combination
+
+20.1 The most unrealistic immediate goal
+
+Expecting a Qwen 7B model to continuously modify its entire weight matrix during ordinary conversations on a 16 GB laptop is not a realistic first milestone.
+
+The realistic route is:
+
+1. Frozen foundation model.
+2. Small neural adaptive memory.
+3. Temporary learning.
+4. Persistent small specialist parameters.
+5. Candidate LoRA adapter.
+6. Carefully controlled language-model integration.
+
+This still investigates genuine weight-level learning.
+
+20.2 The hardest scientific problem
+
+The hardest problem is not storing information.
+
+It is deciding:
+
+* What should be learned?
+* What should not be learned?
+* Which component should learn it?
+* How should learning generalise?
+* When should temporary knowledge become persistent?
+* How can the system detect that a new update damaged something old?
+
+That is where the main research effort should go.
+
+⸻
+
+21. Experimental protocol
+
+Every proposed algorithm must have a comparison baseline.
+
+Experiment	Baseline	Proposed mechanism
+Memory admission	Store everything	AMA
+Retrieval	SQLite + FTS5	FTS5 + optional vector retrieval
+Neural memory	No adaptive memory	Titans-inspired memory
+Routing	Always activate fixed pipeline	NFD
+Learning	No online adaptation	DPF
+Attribution	Update entire selected subsystem	CAGE
+Consolidation	Ordinary fine-tuning	DREAM replay and filtering
+Retention	No promotion gate	NGR
+Arithmetic	Native CPU arithmetic	HARN specialists
+Capacity	Fixed network	PACE
+
+21.1 Measurements
+
+Record:
+
+* Task accuracy.
+* Generalisation accuracy.
+* Retention accuracy.
+* Error rate.
+* False memory admission rate.
+* Retrieval precision.
+* Retrieval latency.
+* p50 and p95 response latency.
+* Peak RAM.
+* CPU time.
+* Storage growth.
+* Candidate promotion and rejection rates.
+
+21.2 Research record
+
+Each experiment must contain:
+
+Experiment ID:
+Hypothesis:
+Baseline:
+Proposed change:
+Hardware:
+Dataset:
+Training configuration:
+Evaluation configuration:
+Latency:
+RAM:
+Accuracy:
+Retention:
+Failures:
+Conclusion:
+Decision:
+
+No algorithm should be labelled successful simply because it produces plausible outputs.
+
+⸻
+
+22. Final acceptance criteria
+
+ASHURA Version 1 is accepted only when the following checklist is satisfied.
+
+Foundation
+
+* [ ]	Runs locally.
+* [ ]	Uses a documented, reproducible language-model checkpoint.
+* [ ]	Has a fixed baseline benchmark.
+* [ ]	Stable weights and checkpoints are protected.
+
+Memory
+
+* [ ]	Working memory works.
+* [ ]	SQLite episodic memory works.
+* [ ]	FTS5 retrieval works.
+* [ ]	Memory admission is evaluated.
+* [ ]	Memory retrieval is measurable.
+* [ ]	Optional vector retrieval is benchmarked before adoption.
+
+Cognitive controller
+
+* [ ]	Intent and need analysis work.
+* [ ]	Resource-aware routing works.
+* [ ]	Unnecessary modules are skipped.
+* [ ]	Execution traces are available.
+
+Learning
+
+* [ ]	Fast adaptive memory works.
+* [ ]	Fast learning is independently resettable.
+* [ ]	Slow consolidation works.
+* [ ]	Verified examples are required for persistent learning.
+* [ ]	The system demonstrates generalisation on unseen examples.
+
+DREAM and NGR
+
+* [ ]	Replay works.
+* [ ]	Candidate training works.
+* [ ]	Old and new capabilities are evaluated.
+* [ ]	Failed candidates are rejected.
+* [ ]	Stable checkpoints can be restored.
+
+Specialist skills
+
+* [ ]	Exact arithmetic works.
+* [ ]	HARN experiments are measurable.
+* [ ]	OCR works locally.
+* [ ]	Specialist outputs can be verified.
+
+Resource efficiency
+
+* [ ]	CPU and RAM are measured.
+* [ ]	p50 and p95 latency are recorded.
+* [ ]	Background learning does not block ordinary responses.
+* [ ]	The system remains usable on the target hardware.
+
+Research
+
+* [ ]	Every proposed algorithm has a documented hypothesis.
+* [ ]	Every algorithm has a baseline comparison.
+* [ ]	Failed experiments are documented.
+* [ ]	No unsupported novelty claims are made.
+* [ ]	Only demonstrated improvements are retained.
+
+⸻
+
+23. Immediate next actions
+
+Do not create the entire architecture in one coding session.
+
+The first implementation should establish a reliable foundation.
+
+Step 1: Freeze the selected language-model baseline and create a benchmark.
+
+Step 2: Implement SQLite, FTS5 and working memory.
+
+Step 3: Implement the memory interface and measure retrieval latency.
+
+Step 4: Implement the first version of AMA.
+
+Step 5: Implement NFD and the module registry.
+
+Step 6: Build a tiny independent neural adaptive-memory experiment.
+
+Step 7: Compare it against ordinary memory retrieval.
+
+Only after those stages work should we begin modifying persistent neural parameters.
+
+⸻
+
+24. The final architectural position
+
+ASHURA is designed around a distinction that must remain intact throughout development:
+
+Remembering is not learning. Learning is not consolidation. Consolidation is not proof of improvement.
+
+SQLite remembers experiences.
+
+FTS5 finds relevant text.
+
+Optional vector retrieval finds semantic similarity.
+
+Titans-inspired neural memory investigates adaptive associations.
+
+DPF controls temporary and persistent plasticity.
+
+AMA decides what deserves memory.
+
+NFD decides what deserves computation.
+
+CAGE investigates which component should learn from a failure.
+
+DREAM turns verified experiences into candidate learning.
+
+NGR protects existing capabilities.
+
+HARN investigates specialist numerical intelligence.
+
+OCR gives the system visual input.
+
+PACE investigates how capacity might evolve.
+
+The language model provides the initial general-purpose intelligence, but it is not the entire cognitive architecture.
+
+The system should remain modular enough that a failed research experiment can be removed without destroying the foundation.
+
+The final objective is not to make a large model that knows everything. It is to create a system that can acquire useful capabilities, retain them, improve through experience, and prove that each update made it better rather than merely different.

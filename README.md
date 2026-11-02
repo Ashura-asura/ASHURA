@@ -1,7 +1,7 @@
 # ASHURA
 Adaptive Self-modifying Hierarchical Unified Reasoning Architecture - built from `New_approach.txt`.
 
-**Current status: Phase 0 baseline measured on the target laptop; Phases 1-6 implemented (Phase 6 uses a synthetic replay experiment), OCR/HARN-neural/LoRA/PACE not started.** The adaptive memory is experimental and is *not* wired into the response path; EXP-004 found no advantage over FTS5. **128 tests pass.**
+**Current status: Phase 0 baseline measured on the target laptop; Phases 1-6 implemented (Phase 6 uses a synthetic replay experiment), OCR/HARN-neural/LoRA/PACE not started.** The adaptive memory is experimental and is *not* wired into the response path; EXP-004 found no advantage over FTS5. **128 ASHURA tests pass. BrainSim (v2 blueprint) is an independent subproject under `BrainSim/`: B1 + first fast-memory experiment complete, 19 tests pass, not integrated into ASHURA.**
 
 ## Run
 ```bash
@@ -16,6 +16,10 @@ python -m experiments.adaptive_memory.conflict  # EXP-005  same-key conflicting 
 python -m experiments.dream.run           # EXP-006  DREAM replay vs new-only training
 python -m evaluation.ollama_baseline      # PHASE 0   real-model baseline over every installed Ollama model
 python -m memory.retention --db data/ashura.db   # forgetting policy (dry run; add --apply)
+# BrainSim is independent; run its tests and experiment from its own directory
+cd BrainSim
+python -m pytest -q                       # 19 BrainSim tests
+python -m experiments.b1_sequence         # B1 + first fast-memory experiment (CPU)
 ```
 ### Using your Ollama models (Windows PowerShell)
 ```powershell
@@ -45,8 +49,19 @@ To use a llama.cpp model instead: install `llama-cpp-python`, download a Qwen In
 | DPF + CAGE | `plasticity/*`, `learning/cage.py` | resettable bounded fast state, versioned stable/candidate/experimental checkpoints, NGR-only promotion + rollback, trace-based attribution; synthetic tests only |
 | DREAM | `learning/dream.py`, `learning/replay.py` | verified-example replay, new-only vs replay experiment (**EXP-006: old retention 1.00 vs 0.00**), NGR promotion/rejection, JSONL decision log |
 | NGR | `evaluation/ngr.py`, `plasticity/slow_weights.py` | promotion rule with frozen tolerances, mandatory gate on promotion, previous stable kept for rollback |
+| BrainSim | `BrainSim/*` | **independent v2 subproject**: tiny GRU, synthetic sequence tasks, isolated fast memory, B1 + first experiment; 19 tests; **not integrated** (results in `BrainSim/research/experiment_log.md`) |
 | Evaluation | `evaluation/*` | strict+lenient judge (echo-proof), 16-item suite v2, Ollama baseline with CIs and paired sign test, latency p50/p95, retrieval bench |
 | Research record | `research/*` | hypotheses, experiment log, failures, decisions |
+
+## BrainSim (v2 blueprint, independent)
+`BrainSim/` is a separate tiny-neural project; it does not import ASHURA and ASHURA does not import it. First measured result (3 seeds, CPU, 30 epochs; details in `BrainSim/research/experiment_log.md`):
+
+| hidden | params | train-rule acc | frozen unseen | token memory | pair memory | old-rule active (token / pair) |
+|---:|---:|---:|---:|---:|---:|---:|
+| 128 | 206k | 0.956 | 0.095 | **0.775** | **0.686** | 0.309 / 0.903 |
+| 384 | 1.8M | 0.956 | 0.090 | **0.773** | **0.682** | 0.309 / 0.904 |
+
+Fast memory improves a later unseen-rule sequence and survives save/load, but leaving it active across a task switch drops old-rule accuracy; pair keys reduce the damage from 64.7 to 5.3 points, still above the 2% tolerance. The safe mode is task-scoped reset. The 384 model gives no accuracy gain over 128. **Not integrated**; B2/B3 must address working memory and gating first.
 
 ## Not started (by design, per spec section 23)
 Neural HARN experts (7), OCR (8), LoRA adapters (9), PACE (10). Placeholder modules are registered as `available=False`, so the router reports them as "needed but not implemented" instead of silently pretending.
@@ -59,7 +74,8 @@ Neural HARN experts (7), OCR (8), LoRA adapters (9), PACE (10). Placeholder modu
 - Resource efficiency: measured on the target laptop for three models (7B, 2B, 1.7B); consolidation is not yet asynchronous, so "background learning does not block responses" is only true for the small NumPy candidate.
 
 ## Next steps
-1. Phase 7: build one neural HARN arithmetic expert and compare against the exact path; Phase 8: OCR via Qwen3.5 vision or Tesseract, with confidence + corrections.
-2. Phase 9: LoRA on `qwen3.5:2b` (frozen base), NGR retention suite, then promote/reject.
-3. Calibrate AMA/NFD weights on a realistic stream and test a semantic encoder before any claim that adaptive memory earns its place.
+1. BrainSim B2/B3: working memory + delayed recall, then gated/surprise plasticity and a gate that can preserve old-rule accuracy while adapting; do not integrate into ASHURA before that. See `BrainSim/research/experiment_log.md`.
+2. Phase 7: build one neural HARN arithmetic expert and compare against the exact path; Phase 8: OCR via Qwen3.5 vision or Tesseract, with confidence + corrections.
+3. Phase 9: LoRA on `qwen3.5:2b` (frozen base), NGR retention suite, then promote/reject.
+4. Calibrate AMA/NFD weights on a realistic stream and test a semantic encoder before any claim that adaptive memory earns its place.
 See `research/failures.md` for known problems.

@@ -151,3 +151,18 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 - **Finding:** the 7B model does not fit the 2 GB MX350; `server_vram_mb` reported 4,636 and latency was dominated by CPU/GPU thrashing, not generation (19.5 generated tokens at 7.3 tok/s). The 2B model fits the budget and is the only measured model that is both usable and non-trivial.
 - **Limits:** 16 author-written questions; Wilson CIs are wide (Qwen3.5 0.33-0.77). `tony_control:7b` was deleted after measurement, so its row is not reproducible without re-pulling. Qwen3.5 arithmetic is weak; ASHURA's exact-arithmetic route answers those without the LLM (smoke test: verified 391 in 1.1 ms).
 - **Decision:** pin `qwen3.5:2b` as the Phase 0 stable foundation. Keep the 7B result as the quality baseline; re-pull only for offline adapter experiments.
+
+---
+## EXP-B1 - BrainSim tiny baseline + first fast-memory experiment (v2 blueprint)
+- **Hypotheses:** H-B1 (a small GRU learns hidden permutation rules), H-FM (an isolated fast memory improves a later related unseen-rule sequence), H-KEY (context keys reduce old-task interference).
+- **Setup:** independent `BrainSim/` subproject; 16 symbols, 8 training + 8 disjoint held-out single-cycle permutations, 3 seeds; hidden 128 (206k params) vs 384 (1.8M); 30 epochs on CPU. Study 12 transitions, test 16 from the same held-out rule. Arms: frozen, recurrent-state carry, token-keyed memory, pair-keyed memory. Full report: `BrainSim/research/experiment_log.md`.
+- **Results (means):**
+
+| arm | train-rule acc | frozen unseen | adapted unseen | old-rule active | old-rule after reset |
+|---|---:|---:|---:|---:|---:|
+| hidden 128 | 0.956 | 0.095 | token **0.775** / pair **0.686** | token 0.309 / pair 0.903 | 0.956 |
+| hidden 384 | 0.956 | 0.090 | token **0.773** / pair **0.682** | token 0.309 / pair 0.904 | 0.956 |
+
+- **Supports:** B1 learns the training rules; fast memory raises unseen-rule accuracy from ~0.09 to 0.69-0.78; save/load reproduces the adapted accuracy exactly; pair keys cut cross-task interference from 64.7 to 5.3 points.
+- **Does not support:** rule induction (memory is a lookup; coverage 0.75 token / ~0.65 pair); safe cross-task use (both arms exceed the 2% retention tolerance while active); a benefit from 8.7x more parameters. Study-state carry alone scored 0.089, so the gain is the memory, not hidden-state context.
+- **Decision:** keep BrainSim independent and task-scoped; no ASHURA integration yet. Next: B2 working memory/delayed recall and B3 gated/surprise plasticity. See `BrainSim/research/decisions.md`.

@@ -1,0 +1,1584 @@
+ASHURA + BrainSim
+
+Unified Local Adaptive Intelligence — Master Engineering Blueprint
+
+Document version: 2.0
+Status: Proposed engineering specification
+Development approach: Parallel development, independent validation, gradual integration
+Primary hardware: Intel i7-1165G7, 16 GB RAM, Intel Iris Xe, NVIDIA MX350
+Primary operating environments: Windows 11 and Kali Linux
+External dependency policy: No external LLM APIs, no cloud-based reasoning dependency, no external RAG dependency.
+
+⸻
+
+PART I — THE COMPLETE VISION
+
+1. What we are building
+
+The objective is to investigate a local artificial intelligence system that can:
+
+1. Understand and process information.
+2. Maintain an internal working state.
+3. Remember previous experiences.
+4. Learn from new experiences.
+5. Adapt its behaviour through temporary weight changes.
+6. Consolidate useful learning into persistent parameters.
+7. Predict outcomes and detect errors.
+8. Decide what to learn and when to learn.
+9. Allocate limited computational resources.
+10. Develop specialist capabilities.
+11. Improve without unnecessarily destroying previous capabilities.
+
+This requires more than a language model.
+
+A conventional language model can generate answers, but that does not automatically mean it can independently manage its learning, memory, resource consumption or long-term development.
+
+Our architecture investigates those missing mechanisms.
+
+2. Three connected projects
+
+<box border radius="lg" padding={3} gap={3}>
+  <box gap={1}>
+    <badge color="success">Project 1 · Neural research</badge>
+    <title size="2xl">BrainSim</title>
+    **Brain-inspired, Survival-Aware Learning Architecture**
+A small neural cognitive model trained from scratch. Its purpose is to investigate learning, memory, prediction, adaptation, routing and resource-aware behaviour.
+  </box>
+  <divider color="subtle"/>
+  <box gap={1}>
+    <badge color="info">Project 2 · Complete system</badge>
+    <title size="2xl">ASHURA</title>
+    **Adaptive Self-modifying Hierarchical Unified Reasoning Architecture**
+The larger local AI system. It combines an existing language foundation, BrainSim, multiple memory systems, specialist skills, fast and slow learning, and safe consolidation.
+  </box>
+  <divider color="subtle"/>
+  <box gap={1}>
+    <badge color="discovery">Project 3 · Long-term research</badge>
+    <title size="2xl">FIRE</title>
+    **Artificial Metabolism and Continuous Adaptive Cognition**
+The long-term investigation into artificial metabolism, resource-dependent cognition, predictive survival, continuous learning, risk awareness and controlled adaptation.
+  </box>
+</box>
+
+These are not three names for the same thing.
+
+Project	Main question
+BrainSim	Can a small neural system learn and regulate its own cognitive processes?
+ASHURA	Can we combine learning mechanisms and existing AI capabilities into a useful local intelligence system?
+FIRE	Can resource-aware, continuous, self-regulating cognition be developed into a more general architecture?
+
+Development rule: BrainSim must be useful and testable independently. ASHURA must not depend on unfinished FIRE research.
+
+⸻
+
+PART II — BRAINSIM
+
+3. BrainSim: build a tiny model first
+
+BrainSim is not intended to be another chatbot.
+
+It is a small neural system whose primary purpose is to learn how to process experiences and change its internal state.
+
+It will not initially need to generate natural-language paragraphs.
+
+Instead, it should learn structured tasks, patterns, predictions, memory associations and actions.
+
+This is an important distinction: a small model can demonstrate genuine parameter learning without pretending to possess the broad linguistic abilities of a 7B model.
+
+3.1 Initial model specification
+
+Component	Initial target
+Parameters	Approximately 1–5 million
+Recurrent hidden state	128–256 dimensions
+Architecture	Small recurrent neural core
+Learning	Offline training + isolated online adaptation
+Memory	Internal state + fast associative memory
+Persistent storage	Local checkpoints and SQLite experience records
+Training	CPU-first
+Input	Structured numerical and symbolic features
+Output	Predictions, priorities, actions and memory decisions
+
+These are initial engineering targets, not fixed scientific requirements.
+
+We should compare a smaller configuration with a larger one rather than assume that 5 million parameters is optimal.
+
+3.2 Why a recurrent model?
+
+A conventional feed-forward network processes an input and produces an output.
+
+A recurrent model can maintain an internal state between steps.
+
+That makes it useful for investigating:
+
+* Temporal relationships.
+* Sequential learning.
+* Prediction.
+* Context-dependent behaviour.
+* Memory updates.
+* Task switching.
+* Delayed consequences.
+
+For the first implementation, use a GRU-based recurrent core or a similarly small recurrent architecture.
+
+Do not invent a new neural architecture before establishing a working baseline.
+
+Later, we can compare it with:
+
+* A small Transformer.
+* A state-space model.
+* A recurrent network with fast weights.
+* A hybrid recurrent and external-memory architecture.
+
+3.3 BrainSim architecture
+
+flowchart TD
+    A[Structured Input / Experience] --> B[Input Encoder]
+    B --> C[Recurrent Neural Core]
+    D[Previous Internal State] --> C
+    C --> E[Internal State]
+    E --> F[Prediction Head]
+    E --> G[Need / Priority Head]
+    E --> H[Action / Routing Head]
+    E --> I[Confidence Head]
+    E --> J[Memory Update Head]
+    J --> K[Fast Associative Memory]
+    K --> C
+    F --> L[Outcome Comparison]
+    L --> M[Prediction Error]
+    M --> N[Learning Controller]
+    N --> O[Fast Adaptation]
+    N --> P[Experience Buffer]
+    P --> Q[Slow Consolidation]
+
+3.4 BrainSim modules
+
+A. Input encoder
+
+Converts experiences into a consistent numerical representation.
+
+Initial input fields can include:
+
+* Current observation.
+* Previous observation.
+* Current task.
+* Previous action.
+* Observed outcome.
+* Resource availability.
+* Prediction error.
+* Task success or failure.
+
+Do not begin with raw language generation or a large vision encoder.
+
+B. Recurrent neural core
+
+The central neural network maintains an internal state.
+
+Conceptually:
+
+[
+h_t = GRU(x_t,h_{t-1})
+]
+
+Where:
+
+* (x_t) is the current encoded observation.
+* (h_{t-1}) is the previous internal state.
+* (h_t) is the updated state.
+
+This is the first cognitive representation we can train and inspect.
+
+C. Prediction head
+
+Predicts what is likely to happen next.
+
+Examples:
+
+* Whether an action will succeed.
+* Whether a pattern will repeat.
+* Whether a resource will become unavailable.
+* Whether the next observation will differ from the expected observation.
+
+Prediction error becomes one of the system’s learning signals.
+
+D. Need and priority head
+
+Estimates what the system needs to do.
+
+Examples:
+
+* Retrieve information.
+* Observe another example.
+* Verify an uncertain result.
+* Allocate more computation.
+* Store a new association.
+* Delay an expensive learning operation.
+
+E. Action and routing head
+
+Chooses between available actions.
+
+For the first experiment, actions can be simple discrete choices.
+
+For example:
+
+* Predict.
+* Retrieve.
+* Verify.
+* Adapt.
+* Store.
+* Wait.
+
+F. Confidence head
+
+Estimates uncertainty.
+
+This is not a guarantee of truth. It must be calibrated against actual prediction outcomes.
+
+G. Fast associative memory
+
+A small memory mechanism whose parameters or state can change during experience.
+
+This is where we investigate neural memory and temporary plasticity.
+
+H. Learning controller
+
+Determines whether an observed result should produce a temporary update, enter the experience buffer or be ignored.
+
+The learning controller must be independently testable.
+
+⸻
+
+4. BrainSim learning system
+
+BrainSim must have two separate learning mechanisms.
+
+4.1 Offline learning
+
+The model initially learns through ordinary gradient-based training.
+
+Use PyTorch and standard optimizers.
+
+Possible training tasks:
+
+* Sequence prediction.
+* Pattern completion.
+* Delayed recall.
+* Associative learning.
+* Prediction under changing conditions.
+* Task selection.
+* Resource allocation.
+
+Generate synthetic environments locally.
+
+For example, create sequences with hidden rules and test whether BrainSim can learn the relationships.
+
+This gives us reproducible experiments without needing external LLM-generated datasets.
+
+4.2 Online fast learning
+
+After initial training, BrainSim should learn from new experiences.
+
+The first experiment should update an isolated fast-memory matrix rather than the entire recurrent network.
+
+A conceptual update is:
+
+[
+M_t = \lambda M_{t-1} + \eta \Delta_t
+]
+
+Where:
+
+* (M_t) is the current fast-memory state.
+* (\lambda) controls retention or decay.
+* (\eta) controls the update rate.
+* (\Delta_t) represents the new learning signal.
+
+A more advanced version can use gradient-based fast weights or differentiable plasticity.
+
+We should compare at least:
+
+1. Fixed memory.
+2. Simple Hebbian-style updates.
+3. Gradient-based fast weights.
+4. A gated update mechanism.
+
+We must not assume one will outperform the others.
+
+4.3 Slow learning
+
+Experiences that demonstrate useful learning should be stored for later consolidation.
+
+The model can then be trained using a replay buffer containing:
+
+* New verified examples.
+* Previous successful examples.
+* Difficult examples.
+* Previously learned patterns.
+* Held-out evaluation examples kept separate from training.
+
+Persistent updates require evaluation.
+
+4.4 BrainSim learning flow
+
+flowchart TD
+    A[New Experience] --> B[Encode Input]
+    B --> C[Update Recurrent State]
+    C --> D[Predict Outcome]
+    D --> E[Observe Actual Outcome]
+    E --> F[Calculate Prediction Error]
+    F --> G{Reliable Learning Signal?}
+    G -->|No| H[Record Observation]
+    G -->|Yes| I[Fast Memory Update]
+    I --> J[Test on New Related Example]
+    J --> K{Learning Demonstrated?}
+    K -->|No| L[Revise Update Policy]
+    K -->|Yes| M[Add to Replay Buffer]
+    M --> N[Slow Consolidation]
+    N --> O[Retention Evaluation]
+    O --> P[Promote or Reject]
+
+4.5 BrainSim completion definition
+
+BrainSim’s first meaningful milestone is reached when it can:
+
+1. Receive a structured sequence.
+2. Maintain an internal recurrent state.
+3. Predict a future outcome.
+4. Compare its prediction with the actual result.
+5. Update a fast-memory mechanism.
+6. Perform better on a later related example.
+7. Preserve the improvement across a controlled persistence test.
+8. Avoid damaging previously learned tasks beyond a defined tolerance.
+
+It must demonstrate this on held-out examples, not only repeat its training data.
+
+⸻
+
+PART III — THE COGNITIVE MECHANISMS
+
+5. Need Ledger
+
+The Need Ledger records unresolved problems and information gaps.
+
+It is not simply a list of memories.
+
+It tracks what the system still needs to resolve.
+
+An entry can contain:
+
+* Unresolved prediction.
+* Missing information.
+* Expected outcome.
+* Current uncertainty.
+* Importance.
+* Available actions.
+* Resource cost.
+* Expiration or review condition.
+
+Example:
+
+Field	Example
+Need	Determine whether a learned sequence rule still applies
+Uncertainty	0.42
+Importance	0.8
+Evidence	Three previous observations
+Next action	Request another observation
+Status	Unresolved
+
+The Need Ledger can be implemented in SQLite for persistent tracking and a small RAM structure for active tasks.
+
+5.1 Proposed algorithm — NFD
+
+Need Field Dynamics
+
+NFD calculates which needs deserve computational attention.
+
+[
+P_i = aE_i+bU_i+cR_i+dI_i-eK_i
+]
+
+Where:
+
+* (E_i): observed error.
+* (U_i): uncertainty.
+* (R_i): recurrence.
+* (I_i): importance.
+* (K_i): computational cost.
+
+The system prioritises high-value tasks without blindly activating every available component.
+
+Algorithm
+
+1. Collect active needs.
+2. Estimate uncertainty and error.
+3. Estimate importance and recurrence.
+4. Estimate resource cost.
+5. Calculate priority.
+6. Select the next action.
+7. Update the ledger after the outcome.
+
+Flowchart
+
+flowchart TD
+    A[Active Need Ledger] --> B[Calculate Need Features]
+    B --> C[Estimate Resource Cost]
+    C --> D[Calculate Priority]
+    D --> E[Select Highest Useful Need]
+    E --> F[Route to Required Skill]
+    F --> G[Observe Result]
+    G --> H[Update Need Ledger]
+
+⸻
+
+6. Routing before dreaming
+
+This is a key design decision.
+
+The system must decide what to do with an experience before deciding whether it deserves consolidation.
+
+Dreaming must not be the default response to every experience.
+
+The router decides whether an experience should:
+
+* Be ignored.
+* Be stored.
+* Be retrieved later.
+* Trigger fast adaptation.
+* Be verified.
+* Enter the replay buffer.
+* Become a candidate for persistent learning.
+
+Only the appropriate experiences proceed to DREAM.
+
+flowchart TD
+    A[Experience Arrives] --> B[Analyse Need and Outcome]
+    B --> C[Router]
+    C --> D[Ignore / Discard]
+    C --> E[Store]
+    C --> F[Retrieve]
+    C --> G[Fast Adapt]
+    C --> H[Verify]
+    H --> I{Verified Learning Signal?}
+    I -->|No| E
+    I -->|Yes| J[Replay Buffer]
+    J --> K[DREAM]
+
+⸻
+
+7. Adaptive Memory — LAMS
+
+Layered Adaptive Memory System
+
+LAMS is shared infrastructure for BrainSim and ASHURA, but each project may use different memory mechanisms.
+
+7.1 Memory layers
+
+Memory	Purpose	Implementation
+Working	Current task state	RAM
+Episodic	Historical events	SQLite
+Semantic	Searchable information	SQLite + FTS5
+Adaptive	Learned associations	Small neural module
+Persistent	Model parameters	Checkpoint / adapter
+
+7.2 Why SQLite first?
+
+SQLite is an embedded database.
+
+It does not require a separate server.
+
+Use:
+
+* SQLite for records and metadata.
+* FTS5 for full-text retrieval.
+* Normal SQL indexes for filtering.
+* Optional sqlite-vec or SQLite vec1 for vector retrieval later.
+
+A separate vector database is not necessary until benchmarks justify it.
+
+7.3 Titans-inspired memory
+
+Titans is an important research reference for neural long-term memory.
+
+We should investigate:
+
+* Surprise-driven updates.
+* Momentum.
+* Adaptive forgetting.
+* Neural memory retrieval.
+* Memory update gating.
+
+However, BrainSim should first implement a small, understandable adaptive-memory baseline.
+
+Only after we have a baseline should we reproduce or adapt more advanced Titans mechanisms.
+
+The aim is not to claim we invented Titans.
+
+The aim is to discover whether our memory controller, admission policy and learning schedule produce useful improvements.
+
+7.4 Engram-inspired memory
+
+Engram provides another research direction.
+
+It explores efficient lookup of repeated patterns using hashed n-grams and learned contextual integration.
+
+We can investigate a small lookup specialist for repeated terms and symbolic patterns.
+
+It should remain optional and independent until it demonstrates a measurable advantage.
+
+⸻
+
+PART IV — ASHURA
+
+8. ASHURA: the larger system
+
+ASHURA uses mature existing technology and combines it with the cognitive mechanisms we develop.
+
+It is not necessary to recreate a foundation model from scratch.
+
+The initial language foundation remains a pretrained Qwen Instruct model.
+
+8.1 Main responsibilities
+
+ASHURA provides:
+
+* Natural-language understanding and generation.
+* Cognitive routing.
+* Working memory.
+* Persistent episodic memory.
+* Semantic retrieval.
+* Adaptive neural memory.
+* Fast and slow plasticity.
+* Specialist arithmetic.
+* OCR and perception.
+* DREAM consolidation.
+* Non-regression protection.
+
+BrainSim becomes an independent cognitive subsystem that can eventually provide learned predictions, priorities and adaptive control.
+
+8.2 Overall architecture
+
+flowchart TD
+    A[User Input: Text / Image / Task] --> B[Input Processing]
+    B --> C[ASHURA Controller]
+    C --> D[BrainSim Cognitive Core]
+    D --> E[Need and Priority]
+    E --> F[Resource-Aware Router]
+    F --> G[Working Memory]
+    G --> H[Memory Retrieval]
+    F --> I[Specialist Skills]
+    F --> J[Qwen Language Foundation]
+    H --> J
+    I --> K[Verification]
+    J --> K
+    K --> L[Response]
+    K --> M[Experience Recorder]
+    M --> N[AMA Admission]
+    N --> O[Fast Adaptation]
+    N --> P[Replay Buffer]
+    P --> Q[DREAM]
+    Q --> R[Candidate Training]
+    R --> S[NGR]
+    S -->|Pass| T[Stable Version]
+    S -->|Fail| U[Rollback]
+
+8.3 BrainSim and Qwen must remain independent
+
+This is critical.
+
+BrainSim should not become a thin wrapper that asks Qwen what it should think.
+
+BrainSim should perform its own:
+
+* Prediction.
+* State updates.
+* Need estimation.
+* Memory decisions.
+* Resource allocation experiments.
+
+Qwen supplies language capabilities.
+
+BrainSim supplies experimental cognitive control.
+
+ASHURA coordinates both.
+
+If Qwen is unavailable, BrainSim should still be able to run its structured learning experiments.
+
+If BrainSim is unavailable, ASHURA should still be able to use Qwen and ordinary memory.
+
+⸻
+
+9. AMA — Adaptive Memory Admission
+
+AMA decides what deserves memory and what deserves learning.
+
+For an experience x:
+
+[
+A(x)=w_nN+w_sS+w_rR+w_uU-w_cC-w_kK
+]
+
+Where:
+
+* N: novelty.
+* S: surprise.
+* R: reliability.
+* U: utility.
+* C: conflict.
+* K: computational cost.
+
+Algorithm
+
+1. Receive an experience.
+2. Extract its relevant features.
+3. Detect duplicates.
+4. Check reliability.
+5. Detect conflicts.
+6. Estimate future usefulness.
+7. Calculate the admission score.
+8. Choose the appropriate memory destination.
+9. Record the decision.
+
+Destination policy
+
+Experience	Action
+Duplicate	Update existing record
+Unreliable	Retain as unverified evidence if useful
+Reliable fact	SQLite
+Important text	FTS5
+Useful semantic association	Optional vector index
+Useful learning signal	Adaptive memory
+Verified general improvement	DREAM
+
+The scoring policy should be calibrated experimentally.
+
+⸻
+
+10. DPF — Dual Plasticity Field
+
+DPF controls fast and slow adaptation.
+
+10.1 Fast plasticity
+
+Temporary parameter updates.
+
+[
+W_{\text{effective}}=W_{\text{base}}+\Delta W_{\text{fast}}
+]
+
+The temporary update can be reset independently.
+
+First apply this to BrainSim’s adaptive-memory component.
+
+Later investigate small temporary adapters for Qwen.
+
+10.2 Slow plasticity
+
+Persistent candidate learning.
+
+[
+W_{\text{candidate}}=W_{\text{base}}+\Delta W_{\text{slow}}
+]
+
+The initial language foundation remains frozen.
+
+Persistent updates are stored as separate adapter versions.
+
+10.3 Separation policy
+
+Property	Fast	Slow
+Purpose	Temporary learning	Persistent improvement
+Scope	Small isolated parameters	Candidate adapter or model
+Frequency	During experience	Deferred consolidation
+Reset	Easy	Version rollback
+Evaluation	Local learning test	Full NGR suite
+
+⸻
+
+11. CAGE — Causal Attribution and Gradient Eligibility
+
+CAGE investigates which component should be updated when a failure occurs.
+
+Example:
+
+A multiplication answer is wrong.
+
+Possible causes:
+
+* Input parsing.
+* Arithmetic specialist.
+* Routing.
+* Language interpretation.
+* Verification.
+
+The system should not update every component.
+
+Algorithm
+
+1. Record the execution path.
+2. Compare intermediate results.
+3. Identify the first divergence.
+4. Estimate the responsible module.
+5. Determine attribution confidence.
+6. Permit isolated adaptation if justified.
+7. Run regression tests.
+
+CAGE is an attribution hypothesis, not a mathematical guarantee of causality.
+
+⸻
+
+12. DREAM — Deferred Replay, Evaluation, Adaptation and Memory
+
+DREAM handles slow learning.
+
+DREAM stages
+
+1. Collect admitted experiences.
+2. Filter unreliable examples.
+3. Remove duplicates.
+4. Construct replay batches.
+5. Train an isolated candidate.
+6. Evaluate the new capability.
+7. Evaluate previous capabilities.
+8. Submit to NGR.
+9. Promote or reject.
+
+Replay sources
+
+* New verified examples.
+* Historical examples.
+* Difficult examples.
+* Previously learned skills.
+* Known failure cases.
+
+The training and evaluation datasets must remain separate.
+
+Generated outputs cannot automatically become verified training targets.
+
+⸻
+
+13. NGR — Non-Regression Gate
+
+NGR is mandatory infrastructure.
+
+Maintain three states:
+
+State	Purpose
+Stable	Last validated model
+Candidate	Proposed update
+Experimental	Research version
+
+Promotion requires:
+
+[
+S_{\text{candidate},i}\geq S_{\text{stable},i}-\epsilon_i
+]
+
+The candidate must also improve its intended target capability.
+
+For critical capabilities, define zero tolerance.
+
+NGR protects the benchmarked capabilities. It cannot guarantee perfect performance on every unseen input.
+
+⸻
+
+PART V — SPECIALIST SKILLS
+
+14. HARN — Hybrid Adaptive Reasoning Network
+
+HARN is the arithmetic specialist system.
+
+It investigates whether separate operation experts and shared representations can learn numerical patterns efficiently.
+
+14.1 Specialists
+
+* Addition.
+* Subtraction.
+* Multiplication.
+* Division.
+* Modulo.
+* Exponentiation.
+* Roots.
+* Comparisons.
+
+14.2 Shared input representation
+
+The common representation handles:
+
+* Operand parsing.
+* Sign.
+* Magnitude.
+* Precision.
+* Integer and floating-point types.
+* Operation identification.
+
+Specialists process the operation.
+
+14.3 Exact arithmetic
+
+Native CPU arithmetic remains the reliable execution path.
+
+Neural arithmetic is an experimental capability, not a replacement for exact computation.
+
+Preserve the existing vM multiplication model as a baseline.
+
+Compare independent experts, shared representations and conditional experts.
+
+14.4 Completion
+
+HARN is complete when:
+
+* All supported exact operations are reliable.
+* Neural specialists have independent benchmarks.
+* Unseen operands are tested.
+* Routing overhead is measured.
+* No neural specialist silently replaces exact arithmetic.
+* Retained neural experts demonstrate a real advantage for their intended purpose.
+
+⸻
+
+15. OCR and perception
+
+The first perception subsystem is local OCR.
+
+Pipeline
+
+flowchart TD
+    A[Image] --> B[Validation]
+    B --> C[Preprocessing]
+    C --> D[Local OCR Engine]
+    D --> E[Text and Confidence]
+    E --> F[Normalization]
+    F --> G[Language Foundation]
+    G --> H[Interpretation]
+    H --> I[Verification]
+    I --> J[Correction and Memory]
+
+Use an established local OCR engine such as Tesseract or PaddleOCR.
+
+Choose through CPU, RAM, accuracy and language-support benchmarks.
+
+Store the original image reference, extracted text, confidence, corrections and engine version.
+
+OCR corrections can improve the perception subsystem, but uncertain OCR output must not automatically become a language-model training label.
+
+Face recognition and more advanced visual capabilities can be added later as independent skills.
+
+⸻
+
+PART VI — FIRE
+
+16. Project FIRE: artificial metabolism and survival-aware cognition
+
+FIRE is the long-term research direction.
+
+The purpose is to investigate whether a cognitive architecture can regulate its own computational activity according to limited resources and predicted outcomes.
+
+The word “survival” is an engineering metaphor here.
+
+We are not claiming subjective fear, consciousness or an actual biological survival instinct.
+
+16.1 Artificial metabolism
+
+A biological system has limited energy and resources.
+
+A local AI system also has limited computational resources:
+
+* CPU time.
+* RAM.
+* GPU memory.
+* Storage.
+* Power.
+* Available execution time.
+
+FIRE investigates whether these constraints can be represented as an internal resource state.
+
+For example:
+
+[
+B_{t+1}=B_t-C_{\text{operation}}+R_{\text{recovery}}
+]
+
+Where:
+
+* (B_t) is the available computational budget.
+* (C_{\text{operation}}) is the cost of the selected computation.
+* (R_{\text{recovery}}) is the resource recovery or replenishment allowance.
+
+This is a simplified budget model, not a literal biological energy equation.
+
+16.2 Resource-aware behaviour
+
+When resources are low, the system should:
+
+* Prefer cheaper skills.
+* Defer noncritical learning.
+* Reduce unnecessary retrieval.
+* Pause expensive consolidation.
+* Preserve important state.
+* Avoid destabilising updates.
+
+When resources become available, it can resume deferred tasks.
+
+16.3 Predictive risk
+
+The system can estimate the risk of:
+
+* Memory exhaustion.
+* Excessive CPU load.
+* Long-running tasks.
+* Unstable model updates.
+* Storage exhaustion.
+* Repeated failed operations.
+
+A risk score can influence routing and execution priority.
+
+16.4 Fear as an engineering signal
+
+The idea of fear can be translated into a measurable risk-response mechanism.
+
+For example:
+
+[
+F_t = f(\text{risk},\text{uncertainty},\text{expected loss})
+]
+
+The resulting signal can increase caution or change action selection.
+
+It is not evidence that the system feels fear.
+
+16.5 FIRE development boundary
+
+FIRE should not be implemented as a prerequisite for ASHURA or BrainSim.
+
+First prove resource measurement, budget-aware routing and predictive risk.
+
+Only then investigate more ambitious continuous-cognition mechanisms.
+
+⸻
+
+PART VII — LATENCY AND HARDWARE
+
+17. CPU-first architecture
+
+The target laptop has limited GPU memory.
+
+We should not design the system around a large GPU.
+
+The architecture should use CPU efficiently and treat GPU acceleration as optional.
+
+17.1 Execution plan
+
+Component	Execution
+BrainSim tiny model	CPU initially
+Neural memory experiments	CPU
+SQLite and FTS5	Local embedded
+AMA and NFD	Lightweight CPU
+Qwen inference	Quantized llama.cpp
+OCR	On-demand CPU
+Exact arithmetic	Native CPU
+DREAM	Deferred background
+Small adapter experiments	CPU or available external compute only if later chosen
+PACE	Offline experiments
+
+17.2 Avoid unnecessary processing
+
+A simple question should not activate every subsystem.
+
+Fast path:
+
+1. Receive input.
+2. Check working context.
+3. Route to the required capability.
+4. Retrieve only if necessary.
+5. Execute.
+6. Verify when appropriate.
+7. Return the response.
+
+Slow path:
+
+1. Record experience.
+2. Analyse learning value.
+3. Update fast memory if justified.
+4. Queue verified examples.
+5. Consolidate later.
+
+17.3 Performance metrics
+
+Record:
+
+* p50 latency.
+* p95 latency.
+* Peak RAM.
+* CPU utilisation.
+* GPU utilisation.
+* Model load time.
+* Retrieval time.
+* Routing overhead.
+* Training time.
+* Storage growth.
+
+No component should be added merely because it sounds sophisticated.
+
+It must justify its resource cost.
+
+⸻
+
+PART VIII — TECHNOLOGY STACK
+
+18. Reuse mature tools
+
+Responsibility	Technology
+Main implementation	Python
+Neural models	PyTorch
+Tiny model experiments	PyTorch
+Language foundation	Qwen Instruct
+Quantized inference	llama.cpp
+Model integration	Transformers
+Persistent adapters	PEFT / LoRA
+Database	SQLite
+Text retrieval	FTS5
+Optional vectors	sqlite-vec / vec1
+OCR	Tesseract / PaddleOCR
+Testing	pytest
+Numerical verification	Python standard library / NumPy
+Profiling	cProfile / psutil
+Checkpoints	Safetensors where compatible
+Version control	Git
+Configuration	TOML / YAML
+
+Do not create custom autograd, matrix multiplication, tokenizers or database engines.
+
+The research effort belongs in the learning mechanisms and their interaction.
+
+⸻
+
+PART IX — REPOSITORY AND PROJECT STRUCTURE
+
+19. Proposed organisation
+
+The projects should be separate repositories or clearly separated top-level projects.
+
+LOCAL-INTELLIGENCE/
+│
+├── ASHURA/
+│   ├── app/
+│   ├── foundation/
+│   ├── brain/
+│   ├── memory/
+│   ├── plasticity/
+│   ├── learning/
+│   ├── skills/
+│   ├── dream/
+│   ├── evolution/
+│   ├── evaluation/
+│   ├── checkpoints/
+│   ├── experiments/
+│   └── research/
+│
+├── BrainSim/
+│   ├── core/
+│   │   ├── encoder.py
+│   │   ├── recurrent_core.py
+│   │   ├── prediction.py
+│   │   ├── need_head.py
+│   │   └── action_head.py
+│   │
+│   ├── memory/
+│   │   ├── working_memory.py
+│   │   ├── fast_memory.py
+│   │   └── experience_buffer.py
+│   │
+│   ├── learning/
+│   │   ├── offline_training.py
+│   │   ├── online_update.py
+│   │   ├── plasticity.py
+│   │   └── consolidation.py
+│   │
+│   ├── environment/
+│   │   ├── sequence_tasks.py
+│   │   ├── prediction_tasks.py
+│   │   ├── association_tasks.py
+│   │   └── resource_tasks.py
+│   │
+│   ├── evaluation/
+│   │   ├── learning.py
+│   │   ├── retention.py
+│   │   ├── generalization.py
+│   │   └── performance.py
+│   │
+│   ├── checkpoints/
+│   ├── experiments/
+│   ├── tests/
+│   └── research/
+│
+└── FIRE/
+    ├── metabolism/
+    ├── risk/
+    ├── continuous_cognition/
+    ├── experiments/
+    └── research/
+
+This is the intended organisation, not a demand to create all directories immediately.
+
+19.1 Integration interfaces
+
+BrainSim must expose a small interface to ASHURA.
+
+For example:
+
+class CognitiveCore:
+    def observe(self, observation):
+        ...
+    def predict(self):
+        ...
+    def estimate_needs(self):
+        ...
+    def select_action(self, available_actions):
+        ...
+    def record_outcome(self, outcome):
+        ...
+    def adapt(self, learning_signal):
+        ...
+    def save_state(self):
+        ...
+    def load_state(self, path):
+        ...
+
+The actual implementation should use typed inputs and outputs, versioned configuration and explicit state handling.
+
+ASHURA should not depend on BrainSim’s internal neural implementation.
+
+That allows us to replace a GRU with another architecture without rewriting the entire system.
+
+⸻
+
+PART X — IMPLEMENTATION ROADMAP
+
+20. Two parallel development tracks
+
+ASHURA has already been started.
+
+We should preserve its existing work and introduce BrainSim as a parallel experimental project.
+
+Do not rewrite functioning components simply to match the proposed directory structure.
+
+Track A — ASHURA
+
+A1. Stabilise the current implementation
+
+* Audit existing code.
+* Identify completed modules.
+* Identify incomplete modules.
+* Preserve working functionality.
+* Establish tests and a stable checkpoint.
+* Measure existing performance.
+
+Completion: The current implementation has a documented baseline and a safe development branch.
+
+A2. Memory and controller
+
+* SQLite.
+* FTS5.
+* Working memory.
+* Need Ledger.
+* NFD.
+* AMA.
+* Conditional routing.
+
+Completion: The system can store and retrieve useful experiences while avoiding unnecessary computation.
+
+A3. Plasticity and DREAM
+
+* Fast adaptation.
+* Experience buffer.
+* Replay.
+* Slow candidate training.
+* CAGE.
+* NGR.
+
+Completion: The system can demonstrate controlled learning and safely reject harmful updates.
+
+A4. Specialist capabilities
+
+* HARN.
+* OCR.
+* Perception.
+* Additional reasoning skills.
+
+Completion: Skills work independently and can be called through the router.
+
+A5. Language integration
+
+* Qwen foundation.
+* Quantized inference.
+* Optional LoRA learning.
+* BrainSim integration.
+
+Completion: The complete system can use language and specialist skills while preserving its stable baseline.
+
+Track B — BrainSim
+
+B1. Tiny neural baseline
+
+Build:
+
+* Input encoder.
+* GRU core.
+* Prediction head.
+* Action head.
+* Basic training loop.
+
+Train on synthetic sequences.
+
+Completion: BrainSim can learn and predict simple sequential patterns.
+
+B2. Internal state and memory
+
+Add:
+
+* Recurrent state management.
+* Working memory.
+* Associative memory.
+* Delayed recall tasks.
+
+Completion: BrainSim can use earlier information to solve a later task.
+
+B3. Fast plasticity
+
+Add:
+
+* Fast-memory update rules.
+* Learning gates.
+* Decay.
+* Surprise-based updates.
+
+Completion: It improves on later related examples after controlled online adaptation.
+
+B4. Slow consolidation
+
+Add:
+
+* Replay buffer.
+* Persistent parameter training.
+* Checkpointing.
+* Retention tests.
+
+Completion: It retains useful learning across restarts without unacceptable interference.
+
+B5. Need and resource control
+
+Add:
+
+* Need estimation.
+* Action selection.
+* Resource budgets.
+* Prediction of computational cost.
+
+Completion: It can choose among simple actions according to measured task needs and costs.
+
+B6. Independent validation
+
+Compare:
+
+* Fixed network.
+* Recurrent network.
+* Recurrent network with fast memory.
+* Recurrent network with gated plasticity.
+
+Completion: Results are documented against fixed baselines and held-out tasks.
+
+⸻
+
+PART XI — INTEGRATION
+
+21. When should BrainSim connect to ASHURA?
+
+Not immediately.
+
+Integration should begin only after BrainSim has independently demonstrated useful learning.
+
+The first integration should be small.
+
+BrainSim provides:
+
+* Need priority.
+* Prediction.
+* Confidence estimate.
+* Suggested action.
+* Resource-aware recommendation.
+
+ASHURA retains final control over execution.
+
+21.1 Integration flow
+
+flowchart TD
+    A[ASHURA Receives Task] --> B[Send Structured Observation]
+    B --> C[BrainSim]
+    C --> D[Prediction / Need / Action]
+    D --> E[ASHURA Validates Recommendation]
+    E --> F{Valid and Within Budget?}
+    F -->|Yes| G[ASHURA Executes Selected Skill]
+    F -->|No| H[Use Safe Default Router]
+    G --> I[Observe Outcome]
+    H --> I
+    I --> J[Send Outcome to BrainSim]
+    J --> K[BrainSim Updates Its State]
+    K --> L[Record Experience]
+
+BrainSim must not have unrestricted authority to change ASHURA’s model weights.
+
+Its recommendations are evaluated by the main system.
+
+21.2 Integration acceptance criteria
+
+* BrainSim works independently.
+* ASHURA works independently.
+* Communication uses a versioned interface.
+* A BrainSim failure does not crash ASHURA.
+* BrainSim’s recommendations can be rejected.
+* The integrated system performs at least as well as the original ASHURA baseline within defined tolerances.
+* Integration overhead is measured.
+
+⸻
+
+PART XII — RESEARCH CHALLENGES
+
+22. What is realistic, and what needs research?
+
+Idea	Reality assessment	Required work
+Tiny recurrent cognitive model	Realistic	Build and benchmark
+Online fast-memory updates	Realistic research	Compare update rules
+Slow replay consolidation	Established technique	Adapt and validate
+Titans-inspired neural memory	Real research direction	Reproduce small mechanisms
+Engram-inspired lookup	Real research direction	Evaluate local lookup
+Self-directed routing	Realistic	Measure against fixed routing
+Need Ledger	Realistic	Define useful priority metrics
+Causal attribution	Difficult	Counterfactual experiments
+Dynamic neural growth	Research-intensive	Compare fixed and adaptive capacity
+Resource-aware cognition	Realistic	Measure resource costs
+Human-like fear	Unsupported claim	Do not claim subjective experience
+Full self-improving Qwen on this laptop	Unrealistic initially	Start with small independent parameters
+General intelligence from a tiny model	Not established	Do not assume it
+
+22.1 Main technical risks
+
+Catastrophic forgetting
+
+Fast learning can damage previous associations.
+
+Mitigation:
+
+* Isolated fast weights.
+* Replay.
+* Retention benchmarks.
+* Resettable temporary memory.
+
+Self-reinforcing errors
+
+A model can train on incorrect generated content.
+
+Mitigation:
+
+* Independent verification.
+* Explicit reliability labels.
+* Held-out tests.
+* User corrections.
+* Local deterministic environments.
+
+Memory overload
+
+Too many memories can reduce retrieval quality.
+
+Mitigation:
+
+* AMA.
+* Expiration policies.
+* Duplicate detection.
+* Resource-aware indexing.
+
+Latency
+
+Too many modules can slow normal responses.
+
+Mitigation:
+
+* NFD.
+* Conditional routing.
+* Lightweight memory retrieval.
+* Deferred DREAM.
+* Background task scheduling.
+
+Small-model capacity
+
+A tiny BrainSim may fail to learn complex patterns.
+
+Mitigation:
+
+* Start with simple tasks.
+* Increase complexity gradually.
+* Measure capacity limits.
+* Compare different parameter counts.
+
+Unreliable confidence
+
+A model can be confidently wrong.
+
+Mitigation:
+
+* Confidence calibration.
+* Actual outcome tracking.
+* Verification.
+* Uncertainty-aware routing.
+
+Unstable online updates
+
+An update may improve one example while damaging a related task.
+
+Mitigation:
+
+* Small update steps.
+* Isolated parameters.
+* Controlled experiments.
+* Candidate evaluation.
+
+⸻
+
+PART XIII — DEFINITIONS OF COMPLETE
+
+23. What does “complete” mean for each project?
+
+BrainSim — complete
+
+BrainSim is complete as its first validated research platform when:
+
+* It has a documented trainable neural architecture.
+* It can maintain an internal recurrent state.
+* It can learn from sequential experience.
+* It has a working prediction mechanism.
+* It has a temporary adaptive-memory mechanism.
+* It demonstrates improvement on unseen related examples.
+* It can consolidate learning persistently.
+* It has measured retention and interference.
+* It has repeatable experiments.
+* It runs within the target resource budget.
+
+It does not need to be a conversational LLM.
+
+ASHURA — complete
+
+ASHURA Version 1 is complete when:
+
+* Its language foundation runs locally.
+* Its memory system works.
+* Its router selects appropriate skills.
+* AMA manages memory admission.
+* NFD controls computational priorities.
+* Fast and slow plasticity are implemented.
+* DREAM performs controlled consolidation.
+* CAGE supports isolated updates.
+* NGR protects stable capabilities.
+* HARN and OCR are functional specialist systems.
+* BrainSim can be integrated or safely disabled.
+* Performance is documented on the target laptop.
+
+FIRE — complete
+
+FIRE’s initial research platform is complete when:
+
+* Resource budgets are measured.
+* Resource-aware action selection works.
+* Predictive risk estimation is benchmarked.
+* Deferred computation works.
+* Resource constraints influence system behaviour in controlled experiments.
+* The architecture remains stable when resources become limited.
+
+This does not imply consciousness or subjective survival.
+
+⸻
+
+PART XIV — FINAL DEVELOPMENT ORDER
+
+24. What we should do next
+
+Do not stop ASHURA.
+
+Do not wait for ASHURA to finish before beginning BrainSim.
+
+Develop both, but do not divide attention equally at every stage.
+
+Immediate priorities
+
+Priority	Work	Reason
+1	Preserve and audit existing ASHURA	Avoid losing progress
+2	Create BrainSim tiny baseline	Establish independent neural learning
+3	Build shared benchmark conventions	Make both projects comparable
+4	Develop ASHURA memory and routing	Establish the complete system foundation
+5	Experiment with BrainSim fast memory	Test genuine adaptive learning
+6	Develop DREAM and NGR	Enable safe persistent improvement
+7	Integrate BrainSim into ASHURA	Use proven components together
+8	Investigate FIRE mechanisms	Expand only after foundations work
+
+First BrainSim experiment
+
+The first experiment should be deliberately small.
+
+Create a synthetic sequential environment with hidden rules.
+
+For example:
+
+* The environment emits a sequence.
+* BrainSim observes the sequence.
+* It predicts the next value.
+* It receives the actual value.
+* It calculates prediction error.
+* It updates a small fast-memory state.
+* It receives another related sequence.
+* We measure whether its prediction improves.
+
+Then compare the result against a model with no online adaptation.
+
+This single experiment tests the central claim behind BrainSim: that experience can change future behaviour through a controlled learning mechanism.
+
+Do not add OCR, Qwen, visual identity, language generation or a complicated survival mechanism to this first experiment.
+
+Those are separate capabilities.
+
+⸻
+
+25. Final engineering philosophy
+
+The relationship between these projects should remain clear:
+
+BrainSim investigates how a small neural system can learn.
+
+ASHURA investigates how multiple learning and reasoning systems can work together.
+
+FIRE investigates how such a system can regulate its own computational existence.
+
+We will reuse established technology for tensor operations, optimisation, model inference, storage and OCR.
+
+We will develop our own mechanisms where there is a genuine research opportunity:
+
+* Adaptive Memory Admission.
+* Need Field Dynamics.
+* Dual Plasticity Field.
+* Causal Attribution and Gradient Eligibility.
+* Deferred Replay, Evaluation, Adaptation and Memory.
+* Non-Regression Gate.
+* Hybrid Adaptive Reasoning Network.
+* Plasticity-Aware Capacity Evolution.
+* Resource-aware cognitive control.
+
+Some may prove useful. Others may fail.
+
+The architecture must be able to accept that without collapsing.
+
+The most important design rule: never make the entire system depend on an unproven algorithm.
+
+Every experimental mechanism must have a baseline, an independent test, a resource budget and a removal path.
+
+The ambition is large, but the engineering process should remain controlled.
+
+We are not trying to make a giant model first and hope intelligence emerges.
+
+We are trying to understand, build and validate the mechanisms that allow a system to learn, remember, adapt, reason, allocate resources and improve over time.

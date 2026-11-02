@@ -1,0 +1,470 @@
+{
+  "experiment": "BrainSim-B2 delayed recall: recurrent core vs fixed MLP",
+  "generated": "2026-11-02T21:18:43",
+  "hypotheses": {
+    "H-B2": "the recurrent core solves trained-delay recall",
+    "H-DELAY": "the GRU generalizes to longer delays better than a fixed MLP",
+    "H-COST": "the comparison includes parameters, time and per-delay accuracy"
+  },
+  "environment": {
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "python": "3.13.14",
+    "torch": "2.6.0+cu124",
+    "device": "cpu",
+    "threads": 4,
+    "rss_mb": 526.3828125
+  },
+  "task": {
+    "symbols": 8,
+    "cue_len": 3,
+    "max_delay": 20,
+    "train_delays": [
+      2,
+      4,
+      6,
+      8
+    ],
+    "eval_delays": [
+      1,
+      2,
+      4,
+      6,
+      8,
+      12,
+      16,
+      20
+    ]
+  },
+  "training": {
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "epochs": 30,
+    "dataset_size": 4096,
+    "hidden": 128,
+    "fixed_hidden": 352,
+    "batch_size": 64
+  },
+  "runs": [
+    {
+      "seed": 0,
+      "params": {
+        "gru": 204183,
+        "fixed": 217560
+      },
+      "train_seconds": {
+        "gru": 112.47453509999832,
+        "fixed": 18.121769599998515
+      },
+      "final_loss": {
+        "gru": 3.5605896584911534e-05,
+        "fixed": 8.290998117388426e-06
+      },
+      "evaluation": {
+        "1": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        },
+        "2": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "4": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "6": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "8": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "12": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        },
+        "16": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        },
+        "20": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        }
+      },
+      "rss_mb": 518.875
+    },
+    {
+      "seed": 1,
+      "params": {
+        "gru": 204183,
+        "fixed": 217560
+      },
+      "train_seconds": {
+        "gru": 133.30321049999839,
+        "fixed": 9.007286200001545
+      },
+      "final_loss": {
+        "gru": 3.976189140075803e-05,
+        "fixed": 8.06512093731726e-06
+      },
+      "evaluation": {
+        "1": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        },
+        "2": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "4": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "6": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "8": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "12": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        },
+        "16": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        },
+        "20": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        }
+      },
+      "rss_mb": 524.546875
+    },
+    {
+      "seed": 2,
+      "params": {
+        "gru": 204183,
+        "fixed": 217560
+      },
+      "train_seconds": {
+        "gru": 144.20904260000316,
+        "fixed": 15.310602900000958
+      },
+      "final_loss": {
+        "gru": 3.38055689326211e-05,
+        "fixed": 8.091602296644851e-06
+      },
+      "evaluation": {
+        "1": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        },
+        "2": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "4": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "6": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "8": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": true
+        },
+        "12": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        },
+        "16": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        },
+        "20": {
+          "gru": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "fixed": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "trained": false
+        }
+      },
+      "rss_mb": 525.95703125
+    }
+  ],
+  "summary": {
+    "1": {
+      "delay": 1,
+      "trained": false,
+      "gru_token_accuracy_mean": 1.0,
+      "gru_token_accuracy_std": 0.0,
+      "gru_full_recall_accuracy_mean": 1.0,
+      "gru_full_recall_accuracy_std": 0.0,
+      "fixed_token_accuracy_mean": 1.0,
+      "fixed_token_accuracy_std": 0.0,
+      "fixed_full_recall_accuracy_mean": 1.0,
+      "fixed_full_recall_accuracy_std": 0.0
+    },
+    "2": {
+      "delay": 2,
+      "trained": true,
+      "gru_token_accuracy_mean": 1.0,
+      "gru_token_accuracy_std": 0.0,
+      "gru_full_recall_accuracy_mean": 1.0,
+      "gru_full_recall_accuracy_std": 0.0,
+      "fixed_token_accuracy_mean": 1.0,
+      "fixed_token_accuracy_std": 0.0,
+      "fixed_full_recall_accuracy_mean": 1.0,
+      "fixed_full_recall_accuracy_std": 0.0
+    },
+    "4": {
+      "delay": 4,
+      "trained": true,
+      "gru_token_accuracy_mean": 1.0,
+      "gru_token_accuracy_std": 0.0,
+      "gru_full_recall_accuracy_mean": 1.0,
+      "gru_full_recall_accuracy_std": 0.0,
+      "fixed_token_accuracy_mean": 1.0,
+      "fixed_token_accuracy_std": 0.0,
+      "fixed_full_recall_accuracy_mean": 1.0,
+      "fixed_full_recall_accuracy_std": 0.0
+    },
+    "6": {
+      "delay": 6,
+      "trained": true,
+      "gru_token_accuracy_mean": 1.0,
+      "gru_token_accuracy_std": 0.0,
+      "gru_full_recall_accuracy_mean": 1.0,
+      "gru_full_recall_accuracy_std": 0.0,
+      "fixed_token_accuracy_mean": 1.0,
+      "fixed_token_accuracy_std": 0.0,
+      "fixed_full_recall_accuracy_mean": 1.0,
+      "fixed_full_recall_accuracy_std": 0.0
+    },
+    "8": {
+      "delay": 8,
+      "trained": true,
+      "gru_token_accuracy_mean": 1.0,
+      "gru_token_accuracy_std": 0.0,
+      "gru_full_recall_accuracy_mean": 1.0,
+      "gru_full_recall_accuracy_std": 0.0,
+      "fixed_token_accuracy_mean": 1.0,
+      "fixed_token_accuracy_std": 0.0,
+      "fixed_full_recall_accuracy_mean": 1.0,
+      "fixed_full_recall_accuracy_std": 0.0
+    },
+    "12": {
+      "delay": 12,
+      "trained": false,
+      "gru_token_accuracy_mean": 1.0,
+      "gru_token_accuracy_std": 0.0,
+      "gru_full_recall_accuracy_mean": 1.0,
+      "gru_full_recall_accuracy_std": 0.0,
+      "fixed_token_accuracy_mean": 1.0,
+      "fixed_token_accuracy_std": 0.0,
+      "fixed_full_recall_accuracy_mean": 1.0,
+      "fixed_full_recall_accuracy_std": 0.0
+    },
+    "16": {
+      "delay": 16,
+      "trained": false,
+      "gru_token_accuracy_mean": 1.0,
+      "gru_token_accuracy_std": 0.0,
+      "gru_full_recall_accuracy_mean": 1.0,
+      "gru_full_recall_accuracy_std": 0.0,
+      "fixed_token_accuracy_mean": 1.0,
+      "fixed_token_accuracy_std": 0.0,
+      "fixed_full_recall_accuracy_mean": 1.0,
+      "fixed_full_recall_accuracy_std": 0.0
+    },
+    "20": {
+      "delay": 20,
+      "trained": false,
+      "gru_token_accuracy_mean": 1.0,
+      "gru_token_accuracy_std": 0.0,
+      "gru_full_recall_accuracy_mean": 1.0,
+      "gru_full_recall_accuracy_std": 0.0,
+      "fixed_token_accuracy_mean": 1.0,
+      "fixed_token_accuracy_std": 0.0,
+      "fixed_full_recall_accuracy_mean": 1.0,
+      "fixed_full_recall_accuracy_std": 0.0
+    }
+  },
+  "quick": false
+}
