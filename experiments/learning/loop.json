@@ -1,0 +1,222 @@
+{
+  "experiment": "EXP-013",
+  "n_old": 20,
+  "dim": 128,
+  "arms": {
+    "verified_replay": {
+      "stage": "promoted",
+      "promoted": true,
+      "correction": {
+        "kind": "arithmetic",
+        "key": "6*7",
+        "value": "42",
+        "state": "verified",
+        "method": "exact arithmetic + Decimal(60) cross-check",
+        "reason": "equation is true",
+        "expected": "42"
+      },
+      "attribution": {
+        "module": "language",
+        "confidence": 0.9,
+        "reason": "verifier rejected 'language' output",
+        "eligible": [
+          "language"
+        ]
+      },
+      "decision": {
+        "allowed": true,
+        "reasons": [
+          "eligible for a bounded fast update"
+        ]
+      },
+      "proposal": {
+        "module": "language",
+        "key": "6*7",
+        "value": "42",
+        "source": "exact arithmetic + Decimal(60) cross-check"
+      },
+      "fast_update": {
+        "applied": true,
+        "reason": "applied bounded update to language",
+        "delta_before": 0.0,
+        "delta_after": 0.6000000238418579
+      },
+      "dream": {
+        "candidate": "candidate_20261105_052740_605200.npz",
+        "scores": {
+          "old": 1.0,
+          "corrected": 1.0
+        },
+        "stable": {
+          "old": 1.0,
+          "corrected": 0.0
+        },
+        "train_n": 2,
+        "ngr": [
+          "all promotion conditions met"
+        ],
+        "promoted": true
+      },
+      "reasons": [
+        "all promotion conditions met"
+      ],
+      "fast_delta_norm": 0.6,
+      "fast_recall_before": "",
+      "fast_recall_after": "42",
+      "stable_before": "old_memory.npz",
+      "stable_after": "candidate_20261105_052740_605200.npz",
+      "candidates": 2
+    },
+    "verified_no_replay": {
+      "stage": "candidate_rejected",
+      "promoted": false,
+      "correction": {
+        "kind": "arithmetic",
+        "key": "6*7",
+        "value": "42",
+        "state": "verified",
+        "method": "exact arithmetic + Decimal(60) cross-check",
+        "reason": "equation is true",
+        "expected": "42"
+      },
+      "attribution": {
+        "module": "language",
+        "confidence": 0.9,
+        "reason": "verifier rejected 'language' output",
+        "eligible": [
+          "language"
+        ]
+      },
+      "decision": {
+        "allowed": true,
+        "reasons": [
+          "eligible for a bounded fast update"
+        ]
+      },
+      "proposal": {
+        "module": "language",
+        "key": "6*7",
+        "value": "42",
+        "source": "exact arithmetic + Decimal(60) cross-check"
+      },
+      "fast_update": {
+        "applied": true,
+        "reason": "applied bounded update to language",
+        "delta_before": 0.0,
+        "delta_after": 0.6000000238418579
+      },
+      "dream": {
+        "candidate": "candidate_20261105_052740_466700.npz",
+        "scores": {
+          "old": 0.0,
+          "corrected": 1.0
+        },
+        "stable": {
+          "old": 1.0,
+          "corrected": 0.0
+        },
+        "train_n": 1,
+        "ngr": [
+          "regression on old: 1.000 -> 0.000 (eps 0.02)"
+        ],
+        "promoted": false
+      },
+      "reasons": [
+        "regression on old: 1.000 -> 0.000 (eps 0.02)",
+        "stable checkpoint unchanged; candidate retained for inspection"
+      ],
+      "fast_delta_norm": 0.6,
+      "fast_recall_before": "",
+      "fast_recall_after": "42",
+      "stable_before": "old_memory.npz",
+      "stable_after": "old_memory.npz",
+      "candidates": 2
+    },
+    "unverified_fact": {
+      "stage": "refused_unverified",
+      "promoted": false,
+      "correction": {
+        "kind": "fact",
+        "key": "the project p12 code",
+        "value": "9999",
+        "state": "unavailable",
+        "method": "user assertion; factual truth not independently verified",
+        "reason": "a user assertion is evidence of what the user said, not independent truth",
+        "expected": null
+      },
+      "attribution": null,
+      "decision": null,
+      "proposal": null,
+      "fast_update": null,
+      "dream": null,
+      "reasons": [
+        "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+      ],
+      "fast_delta_norm": 0.0,
+      "fast_recall_before": "",
+      "fast_recall_after": "",
+      "stable_before": "old_memory.npz",
+      "stable_after": "old_memory.npz",
+      "candidates": 1
+    },
+    "false_arithmetic": {
+      "stage": "refused_unverified",
+      "promoted": false,
+      "correction": {
+        "kind": "arithmetic",
+        "key": "6*7",
+        "value": "43",
+        "state": "failed",
+        "method": "exact arithmetic + Decimal(60) cross-check",
+        "reason": "equation is false: 6*7 = 42, not 43",
+        "expected": "42"
+      },
+      "attribution": null,
+      "decision": null,
+      "proposal": null,
+      "fast_update": null,
+      "dream": null,
+      "reasons": [
+        "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+      ],
+      "fast_delta_norm": 0.0,
+      "fast_recall_before": "",
+      "fast_recall_after": "",
+      "stable_before": "old_memory.npz",
+      "stable_after": "old_memory.npz",
+      "candidates": 1
+    },
+    "no_trace": {
+      "stage": "refused_no_trace",
+      "promoted": false,
+      "correction": {
+        "kind": "arithmetic",
+        "key": "6*7",
+        "value": "42",
+        "state": "verified",
+        "method": "exact arithmetic + Decimal(60) cross-check",
+        "reason": "equation is true",
+        "expected": "42"
+      },
+      "attribution": null,
+      "decision": null,
+      "proposal": null,
+      "fast_update": null,
+      "dream": null,
+      "reasons": [
+        "no execution trace to attribute; a verified fact alone does not identify a failing component"
+      ],
+      "fast_delta_norm": 0.0,
+      "fast_recall_before": "",
+      "fast_recall_after": "",
+      "stable_before": "old_memory.npz",
+      "stable_after": "old_memory.npz",
+      "candidates": 1
+    }
+  },
+  "limits": [
+    "synthetic, author-written, single seed",
+    "exact arithmetic is the only independently verified correction type",
+    "the candidate trains the NumPy adaptive memory, not the language model"
+  ]
+}

@@ -15,6 +15,7 @@ from pathlib import Path
 from foundation.language_model import LanguageModel
 from learning.ama import AMA, surprise_from_prior
 from learning.cage import CAGE
+from learning.corrections import parse_correction
 from memory.episodic import Experience, normalize
 from memory.fts import FTS5Index
 from skills.arithmetic import exact, try_neural_addition
@@ -73,6 +74,7 @@ class Response:
     admission: str | None = None
     attribution: str | None = None
     verification: Verification | None = None
+    correction: dict | None = None       # parsed user correction and its independent check
 
 
 class Controller:
@@ -268,6 +270,7 @@ class Controller:
         # P05/P06: a user correction is a separate record of what the user said. It is not a
         # verdict on the assistant's reply, and its factual truth is not established by the user
         # merely saying it. The generated reply is never relabelled as corrected.
+        correction = None
         if self.ama and user_turn:
             e_user = Experience(task.text, "", task_category=category, source="user",
                                 verification_status="user_provided",
@@ -276,6 +279,19 @@ class Controller:
             d = self.ama.admit(e_user)
             admission = d.decision
             admitted = d.decision != "MERGED"
+
+            # P05/P06/P07: a correction is still stored as a user record. Only a claim ASHURA can
+            # check independently (exact arithmetic) also produces a verified training record.
+            if task.user_correction:
+                parsed = parse_correction(task.text, prior=prior)
+                correction = parsed.as_dict()
+                verified_record = parsed.to_experience()
+                if verified_record is not None:
+                    d2 = self.ama.admit(verified_record)
+                    admission = f"{admission} / {d2.decision}"
+                    admitted = admitted or d2.decision != "MERGED"
+                correction["admission"] = admission
+                correction["verified_record"] = verified_record is not None
 
         if self.ama and answered and not user_turn:          # learning path; error text is not learned
             # Only an independently verified exact answer may be stored as verified (P03).
@@ -300,7 +316,8 @@ class Controller:
         response_state = (Verification.VERIFIED if response_verified
                           else Verification.FAILED if verification is Verification.FAILED
                           else Verification.UNAVAILABLE)
-        return Response(text, trace, response_state.legacy_bool, admission, attribution, response_state)
+        return Response(text, trace, response_state.legacy_bool, admission, attribution, response_state,
+                        correction)
 
 
 def format_value_safe(v) -> str:

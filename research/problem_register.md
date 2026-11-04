@@ -69,6 +69,18 @@ foundations are reliable. Implementation status is tracked in `research/phase1_t
 | P28 | measured, not calibrated | All ratios/policies tie at 1.00 on EXP-006 (F-038). |
 | P29 | fixed | Verified source required; provenance/derivation stored; cascade delete. |
 
+### Phase 3 resolution (2026-11-05)
+
+| ID | Status | Evidence / remaining gap |
+|---|---|---|
+| P05/P06 | extended | Raw correction remains `user_provided`; only an independently checked arithmetic equation adds a verified record. False facts stay user assertions. |
+| P07 | fixed as an explicit loop | `learning/loop.py`: verified correction -> CAGE -> fast update -> DREAM -> NGR -> promote/rollback. Not yet invoked automatically by the controller (F-041). |
+| P08 | preserved | CAGE still needs a verified outcome and a verifier-covered attributed module; unattributed failures produce no proposal. |
+| P75 | fixed (one scenario) | EXP-013: promoted arm, NGR-rejected arm, three refused arms; stable pointer unchanged on rejection. |
+| A01 | partial (isolated) | Fast recall for `6*7`: empty -> `42`; temporary NumPy state only. |
+| A02 | partial (isolated) | Candidate trained from verified data passed/failed NGR against a real stable artifact. |
+| A03 | partial | Fast `FastWeights` and slow `CheckpointStore` remain separate; rejected candidate leaves stable unchanged. Not a language-model fine-tune. |
+
 Recommended separation: episodic (what happened, including uncertainty), verified
 semantic (facts that passed an independent policy), and adaptive neural memory
 (learned associations updated only through a gated process). These are not

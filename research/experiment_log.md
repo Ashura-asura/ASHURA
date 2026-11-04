@@ -249,3 +249,12 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 - **Replay:** ratios 0.25/0.5/0.75/1.0 and random/recent sampling all scored 1.00 new / 1.00 old retention on the EXP-006 buffer. The task cannot distinguish them; the default 0.5 is not a calibrated optimum. `experiments/dream/replay_sweep.py`.
 - **Provenance:** semantic facts now require a verified source episode and store verification method, provenance JSON, derivation and source id; deleting the source removes the fact. Legacy facts are migrated with a legacy derivation.
 - **Decision:** keep the retention policy, feedback path, replay-policy option and provenance checks. Do not claim replay calibration or fact understanding. Details: `research/phase2_memory.md`.
+
+---
+## EXP-013 - Verified-correction loop through CAGE, DREAM and NGR (P07/P75/A01-A03, 2026-11-05)
+- **Setup:** synthetic old capability (20 facts, train/held-out) and corrected capability `6*7 -> 42` with two held-out wordings; stable checkpoint trained on old facts only; dim 128, single seed, NumPy adaptive memory. `experiments/learning/loop_e2e.py`.
+- **Verified + stable + replay:** CAGE attributed the failing `language` step (confidence 0.90), the fast update made `6*7` recall return `42`, the candidate scored 1.00 old / 1.00 corrected, NGR passed and the stable pointer moved to the candidate.
+- **Verified + fresh + no replay:** fast recall also reached `42`, but old retention fell to 0.00; NGR rejected the candidate on the old-capability regression and the stable pointer stayed on `old_memory.npz`.
+- **Refused arms:** an unverifiable factual correction, a false arithmetic correction and a verified correction without a trace all stopped before training; no fast update and no new stable candidate. The raw user sentences remain `user_provided`.
+- **Supports:** the control flow is connected end to end, CAGE refuses unattributable failures, and NGR remains the only promotion path.
+- **Does not support:** language-model fine-tuning, general corrections, or long-term consolidation. Only exact `+ - * /` corrections are independently verified, and the live controller does not yet invoke the loop automatically. Details: `research/phase3_learning.md`, `experiments/learning/loop.json`.

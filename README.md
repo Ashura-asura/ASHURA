@@ -4,18 +4,19 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 `spec/New_approach.txt` and the v2 blueprint `spec/New_approach_2.txt`.
 
 **Status:** Phase 0 foundation baseline measured on the target laptop; Phases 1–6 implemented;
-Phase 1 trust repair (P01–P14) and Phase 2 memory reliability (P15–P29) implemented and tested;
-local OCR and a HARN arithmetic candidate are integrated behind optional dependencies/checkpoints;
-BrainSim B1–B6 measured as an independent subproject. **233 ASHURA tests and 46 BrainSim tests
-pass.** The adaptive memory remains experimental and out of the response path. BrainSim is not
-imported by ASHURA. The verified learning loop is **not** complete: CAGE is not yet connected to
-candidate training, and natural-language corrections are not independently verified.
+Phase 1 trust repair (P01–P14), Phase 2 memory reliability (P15–P29) and Phase 3 verified-correction
+loop (P07/P75/A01–A03) implemented and tested; local OCR and a HARN arithmetic candidate are
+integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
+subproject. **246 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
+experimental and out of the response path. BrainSim is not imported by ASHURA. The learning loop is
+**not** complete: it is an explicit API, only exact arithmetic corrections are independently
+verified, and the candidate is the NumPy memory rather than the language model.
 
 ## Run
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 233 tests
+python -m pytest -q                       # 246 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -28,6 +29,7 @@ python -m experiments.ama.calibrate       # EXP-009  AMA threshold/cost/storage
 python -m experiments.adaptive_memory.stress     # EXP-011  adaptive memory under stress
 python -m experiments.dream.replay_sweep  # EXP-012  replay ratio/policy sweep
 python -m experiments.memory.retention_bench     # EXP-012  retention/utility
+python -m experiments.learning.loop_e2e   # EXP-013  verified correction -> NGR
 python -m evaluation.contradiction_bench  # EXP-010  structured answer comparison
 python -m evaluation.ollama_baseline      # PHASE 0   real-model baseline
 python -m memory.retention --db data/ashura.db   # forgetting policy dry run
@@ -111,6 +113,31 @@ EXP-009–EXP-012, `experiments/adaptive_memory/stress.json`, `experiments/dream
 and `evaluation/contradiction_results.json`. Replay ratios remain uncalibrated (all arms tie), and
 the adaptive memory is still not integrated.
 
+## Phase 3 verified-correction loop (P07/P75)
+
+The 2026-11-05 Phase 3 pass connects the existing pieces into one explicit chain:
+
+- **Correction parsing.** `learning/corrections.py` classifies a correction and reports whether it
+  is `verified`, `failed` or `unavailable`. Only exact `+ - * /` equations are independently checked
+  (Fraction + Decimal(60)); a false equation or a factual claim stays `user_provided`.
+- **Controller behaviour.** The user's sentence is still stored separately as `user_provided` with
+  no generated reply. A verified arithmetic correction also produces a second `verified` record;
+  the assistant's reply is never relabelled.
+- **CAGE -> candidate -> NGR.** `learning/loop.py` runs verified correction -> CAGE attribution ->
+  authorisation -> bounded proposal -> temporary `FastWeights` update -> DREAM candidate -> NGR ->
+  promotion/rollback. Every stage can refuse with a reason.
+- **Measured arms (EXP-013).** Verified + stable + replay: fast recall empty -> 42, old 1.00,
+  corrected 1.00, promoted. Verified + fresh + no replay: old 0.00, NGR regression, stable pointer
+  unchanged. Unverified factual, false arithmetic and no-trace corrections: refused before
+  training, with no fast update.
+- **Not language-model learning.** The candidate is the NumPy adaptive memory; no Qwen fine-tune or
+  adapter is trained (D-009 stands).
+
+The live controller does not invoke the loop automatically yet: it does not retain the previous
+execution trace (F-041). Arbitrary factual corrections remain unverifiable (F-042), and EXP-013 is a
+single-seed synthetic control-flow test (F-044). Details: `research/phase3_learning.md` and
+`experiments/learning/loop.json`.
+
 ### Ollama (Windows PowerShell)
 
 ```powershell
@@ -170,6 +197,7 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 | OCR | `skills/perception/ocr.py`, `evaluation/ocr_benchmark.py` | optional local Tesseract, confidence, corrections, CER/WER runner; no target-corpus measurement yet |
 | Adaptive memory | `memory/adaptive_memory.py` | Titans-inspired linear memory; **no advantage over FTS5 yet** |
 | DPF + CAGE | `plasticity/*`, `learning/cage.py` | bounded fast state, candidate checkpoints, NGR-only promotion, trace attribution, gated update consumer (`GatedUpdater`) |
+| Learning loop | `learning/loop.py`, `learning/corrections.py` | verified correction -> CAGE -> fast update -> DREAM -> NGR; exact arithmetic corrections only; explicit API, not automatic |
 | DREAM / NGR | `learning/dream.py`, `learning/replay.py`, `evaluation/ngr.py` | four consolidation arms (stable/fresh × new/replay, EXP-006), ratio/policy sweep (all arms tie), training-only vocabulary, real cold-start baseline, hardened promotion/rollback gate |
 | Adaptive memory | `memory/adaptive_memory.py` | experimental IDF memory; verified/conflict-gated queue; stress and long-run measurements; not in the response path |
 | BrainSim | `BrainSim/*` | independent B1–B6; 46 tests; not imported by ASHURA |

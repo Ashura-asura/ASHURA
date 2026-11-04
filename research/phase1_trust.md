@@ -24,7 +24,7 @@ baseline. This is **not** a claim that the full learning loop is complete (see "
 | P04 | fixed | `TraceStep.verification` records the factual state separately from `ok` (operational success). An unavailable verifier is `ok=True, verification="unavailable"`, not a success claim. | same tests plus `test_verified_arithmetic_marks_the_response_verified` |
 | P05 | fixed (storage path) | A user correction/assertion is stored as its own immutable `user_provided` experience (`output=""`, `source="user"`). The assistant's generated reply is not relabelled and, on a correction turn, is not admitted as the correction. | `test_user_correction_is_stored_as_a_separate_user_provided_record`, `test_generated_answer_after_a_correction_is_never_labelled_user_corrected` |
 | P06 | fixed | Reliability is provenance-specific: `verified` 1.0, `trusted_material` 0.8, `user_provided`/legacy `user_corrected` 0.6, `unverified` 0.2. User material is retrievable and labelled but cannot enter semantic facts, DREAM, or override verified/trusted evidence. | `test_reliability_is_provenance_specific_and_provenance_is_stored`, `test_only_verified_records_enter_semantic_memory` |
-| P07 | interface fixed; full chain deferred | `CAGE.propose()` turns an allowed, independently verified decision into a bounded `UpdateProposal`; `plasticity/gated_update.py::GatedUpdater` is the consumer and only writes temporary fast state when the decision allows it. Candidate training -> NGR -> promotion is still the DREAM path, not connected to CAGE in the live controller. | `tests/test_cage.py::test_gated_updater_consumes_a_verified_authorisation`, `test_gated_updater_rejects_unverified_or_unattributed_signals` |
+| P07 | fixed as an explicit loop | `CAGE.propose()` turns an allowed, independently verified decision into a bounded `UpdateProposal`; `plasticity/gated_update.py::GatedUpdater` applies it to temporary fast state. Phase 3 adds `learning/loop.py`, which chains CAGE -> fast update -> DREAM candidate -> NGR -> promotion/rollback. The live controller does not invoke it automatically yet (F-041). | `tests/test_cage.py::test_gated_updater_consumes_a_verified_authorisation`, `tests/test_phase3_loop.py::test_verified_correction_promotes_through_cage_candidate_and_ngr` |
 | P08 | fixed | CAGE receives `verified=True` only when the outcome is VERIFIED *and* the attributed module is covered by an independent verifier. An ordinary controller failure is `verified=False` and diagnostic-only. | `test_controller_attributes_arithmetic_failure_without_updating` |
 | P09 | fixed | NGR rejects NaN and +/-infinity in scores and performance values before comparison. | `tests/test_ngr.py::test_nan_scores_are_rejected`, `test_infinite_scores_are_rejected`, `test_invalid_performance_values_are_rejected` |
 | P10 | fixed (policy opt-in) | `NGRPolicy(require_performance=True)` requires every key in `required_performance` (default p95 latency and peak RAM); a missing or invalid measurement rejects. Old call sites remain valid. | `test_performance_is_required_when_the_policy_demands_it` |
@@ -77,22 +77,21 @@ eventually supersede a fact is CAGE -> bounded update -> candidate -> NGR, which
 
 ## Test evidence
 
-- ASHURA: **204 passed** on Windows/Python 3.13 (`python -m pytest -q`).
+- ASHURA: **204 passed at the end of Phase 1; 246 passed on the current main** (Windows/Python 3.13, `python -m pytest -q`).
 - BrainSim: **46 passed** (unchanged; ASHURA does not import BrainSim).
 - New Phase 1 tests: 12 in `tests/test_phase1_trust.py`, plus 7 NGR validation tests, 2 DREAM
   arm/vocabulary tests, 1 cold-start test, and 2 CAGE update-consumer tests.
 
 ## Still open (not claimed as fixed)
 
-1. **Full CAGE -> candidate -> NGR promotion path (P07).** The gate and consumer exist and are
-   tested, but the live controller does not turn a verified correction into a trained candidate.
-   That is Phase 3, not Phase 1.
-2. **Independent verification of natural-language user corrections (P05/P06).** A user statement
-   is stored as `user_provided` (0.6); ASHURA has no independent verifier for arbitrary prose, so
-   it cannot become `verified` by itself. This is an honest limitation, not a hidden success.
-3. **Conflict index (P21).** Contradictory evidence is retained in the database but a weaker
-   conflicting record is still stored outside the searchable index. A dedicated conflict index is
-   Phase 2.
+1. **Full CAGE -> candidate -> NGR promotion path (P07).** The explicit loop now exists and is
+   tested in Phase 3 (EXP-013). The live controller still does not invoke it automatically because
+   it does not retain the previous execution trace (F-041).
+2. **Independent verification of natural-language user corrections (P05/P06).** Exact `+ - * /`
+   equations can now be checked (Phase 3). Arbitrary prose is still stored as `user_provided`
+   (0.6) and cannot become `verified` by itself (F-042).
+3. **Conflict index (P21).** Fixed in Phase 2: a dedicated `conflicts` table and explicit
+   resolution API exist. A reviewer workflow/UI is still open (F-039).
 4. **AMA calibration (P15-P18).** Weights, thresholds, utility, and retrieval cutoff are not
    calibrated on a realistic stream. The 0.5 retrieval cutoff is a safety boundary, not a tuned
    optimum.

@@ -86,3 +86,11 @@
 **F-039 - Conflict resolution has no reviewer workflow (OPEN).** The API and explicit policy exist, but there is no UI, queue prioritisation or notification that surfaces open conflicts to a user. A conflict can remain open indefinitely while the older record stays searchable. This is safe but incomplete for production audit.
 
 **F-040 - Semantic provenance cannot establish that a fact is true (OPEN by design).** A semantic fact now requires a verified source experience and preserves provenance/derivation, but 'verified' still means an independent check within ASHURA's verifier coverage (for example exact arithmetic or passing tests). No general natural-language fact verifier exists, so most user statements remain `user_provided` or `trusted_material` and never become semantic facts.
+
+**F-041 - The verified-correction loop is not wired into the live controller (OPEN).** `learning/loop.py` connects CAGE, fast plasticity, DREAM and NGR, and EXP-013 exercises it. The controller verifies arithmetic corrections and stores a verified record, but it does not retain the previous execution trace, so it cannot start the loop on its own after a correction. This is an explicit API, not autonomous learning.
+
+**F-042 - Only exact `+ - * /` corrections are independently verifiable (OPEN, P47).** Power, modulo, roots and all natural-language factual corrections remain `user_provided`. The correction parser refuses to mark an unchecked claim verified, which is safe but leaves most user corrections outside the learning signal.
+
+**F-043 - The loop trains the adaptive memory, not the language model (OPEN by design).** The promoted candidate is a NumPy associative memory. No Qwen fine-tune, adapter or language-model weight change occurs. Do not describe EXP-013 as model self-improvement.
+
+**F-044 - EXP-013 is a single-seed synthetic control-flow test (OPEN).** Eight old facts, one corrected arithmetic fact and two held-out wordings cannot establish general fast adaptation, retention or consolidation. The promoted/rejected split demonstrates the gate, not a capability benchmark.
