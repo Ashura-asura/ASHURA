@@ -31,6 +31,10 @@ class TaskScopedMemory:
     @property
     def task_count(self) -> int: return len(self._tasks)
 
+    @property
+    def size_bytes(self) -> int:
+        return sum(mem.size_bytes for mem, _ in self._tasks.values())
+
     def _get(self, task_id: str, create: bool) -> FastAssociativeMemory | None:
         if task_id in self._tasks:
             mem,_=self._tasks[task_id]; self._tasks[task_id]=(mem,time.monotonic()); return mem
@@ -63,6 +67,14 @@ class TaskScopedMemory:
         keys=torch.tensor([key]); prev_t=torch.tensor([prev]) if prev is not None else None
         if not bool(mem.seen(keys,prev_t)[0]): return None
         return int(mem.scores(keys,prev_t)[0].argmax())
+
+    def blend(self, task_id: str, model_logits: torch.Tensor, keys: torch.Tensor,
+              *, prev: torch.Tensor | None = None) -> torch.Tensor:
+        """Blend a task's memory into model probabilities; unknown tasks are model-only."""
+        mem=self._get(task_id,False)
+        if mem is None:
+            return torch.softmax(model_logits, dim=-1)
+        return mem.blend(model_logits, keys, prev=prev)
 
     def reset(self, task_id: str | None = None) -> None:
         if task_id is None: self._tasks.clear()

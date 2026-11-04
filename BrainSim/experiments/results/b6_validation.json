@@ -1,0 +1,239 @@
+{
+  "experiment": "B6 independent held-out validation",
+  "generated": "2026-11-05T03:32:19",
+  "quick": false,
+  "warning": null,
+  "hypothesis": "On disjoint held-out permutation rules, a fixed in-context baseline and a frozen GRU are weaker than fast memory; task-scoped memory retains across task switches.",
+  "environment": {
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.13.14",
+    "torch": "2.6.0+cu124",
+    "device": "cpu",
+    "threads": 4,
+    "rss_mb": 488.98828125
+  },
+  "task": {
+    "vocab": 16,
+    "train_rules": 8,
+    "heldout_rules": 8,
+    "study_len": 12,
+    "test_len": 16,
+    "episodes_per_rule": 8,
+    "fixed_window": "study walk + test prefix, no recurrence or memory"
+  },
+  "training": {
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "epochs": 30,
+    "fixed_epochs": 30,
+    "gru_hidden": 128,
+    "fixed_hidden": 220,
+    "batch_size": 32
+  },
+  "runs": [
+    {
+      "seed": 0,
+      "params": {
+        "gru": 206493,
+        "fixed": 207496
+      },
+      "train_seconds": {
+        "gru": 5.514400100000785,
+        "fixed": 0.5364337999999407
+      },
+      "final_loss": {
+        "gru": 0.08879540674388409,
+        "fixed": 0.0011401102092349902
+      },
+      "train_rule_accuracy": 0.959578812122345,
+      "arms": {
+        "fixed": {
+          "token_accuracy": 0.2978515625,
+          "full_recall_accuracy": 0.0
+        },
+        "recurrent": {
+          "token_accuracy": 0.0703125,
+          "full_recall_accuracy": 0.0
+        },
+        "fast_memory": {
+          "test": {
+            "token_accuracy": 0.771484375,
+            "full_recall_accuracy": 0.0
+          },
+          "revisit": {
+            "token_accuracy": 0.0703125,
+            "full_recall_accuracy": 0.0
+          },
+          "memory_bytes": 1152,
+          "memory_rows": 16
+        },
+        "gated_memory": {
+          "test": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "revisit": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "retention_gap": 0.0,
+          "memory_bytes": 9216,
+          "tasks": 8
+        }
+      },
+      "rss_mb": 486.61328125
+    },
+    {
+      "seed": 1,
+      "params": {
+        "gru": 206493,
+        "fixed": 207496
+      },
+      "train_seconds": {
+        "gru": 5.54136920000019,
+        "fixed": 0.49377929999900516
+      },
+      "final_loss": {
+        "gru": 0.08935952186584473,
+        "fixed": 0.0011218414438189939
+      },
+      "train_rule_accuracy": 0.9555026888847351,
+      "arms": {
+        "fixed": {
+          "token_accuracy": 0.373046875,
+          "full_recall_accuracy": 0.0
+        },
+        "recurrent": {
+          "token_accuracy": 0.107421875,
+          "full_recall_accuracy": 0.0
+        },
+        "fast_memory": {
+          "test": {
+            "token_accuracy": 0.775390625,
+            "full_recall_accuracy": 0.0
+          },
+          "revisit": {
+            "token_accuracy": 0.107421875,
+            "full_recall_accuracy": 0.0
+          },
+          "memory_bytes": 1152,
+          "memory_rows": 16
+        },
+        "gated_memory": {
+          "test": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "revisit": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "retention_gap": 0.0,
+          "memory_bytes": 9216,
+          "tasks": 8
+        }
+      },
+      "rss_mb": 488.56640625
+    },
+    {
+      "seed": 2,
+      "params": {
+        "gru": 206493,
+        "fixed": 207496
+      },
+      "train_seconds": {
+        "gru": 6.505979399997159,
+        "fixed": 0.6569267000013497
+      },
+      "final_loss": {
+        "gru": 0.09025571495294571,
+        "fixed": 0.0010610647441353649
+      },
+      "train_rule_accuracy": 0.95652174949646,
+      "arms": {
+        "fixed": {
+          "token_accuracy": 0.3115234375,
+          "full_recall_accuracy": 0.0
+        },
+        "recurrent": {
+          "token_accuracy": 0.072265625,
+          "full_recall_accuracy": 0.0
+        },
+        "fast_memory": {
+          "test": {
+            "token_accuracy": 0.7646484375,
+            "full_recall_accuracy": 0.0
+          },
+          "revisit": {
+            "token_accuracy": 0.072265625,
+            "full_recall_accuracy": 0.0
+          },
+          "memory_bytes": 1152,
+          "memory_rows": 16
+        },
+        "gated_memory": {
+          "test": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "revisit": {
+            "token_accuracy": 1.0,
+            "full_recall_accuracy": 1.0
+          },
+          "retention_gap": 0.0,
+          "memory_bytes": 9216,
+          "tasks": 8
+        }
+      },
+      "rss_mb": 488.640625
+    }
+  ],
+  "summary": {
+    "seeds": 3,
+    "fixed_token_accuracy_mean": 0.3274739583333333,
+    "fixed_token_accuracy_std": 0.03270472026720419,
+    "fixed_full_recall_accuracy_mean": 0.0,
+    "fixed_full_recall_accuracy_std": 0.0,
+    "recurrent_token_accuracy_mean": 0.08333333333333333,
+    "recurrent_token_accuracy_std": 0.01705182402826666,
+    "recurrent_full_recall_accuracy_mean": 0.0,
+    "recurrent_full_recall_accuracy_std": 0.0,
+    "fast_memory_test_token_accuracy_mean": 0.7705078125,
+    "fast_memory_test_token_accuracy_std": 0.00443951227115425,
+    "fast_memory_test_full_recall_accuracy_mean": 0.0,
+    "fast_memory_test_full_recall_accuracy_std": 0.0,
+    "fast_memory_revisit_token_accuracy_mean": 0.08333333333333333,
+    "fast_memory_revisit_token_accuracy_std": 0.01705182402826666,
+    "fast_memory_revisit_full_recall_accuracy_mean": 0.0,
+    "fast_memory_revisit_full_recall_accuracy_std": 0.0,
+    "gated_memory_test_token_accuracy_mean": 1.0,
+    "gated_memory_test_token_accuracy_std": 0.0,
+    "gated_memory_test_full_recall_accuracy_mean": 1.0,
+    "gated_memory_test_full_recall_accuracy_std": 0.0,
+    "gated_memory_revisit_token_accuracy_mean": 1.0,
+    "gated_memory_revisit_token_accuracy_std": 0.0,
+    "gated_memory_revisit_full_recall_accuracy_mean": 1.0,
+    "gated_memory_revisit_full_recall_accuracy_std": 0.0,
+    "gated_retention_gap_mean": 0.0,
+    "params_gru": 206493,
+    "train_seconds_gru_mean": 5.853916233332711,
+    "params_fixed": 207496,
+    "train_seconds_fixed_mean": 0.5623799333334318,
+    "memory_bytes_fast_mean": 1152,
+    "memory_bytes_gated_mean": 9216,
+    "gated_beats_recurrent_revisit": true,
+    "gated_beats_fast_revisit": true,
+    "fixed_beats_frozen_recurrent": true,
+    "gated_beats_fixed": true
+  },
+  "limits": [
+    "synthetic permutation task with a study/test structure designed by the authors",
+    "the gated arm receives the correct rule ID; this is not learned task segmentation",
+    "the fixed baseline is a strong in-context baseline but not a language model",
+    "three seeds; CPU timing is noisy"
+  ],
+  "elapsed_seconds": 21.240412800005288
+}

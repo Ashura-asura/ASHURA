@@ -1,6 +1,6 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
-checkpoints/*.pt
-checkpoints/*.npz
+checkpoints/
+experiments/results/*_quick.json
 results/*.tmp

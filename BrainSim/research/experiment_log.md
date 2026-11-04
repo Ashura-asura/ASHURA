@@ -244,3 +244,216 @@ for every seed.
 
 Use task-scoped memory as the safe default for any future integration. Do not claim that the
 gate solves interference without task IDs. A learned boundary detector is a separate experiment.
+
+---
+
+## BS-EXP-004 — B4 slow consolidation: new-only vs replay
+
+**Date:** 2026-11-05
+**Code:** `experiments/b4_consolidation.py`
+**Results:** `experiments/results/b4_consolidation.json`
+**Environment:** Python 3.13.14, PyTorch 2.6.0+cu124, CPU.
+
+### Hypotheses
+
+- **H-B4:** fine-tuning the persistent weights on a disjoint new rule family causes old-rule
+  forgetting beyond the 2% retention tolerance.
+- **H-REPLAY:** mixing replayed old-rule sequences into the same fine-tuning schedule reduces that
+  forgetting while retaining most of the new-rule accuracy.
+
+### Setup
+
+Eight old and eight disjoint new single-cycle permutation rules over 16 symbols. The base model
+was trained for 30 epochs on 256 old-rule walks. Both arms then started from the same checkpoint
+and fine-tuned for 15 epochs on 64 new-rule walks, with AdamW, lr 3e-3, batch 32, hidden 128.
+The replay arm mixed 50% samples from a bounded 512-sequence buffer containing old walks. Three
+seeds. Old and new retention were measured on fresh walks from the respective rule sets; every
+arm checkpoint was saved, reloaded and re-evaluated.
+
+### Results
+
+Means over seeds 0–2:
+
+| arm | old accuracy | old drop | new accuracy | within 2% |
+|---|---:|---:|---:|---:|
+| base checkpoint | 0.9566 | — | 0.0821 | — |
+| new-only fine-tune | 0.4632 | **0.4934** | 0.9408 | 0/3 |
+| replay fine-tune | 0.9449 | **0.0118** | 0.9314 | 3/3 |
+
+Replay cut the old-rule loss from 49.3 to 1.18 percentage points. New-rule accuracy fell by 0.94
+points relative to new-only, inside the pre-declared 1-point comparison band. Fine-tuning took
+0.66 s (new-only) and 0.92 s (replay) per seed. All six fine-tuned checkpoints round-tripped
+exactly. Standard deviations were at most 1.7 points.
+
+### Supports
+
+- **H-B4:** persistent training on the new rules alone causes severe interference.
+- **H-REPLAY:** replay is a simple, measured mitigation that keeps every seed inside the tolerance
+  and retains the new-rule gain.
+
+### Does not support
+
+- General continual learning. The domain, rule split and replay ratio are author-designed, and
+  retention is tested on new walks from the old rules rather than a separate task family.
+- Equal-cost superiority. The replay arm sees more examples and takes about 38% longer, so this is
+  a method comparison, not an equal-FLOPs result.
+- A guarantee outside the tested capacity, ratio and learning rate.
+
+### Failure analysis
+
+New-only fine-tuning overwrites the recurrent weights that encoded the old cycle. Replay keeps
+old-rule gradients in the same batches, but it does not protect transitions that are absent from
+the buffer; a larger or shifting domain would need coverage analysis. The buffer stores raw token
+sequences only, not gradients or logits.
+
+### Decision
+
+Keep replay-augmented fine-tuning as the candidate B4 consolidation mode. The safe default remains
+frozen weights plus task-scoped fast memory (D-BS-004); persistent updates require retention
+testing before use.
+
+---
+
+## BS-EXP-005 — B5 need and resource control
+
+**Date:** 2026-11-05
+**Code:** `experiments/b5_control.py`
+**Results:** `experiments/results/b5_control.json`
+**Environment:** Python 3.13.14, PyTorch 2.6.0+cu124, CPU (4 threads).
+
+### Hypotheses
+
+- **H-B5:** a recurrent core trained on need/budget contexts selects higher-utility actions than
+  always-max, cost-blind need matching, always-wait and random baselines.
+- **H-CONF:** the confidence head is calibrated against whether the selected action is optimal.
+- **H-BUDGET:** masking unaffordable actions keeps the policy feasible; the raw violation rate is
+  reported rather than hidden.
+
+### Setup
+
+Synthetic task with 4 observed need types (`predict`, `retrieve`, `verify`, `adapt`), 6 actions
+(`predict`, `retrieve`, `verify`, `adapt`, `store`, `wait`), costs `(1, 2, 3, 4, 2, 0)`, episode
+length 8, maximum budget 12, initial budgets `(2, 5, 9, 12)` and recovery 1 per step. The target is
+a finite-horizon dynamic-programming oracle: it values future budget, so waiting can be optimal.
+This replaced a myopic greedy oracle that ignored future utility.
+
+A 128-hidden, 2-layer GRU (201,615 parameters) was trained for 20 epochs on 4,096 episodes with
+supervised action and need targets, plus a detached confidence target. Evaluation used 512 fresh
+episodes and closed-loop rollouts. Three seeds. Training took 20.3–24.8 s per seed; RSS was
+508–513 MB.
+
+### Results
+
+Means over seeds 0–2, closed loop:
+
+| policy | total utility / episode | action accuracy | cost / episode |
+|---|---:|---:|---:|
+| learned | **5.5740** | 0.9998 | 13.41 |
+| DP oracle | 5.5745 | 1.0000 | 13.42 |
+| need-match | 5.4059 | 0.8705 | 12.81 |
+| always-max | 2.1598 | 0.3452 | 13.63 |
+| random feasible | 2.2706 | 0.2472 | 12.35 |
+| always-wait | 0.4000 | 0.0592 | 0.00 |
+
+The learned policy was within 0.0006 utility (about 0.01%) of the oracle, beat all four simple
+baselines, and never selected an infeasible action in closed loop (infeasible rate 0.0; the raw
+unmasked policy also had zero violations). Open-loop action accuracy was 0.9998. Confidence ECE
+was 0.0002, Brier score 0.00016 and expected-cost MAE 0.00018.
+
+### Supports
+
+- The core can map observed needs and budgets to near-oracle actions on this small task.
+- Masking plus a finite-horizon target yields feasible closed-loop behaviour.
+- Confidence and expected cost track action correctness and realised cost.
+
+### Does not support
+
+- Reinforcement learning. The policy is supervised imitation of a known oracle.
+- Latent need inference, general resource management, or transfer to ASHURA's router.
+- A dedicated cost-prediction mechanism; expected cost is derived from the action distribution and
+  a fixed cost table.
+
+### Failure analysis
+
+The task is fully observable and small enough for a DP table. The model's near-perfect score
+mostly confirms that the training signal and masking are correct; it does not show that the model
+would discover needs or costs. An earlier greedy oracle produced a different target and would
+have rewarded short-horizon behaviour, so the DP oracle is essential for a valid comparison.
+
+### Decision
+
+Use the DP oracle as the B5 control baseline. Do not wire this policy into ASHURA; the integration
+surface and a non-synthetic task are still missing.
+
+---
+
+## BS-EXP-006 — B6 independent validation
+
+**Date:** 2026-11-05
+**Code:** `experiments/b6_validation.py`
+**Results:** `experiments/results/b6_validation.json`
+**Environment:** Python 3.13.14, PyTorch 2.6.0+cu124, CPU.
+
+### Hypothesis
+
+On disjoint held-out permutation rules, a fixed in-context baseline and a frozen GRU are weaker
+than fast memory, and per-rule memory retains across task switches.
+
+### Setup
+
+Train on 8 rules, evaluate on 8 disjoint rules. Each held-out rule contributes 8 study/test
+episodes; the study walk has 12 transitions and the test walk 16. Four arms:
+
+1. **fixed** — non-recurrent MLP over the flattened study + test prefix (207,496 parameters).
+2. **recurrent** — the frozen B1 GRU (206,493 parameters).
+3. **fast_memory** — GRU + token-keyed fast memory, reset before every episode (B1 mode).
+4. **gated_memory** — GRU + `TaskScopedMemory`, one task per rule, verified writes, task ID
+   supplied externally (B3 mode).
+
+The fixed arm was trained for 30 epochs on old-rule study/test pairs; the GRU for 30 epochs on old
+walks. Evaluation is zero-shot on the held-out rules. Three seeds.
+
+### Results
+
+Means over seeds 0–2:
+
+| arm | test token acc | test full recall | revisit token acc | memory |
+|---|---:|---:|---:|---:|
+| fixed in-context MLP | 0.3275 | 0.0000 | — | 0 B |
+| frozen GRU | 0.0833 | 0.0000 | 0.0833 | 0 B |
+| fast memory, reset per episode | **0.7705** | 0.0000 | 0.0833 | 1,152 B |
+| per-rule gated memory | **1.0000** | **1.0000** | **1.0000** | 9,216 B |
+
+The fixed MLP trained in 0.56 s versus 5.85 s for the GRU. The gated memory's revisit retention gap
+was exactly 0.0. Fast memory's advantage disappeared after the B1-style reset, as designed.
+
+### Supports
+
+- Fast memory is the mechanism that improves held-out-rule prediction for the frozen core.
+- Per-rule memory retains verified transitions across a revisit without new study data.
+- The fixed MLP is a stronger in-context baseline than the frozen GRU on this task (0.327 vs
+  0.083), so recurrence is not supported as the source of the held-out gain.
+
+### Does not support
+
+- Rule inference or general intelligence. Eight study walks per rule cover every transition of a
+  16-cycle, and the task ID is supplied, so 1.000 is verified lookup with full coverage.
+- Learned task segmentation or learned gating; the gated arm depends on external IDs.
+- Generalization to unobserved transitions. The fixed baseline reaches 0.327 token accuracy but
+  zero full recall, and the frozen GRU is near chance.
+- A claim that per-rule memory is cheap: it uses 8× the memory of the single-episode fast memory
+  in this configuration.
+
+### Failure analysis
+
+The held-out-rule setup measures adaptation, not induction: a single-cycle permutation has a
+unique next token per key, so a complete lookup table is sufficient. The fixed MLP can match parts
+of the study window but cannot represent the full unseen mapping, which explains partial token
+accuracy with zero full recall. The gated arm's perfect score is an upper bound created by full
+coverage and external task identity, not a learning result.
+
+### Decision
+
+B6 completes the BrainSim milestone sequence. Use these four arms as the standing comparison for
+future BrainSim changes. Do not integrate BrainSim into ASHURA's response path without a task where
+it beats the existing deterministic or retrieval baseline.

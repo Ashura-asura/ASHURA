@@ -49,3 +49,25 @@
   A versioned wrapper and corpus generator were considered, but ASHURA has no response-path use
   case that has passed an independent experiment. Keep the package small and integration
   deferred until B2b/B4 produce a measured signal worth wiring.
+
+
+- **D-BS-010 - Replay-augmented fine-tuning is the B4 candidate; frozen weights plus task-scoped
+  memory remains the safe default.** Replay reduced old-rule forgetting from 49.3 to 1.18 points
+  and kept new-rule accuracy within 1 point of new-only, but it costs extra samples and time and
+  only covers stored sequences. Persistent updates must carry a retention test (BS-EXP-004).
+
+- **D-BS-011 - B5 uses a finite-horizon DP oracle and supervised imitation.** The learned policy
+  matched the oracle on a small fully observed task, but this is not reinforcement learning,
+  latent need inference, or general resource management. Do not wire the action head into ASHURA's
+  router without a non-synthetic task and a router-specific baseline (BS-EXP-005).
+
+- **D-BS-012 - B6's four arms are the standing validation protocol: fixed in-context MLP, frozen
+  GRU, reset-per-episode fast memory, and per-rule gated memory.** The gated arm's 1.000 is
+  full-coverage lookup with external task IDs and verified writes, not intelligence. The fixed
+  baseline must stay in every comparison because it beat the frozen GRU on held-out token
+  accuracy (BS-EXP-006).
+
+- **D-BS-013 - BrainSim milestones B1-B6 are complete on synthetic tasks; ASHURA integration is
+  still deferred.** The next useful step is a task where a BrainSim mechanism beats a deterministic
+  or retrieval baseline, not another synthetic milestone. Until then, ASHURA does not import
+  BrainSim and no BrainSim result is used in the response path.

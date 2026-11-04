@@ -5,7 +5,7 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 
 **Status:** Phase 0 foundation baseline measured on the target laptop; Phases 1–6 implemented;
 local OCR and a HARN arithmetic candidate are integrated behind optional dependencies/checkpoints;
-BrainSim B1–B3 measured as an independent subproject. **139 ASHURA tests and 28 BrainSim tests
+BrainSim B1–B6 measured as an independent subproject. **139 ASHURA tests and 46 BrainSim tests
 pass.** The adaptive memory remains experimental and out of the response path. BrainSim is not
 imported by ASHURA.
 
@@ -84,17 +84,20 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 | Adaptive memory | `memory/adaptive_memory.py` | Titans-inspired linear memory; **no advantage over FTS5 yet** |
 | DPF + CAGE | `plasticity/*`, `learning/cage.py` | bounded fast state, candidate checkpoints, NGR-only promotion, trace attribution |
 | DREAM / NGR | `learning/dream.py`, `learning/replay.py`, `evaluation/ngr.py` | verified replay, new-only vs replay (EXP-006), promotion/rollback gate |
-| BrainSim | `BrainSim/*` | independent B1/B2/B3; 28 tests; not imported by ASHURA |
+| BrainSim | `BrainSim/*` | independent B1–B6; 46 tests; not imported by ASHURA |
 | Evaluation | `evaluation/*` | strict/lenient judge, 16-item suite, Ollama baseline with CIs and paired sign test, latency, retrieval bench |
 
 ## BrainSim (v2 blueprint, independent)
 
 ```bash
 cd BrainSim
-python -m pytest -q                       # 28 tests
+python -m pytest -q                       # 46 tests
 python -m experiments.b1_sequence         # B1 + fast memory
 python -m experiments.b2_delayed_copy     # B2 delayed recall
 python -m experiments.b3_gated_memory     # B3 task-scoped gate
+python -m experiments.b4_consolidation    # B4 replay vs new-only fine-tuning
+python -m experiments.b5_control          # B5 budgeted need/action control
+python -m experiments.b6_validation       # B6 four-arm held-out validation
 ```
 
 B1 (3 seeds, CPU, 30 epochs): 128-hidden model, 206k parameters, train-rule 0.957, frozen unseen
@@ -111,8 +114,40 @@ B3 (3 seeds): shared token memory retains old-rule accuracy 0.104 after a task s
 task-scoped gate retains 1.000. The task ID is supplied externally, so this proves isolation when
 the boundary is known, not learned task identification or general interference control.
 
+B4 (3 seeds): new-only fine-tuning on 8 new rules dropped old-rule accuracy by 49.3 points; a 50%
+replay mix cut the drop to 1.18 points (0.945 old, 0.931 new). Replay costs ~38% more fine-tuning
+time and is a bounded mitigation, not a retention guarantee.
+
+B5 (3 seeds): a supervised 201k-parameter policy matched a finite-horizon DP oracle on a synthetic
+budgeted-choice task (5.574 vs 5.5745 total utility; 0.9998 action accuracy; 0.0 infeasible
+actions; confidence ECE 0.0002). Needs and budgets are observed inputs, so this is not
+reinforcement learning, latent need inference, or general resource management.
+
+B6 (3 seeds, disjoint held-out rules): fixed in-context MLP 0.327 token accuracy / 0.000 full
+recall; frozen GRU 0.083 / 0.000; fast memory 0.771 / 0.000 but 0.083 after reset; per-rule gated
+memory 1.000 / 1.000 and 1.000 on revisit. The gated 1.000 is full-coverage verified lookup with an
+externally supplied rule ID, not rule induction or learned task segmentation. The fixed baseline
+beats the frozen GRU, so B6 does not support a recurrent advantage.
+
 Full reports: `BrainSim/research/experiment_log.md`, `BrainSim/research/failures.md`,
 `BrainSim/research/decisions.md`.
+
+## Remaining work
+
+- **LoRA/QLoRA on the pinned local model:** not started. No adapter, training run or evaluation.
+- **OCR accuracy:** the runner exists; no labelled held-out target corpus has been measured. The
+  synthetic smoke test is not a document-accuracy result.
+- **Real nonlinear HARN:** the current addition candidate is linear least squares. No deep or
+  nonlinear arithmetic circuit has been trained or shown to help.
+- **Perception/reasoning skills beyond OCR and exact arithmetic:** not implemented or benchmarked.
+- **BrainSim → ASHURA integration:** deferred. No BrainSim mechanism has beaten a deterministic or
+  retrieval baseline on an ASHURA response-path task.
+- **AMA/NFD calibration:** weights and thresholds remain engineering defaults.
+- **Expanded language evaluation:** the current suite is 16 items; broader capability and safety
+  coverage is missing.
+- **PACE capacity mutation and FIRE:** blueprint-only; not implemented.
+- **B2b harder recall:** variable-length or relational recall was proposed but is not a blueprint
+  milestone and has not been run.
 
 ## Research boundaries
 
@@ -121,7 +156,9 @@ Full reports: `BrainSim/research/experiment_log.md`, `BrainSim/research/failures
 - DREAM trains a small NumPy memory, never Qwen.
 - Exact arithmetic is authoritative; the HARN candidate is linear regression and adds no capability.
 - OCR is implemented but unmeasured on a held-out target corpus.
-- BrainSim tasks are synthetic and author-designed; B2 does not support a recurrent advantage.
+- BrainSim tasks are synthetic and author-designed; B2 and B6 do not support a recurrent
+  advantage. B4 replay is a bounded mitigation; B5 is supervised imitation; B6's gated 1.000 is
+  full-coverage lookup with external task IDs.
 - LoRA on Qwen, PACE capacity mutation and BrainSim integration into the response path are not done.
 
 See `research/experiment_log.md`, `research/failures.md` and `research/decisions.md` for the

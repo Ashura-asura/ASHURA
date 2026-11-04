@@ -48,3 +48,31 @@ Task-scoped memory retained old-rule accuracy at 1.000 while shared memory fell 
 task ID was supplied by the experiment and all writes were verified. The gate therefore proves
 isolation when the boundary is already known; it does not detect boundaries, infer task identity,
 or test surprise-gated admission. Do not describe it as solved interference control.
+
+
+**F-BS-008 - Replay is a mitigation, not free retention (BS-EXP-004).**
+Replay-augmented fine-tuning cut old-rule forgetting from 49.3 to 1.18 points and kept every seed
+inside the 2% tolerance, but the replay arm saw extra old examples and took about 38% longer. The
+buffer covers only the sequences it stores; retention on a different domain or on transitions
+absent from the buffer was not tested. Do not describe replay as a guarantee.
+
+**F-BS-009 - B5 is supervised imitation on a fully observed toy task (BS-EXP-005).**
+The learned policy matched a finite-horizon DP oracle (5.574 vs 5.5745 total utility) with 0.0
+infeasible actions, but the need and budget were inputs, the oracle was known, and training was
+supervised cross-entropy, not reinforcement. Do not cite it as reinforcement learning, latent need
+inference, or general resource management. The DP oracle is essential: a myopic greedy target
+would have rewarded different actions.
+
+**F-BS-010 - B6's 1.000 gated-memory score is full-coverage lookup (BS-EXP-006).**
+Per-rule memory reached 1.000 token and full recall on held-out rules and retained 1.000 on a
+revisit, while fast memory fell back to 0.083 after reset. However, eight study walks per rule
+cover every transition of a 16-cycle, the task ID is supplied externally, and writes are verified.
+The result measures retention of verified lookup entries, not rule induction, learned task
+segmentation, or generalization to unobserved transitions. The fixed in-context MLP (0.327) also
+beat the frozen GRU (0.083), so B6 does not support a recurrent advantage.
+
+**F-BS-011 - The B6 fixed baseline is strong but not a rule learner (BS-EXP-006).**
+The parameter-matched fixed MLP reached 0.327 token accuracy on held-out rules but 0.000 full
+recall, versus 0.083 token and 0.000 full recall for the frozen GRU. It can match parts of the
+study/test window without representing the unseen permutation. This is a useful upper bound on
+in-context pattern matching, not evidence that the fixed model understands the rule.

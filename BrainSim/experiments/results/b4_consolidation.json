@@ -1,0 +1,215 @@
+{
+  "experiment": "B4 slow consolidation: new-only vs replay",
+  "generated": "2026-11-05T03:20:01",
+  "quick": false,
+  "warning": null,
+  "hypotheses": {
+    "H-B4": "fine-tuning on new rules forgets old rules beyond 2%",
+    "H-REPLAY": "replaying old sequences reduces forgetting while retaining new accuracy"
+  },
+  "task": "8 old permutation rules, then 8 disjoint new rules",
+  "training": {
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "base_epochs": 30,
+    "finetune_epochs": 15,
+    "hidden": 128,
+    "batch_size": 32,
+    "finetune_lr": 0.003,
+    "replay_ratio": 0.5,
+    "replay_capacity": 512,
+    "old_train_sequences": 256,
+    "new_finetune_sequences": 64
+  },
+  "environment": {
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.13.14",
+    "torch": "2.6.0+cu124",
+    "device": "cpu"
+  },
+  "elapsed_seconds": 24.943564900000638,
+  "runs": [
+    {
+      "seed": 0,
+      "params": 206493,
+      "base_train_seconds": 5.782177399996726,
+      "base_final_loss": 0.08690609131008387,
+      "base": {
+        "old_accuracy": 0.95652174949646,
+        "new_accuracy": 0.06725543737411499
+      },
+      "arms": {
+        "new_only": {
+          "old_accuracy": 0.4806385934352875,
+          "new_accuracy": 0.9432744383811951,
+          "old_drop": 0.4758831560611725,
+          "old_retention": 0.5024857967822574,
+          "new_gain": 0.8760190010070801,
+          "within_tolerance": false,
+          "finetune_seconds": 0.6213980000029551,
+          "final_loss": 0.13656682521104813,
+          "old_examples_seen": 0,
+          "new_examples_seen": 960,
+          "checkpoint": "C:\\Users\\bisha\\Desktop\\ASHURA\\BrainSim\\checkpoints\\b4\\b4_new_only_s0.pt",
+          "checkpoint_roundtrip": true,
+          "checkpoint_old_accuracy": 0.4806385934352875,
+          "checkpoint_new_accuracy": 0.9432744383811951
+        },
+        "replay": {
+          "old_accuracy": 0.9446331262588501,
+          "new_accuracy": 0.931046187877655,
+          "old_drop": 0.011888623237609863,
+          "old_retention": 0.98757098493174,
+          "new_gain": 0.86379075050354,
+          "within_tolerance": true,
+          "finetune_seconds": 0.8651766999973916,
+          "final_loss": 0.18164198845624924,
+          "old_examples_seen": 256,
+          "new_examples_seen": 960,
+          "checkpoint": "C:\\Users\\bisha\\Desktop\\ASHURA\\BrainSim\\checkpoints\\b4\\b4_replay_s0.pt",
+          "checkpoint_roundtrip": true,
+          "checkpoint_old_accuracy": 0.9446331262588501,
+          "checkpoint_new_accuracy": 0.931046187877655
+        }
+      },
+      "rss_mb": 502.02734375
+    },
+    {
+      "seed": 1,
+      "params": 206493,
+      "base_train_seconds": 6.330531200001133,
+      "base_final_loss": 0.08811070863157511,
+      "base": {
+        "old_accuracy": 0.95652174949646,
+        "new_accuracy": 0.10326086729764938
+      },
+      "arms": {
+        "new_only": {
+          "old_accuracy": 0.4415760934352875,
+          "new_accuracy": 0.94191575050354,
+          "old_drop": 0.5149456560611725,
+          "old_retention": 0.4616477290430098,
+          "new_gain": 0.8386548832058907,
+          "within_tolerance": false,
+          "finetune_seconds": 0.6172065999999177,
+          "final_loss": 0.12728220224380493,
+          "old_examples_seen": 0,
+          "new_examples_seen": 960,
+          "checkpoint": "C:\\Users\\bisha\\Desktop\\ASHURA\\BrainSim\\checkpoints\\b4\\b4_new_only_s1.pt",
+          "checkpoint_roundtrip": true,
+          "checkpoint_old_accuracy": 0.4415760934352875,
+          "checkpoint_new_accuracy": 0.94191575050354
+        },
+        "replay": {
+          "old_accuracy": 0.9459918737411499,
+          "new_accuracy": 0.931046187877655,
+          "old_drop": 0.010529875755310059,
+          "old_retention": 0.988991493647841,
+          "new_gain": 0.8277853205800056,
+          "within_tolerance": true,
+          "finetune_seconds": 0.9089381000012509,
+          "final_loss": 0.17219486832618713,
+          "old_examples_seen": 256,
+          "new_examples_seen": 960,
+          "checkpoint": "C:\\Users\\bisha\\Desktop\\ASHURA\\BrainSim\\checkpoints\\b4\\b4_replay_s1.pt",
+          "checkpoint_roundtrip": true,
+          "checkpoint_old_accuracy": 0.9459918737411499,
+          "checkpoint_new_accuracy": 0.931046187877655
+        }
+      },
+      "rss_mb": 503.6015625
+    },
+    {
+      "seed": 2,
+      "params": 206493,
+      "base_train_seconds": 6.4670335999981035,
+      "base_final_loss": 0.08857605699449778,
+      "base": {
+        "old_accuracy": 0.9568614363670349,
+        "new_accuracy": 0.0757472813129425
+      },
+      "arms": {
+        "new_only": {
+          "old_accuracy": 0.46739131212234497,
+          "new_accuracy": 0.937160313129425,
+          "old_drop": 0.48947012424468994,
+          "old_retention": 0.4884629000170742,
+          "new_gain": 0.8614130318164825,
+          "within_tolerance": false,
+          "finetune_seconds": 0.7473919999974896,
+          "final_loss": 0.1333763524889946,
+          "old_examples_seen": 0,
+          "new_examples_seen": 960,
+          "checkpoint": "C:\\Users\\bisha\\Desktop\\ASHURA\\BrainSim\\checkpoints\\b4\\b4_new_only_s2.pt",
+          "checkpoint_roundtrip": true,
+          "checkpoint_old_accuracy": 0.46739131212234497,
+          "checkpoint_new_accuracy": 0.937160313129425
+        },
+        "replay": {
+          "old_accuracy": 0.943953812122345,
+          "new_accuracy": 0.9320651888847351,
+          "old_drop": 0.012907624244689941,
+          "old_retention": 0.9865104562122422,
+          "new_gain": 0.8563179075717926,
+          "within_tolerance": true,
+          "finetune_seconds": 0.9730458999983966,
+          "final_loss": 0.17127495259046555,
+          "old_examples_seen": 256,
+          "new_examples_seen": 960,
+          "checkpoint": "C:\\Users\\bisha\\Desktop\\ASHURA\\BrainSim\\checkpoints\\b4\\b4_replay_s2.pt",
+          "checkpoint_roundtrip": true,
+          "checkpoint_old_accuracy": 0.943953812122345,
+          "checkpoint_new_accuracy": 0.9320651888847351
+        }
+      },
+      "rss_mb": 507.98046875
+    }
+  ],
+  "summary": {
+    "seeds": 3,
+    "retention_tolerance": 0.02,
+    "base_old_accuracy_mean": 0.9566349784533182,
+    "base_old_accuracy_std": 0.00016012992644239005,
+    "base_new_accuracy_mean": 0.0820878619949023,
+    "base_new_accuracy_std": 0.015367714393775189,
+    "new_only_old_accuracy_mean": 0.46320199966430664,
+    "new_only_old_accuracy_std": 0.016219997548618935,
+    "new_only_new_accuracy_mean": 0.9407835006713867,
+    "new_only_new_accuracy_std": 0.0026213386097426595,
+    "new_only_old_drop_mean": 0.49343297878901166,
+    "new_only_old_drop_std": 0.01619151812250452,
+    "new_only_old_retention_mean": 0.4841988086141138,
+    "new_only_old_retention_std": 0.01694252639146915,
+    "new_only_new_gain_mean": 0.8586956386764845,
+    "new_only_new_gain_std": 0.015374383323638744,
+    "new_only_finetune_seconds_mean": 0.6619988666667874,
+    "new_only_finetune_seconds_std": 0.060406304160645755,
+    "new_only_within_tolerance_count": 0,
+    "new_only_checkpoint_roundtrip_count": 3,
+    "replay_old_accuracy_mean": 0.9448596040407816,
+    "replay_old_accuracy_std": 0.0008473066858357423,
+    "replay_new_accuracy_mean": 0.931385854880015,
+    "replay_new_accuracy_std": 0.0004803616814281629,
+    "replay_old_drop_mean": 0.011775374412536621,
+    "replay_old_drop_std": 0.0009740092203439114,
+    "replay_old_retention_mean": 0.987690978263941,
+    "replay_old_retention_std": 0.0010164269080264134,
+    "replay_new_gain_mean": 0.8492979928851128,
+    "replay_new_gain_std": 0.015514662906442923,
+    "replay_finetune_seconds_mean": 0.9157202333323463,
+    "replay_finetune_seconds_std": 0.04429777328192149,
+    "replay_within_tolerance_count": 3,
+    "replay_checkpoint_roundtrip_count": 3,
+    "replay_reduces_drop": true,
+    "replay_keeps_new_accuracy": true
+  },
+  "limits": [
+    "synthetic permutation task only",
+    "three seeds; CPU laptop timing is noisy",
+    "the replay arm sees more examples than new-only",
+    "retention is measured on new random walks from the old rules, not a separate domain"
+  ]
+}

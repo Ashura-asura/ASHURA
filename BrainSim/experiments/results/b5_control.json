@@ -1,0 +1,511 @@
+{
+  "experiment": "B5 need and resource control",
+  "generated": "2026-11-05T03:36:58",
+  "quick": false,
+  "warning": null,
+  "hypotheses": {
+    "H-B5": "learned action selection beats always-max, need-match, wait and random",
+    "H-CONF": "confidence tracks whether the selected action is optimal",
+    "H-BUDGET": "unaffordable actions are masked and the raw violation rate is reported"
+  },
+  "environment": {
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.13.14",
+    "torch": "2.6.0+cu124",
+    "device": "cpu",
+    "threads": 4,
+    "rss_mb": 512.21875
+  },
+  "task": {
+    "needs": [
+      "predict",
+      "retrieve",
+      "verify",
+      "adapt"
+    ],
+    "actions": [
+      "predict",
+      "retrieve",
+      "verify",
+      "adapt",
+      "store",
+      "wait"
+    ],
+    "action_costs": [
+      1,
+      2,
+      3,
+      4,
+      2,
+      0
+    ],
+    "episode_len": 8,
+    "max_budget": 12,
+    "initial_budgets": [
+      2,
+      5,
+      9,
+      12
+    ],
+    "recovery": 1,
+    "oracle": "highest-utility action whose cost fits the current budget"
+  },
+  "training": {
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "epochs": 20,
+    "train_episodes": 4096,
+    "eval_episodes": 512,
+    "hidden": 128,
+    "layers": 2,
+    "batch_size": 64,
+    "train_seconds_mean": 22.495430099998583,
+    "train_seconds_total": 67.48629029999574
+  },
+  "runs": [
+    {
+      "seed": 0,
+      "params": 201615,
+      "train_seconds": 20.272598099996685,
+      "final_loss": 0.00013158627177745075,
+      "final_action_loss": 9.551825667131197e-05,
+      "final_need_loss": 9.950598098384944e-05,
+      "final_confidence_loss": 0.00016166819295904133,
+      "open_loop": {
+        "action_accuracy": 1.0,
+        "raw_action_accuracy": 1.0,
+        "need_accuracy": 1.0,
+        "mean_utility": 0.7037352919578552,
+        "mean_cost": 1.699462890625,
+        "total_utility_per_episode": 5.6298828125,
+        "total_cost_per_episode": 13.595703125,
+        "raw_infeasible_rate": 0.0,
+        "confidence_brier": 4.9238860100331294e-08,
+        "confidence_ece": 0.00015020370483398438,
+        "mean_confidence": 0.999849796295166,
+        "mean_confidence_correct": 0.999849796295166,
+        "mean_confidence_incorrect": null,
+        "expected_cost_mae": 0.0001295378606300801,
+        "steps": 4096
+      },
+      "closed_loop": {
+        "action_accuracy": 1.0,
+        "mean_utility": 0.7037353515625,
+        "mean_cost": 1.699462890625,
+        "total_utility_per_episode": 5.6298828125,
+        "total_cost_per_episode": 13.595703125,
+        "infeasible_rate": 0.0,
+        "confidence_brier": 4.923886365304497e-08,
+        "confidence_ece": 0.00015020370483398438,
+        "mean_confidence": 0.999849796295166,
+        "expected_cost_mae": 0.0001295378606300801
+      },
+      "baselines_closed_loop": {
+        "oracle": {
+          "action_accuracy": 1.0,
+          "mean_utility": 0.7037353515625,
+          "mean_cost": 1.699462890625,
+          "total_utility_per_episode": 5.6298828125,
+          "total_cost_per_episode": 13.595703125,
+          "infeasible_rate": 0.0
+        },
+        "need_match": {
+          "action_accuracy": 0.875732421875,
+          "mean_utility": 0.681896984577179,
+          "mean_cost": 1.622314453125,
+          "total_utility_per_episode": 5.455175876617432,
+          "total_cost_per_episode": 12.978515625,
+          "infeasible_rate": 0.0
+        },
+        "always_max": {
+          "action_accuracy": 0.34423828125,
+          "mean_utility": 0.2773803472518921,
+          "mean_cost": 1.727783203125,
+          "total_utility_per_episode": 2.2190427780151367,
+          "total_cost_per_episode": 13.822265625,
+          "infeasible_rate": 0.0
+        },
+        "always_wait": {
+          "action_accuracy": 0.05712890625,
+          "mean_utility": 0.05000000819563866,
+          "mean_cost": 0.0,
+          "total_utility_per_episode": 0.40000006556510925,
+          "total_cost_per_episode": 0.0,
+          "infeasible_rate": 0.0
+        },
+        "random": {
+          "action_accuracy": 0.24462890625,
+          "mean_utility": 0.2844604551792145,
+          "mean_cost": 1.56298828125,
+          "total_utility_per_episode": 2.275683641433716,
+          "total_cost_per_episode": 12.50390625,
+          "infeasible_rate": 0.0
+        }
+      },
+      "baselines_open_loop": {
+        "oracle": {
+          "action_accuracy": 1.0,
+          "mean_utility": 0.7037352919578552,
+          "mean_cost": 1.699462890625,
+          "total_utility_per_episode": 5.6298828125,
+          "total_cost_per_episode": 13.595703125
+        },
+        "need_match": {
+          "action_accuracy": 0.856201171875,
+          "mean_utility": 0.7485107183456421,
+          "mean_cost": 1.871826171875,
+          "total_utility_per_episode": 5.9880852699279785,
+          "total_cost_per_episode": 14.974609375
+        },
+        "always_max": {
+          "action_accuracy": 0.281005859375,
+          "mean_utility": 0.35228270292282104,
+          "mean_cost": 2.326904296875,
+          "total_utility_per_episode": 2.8182616233825684,
+          "total_cost_per_episode": 18.615234375
+        },
+        "always_wait": {
+          "action_accuracy": 0.1767578125,
+          "mean_utility": 0.05000000819563866,
+          "mean_cost": 0.0,
+          "total_utility_per_episode": 0.40000006556510925,
+          "total_cost_per_episode": 0.0
+        }
+      },
+      "rss_mb": 507.8125
+    },
+    {
+      "seed": 1,
+      "params": 201615,
+      "train_seconds": 24.828822199997376,
+      "final_loss": 0.00013014167177516356,
+      "final_action_loss": 9.494486312178196e-05,
+      "final_need_loss": 9.707333742881019e-05,
+      "final_confidence_loss": 0.00015782141349518497,
+      "open_loop": {
+        "action_accuracy": 0.99951171875,
+        "raw_action_accuracy": 0.99951171875,
+        "need_accuracy": 1.0,
+        "mean_utility": 0.6866821050643921,
+        "mean_cost": 1.645263671875,
+        "total_utility_per_episode": 5.493456840515137,
+        "total_cost_per_episode": 13.162109375,
+        "raw_infeasible_rate": 0.0,
+        "confidence_brier": 0.00048758782213553786,
+        "confidence_ece": 0.00034034252166748047,
+        "mean_confidence": 0.9998520612716675,
+        "mean_confidence_correct": 0.9998523592948914,
+        "mean_confidence_incorrect": 0.9992346167564392,
+        "expected_cost_mae": 0.0002407666324870661,
+        "steps": 4096
+      },
+      "closed_loop": {
+        "action_accuracy": 0.99951171875,
+        "mean_utility": 0.6866821050643921,
+        "mean_cost": 1.645263671875,
+        "total_utility_per_episode": 5.493456840515137,
+        "total_cost_per_episode": 13.162109375,
+        "infeasible_rate": 0.0,
+        "confidence_brier": 0.0004875878512393683,
+        "confidence_ece": 0.00034034252166748047,
+        "mean_confidence": 0.9998520612716675,
+        "expected_cost_mae": 0.0002407666324870661
+      },
+      "baselines_closed_loop": {
+        "oracle": {
+          "action_accuracy": 1.0,
+          "mean_utility": 0.686901867389679,
+          "mean_cost": 1.646240234375,
+          "total_utility_per_episode": 5.495214939117432,
+          "total_cost_per_episode": 13.169921875,
+          "infeasible_rate": 0.0
+        },
+        "need_match": {
+          "action_accuracy": 0.86279296875,
+          "mean_utility": 0.6652954816818237,
+          "mean_cost": 1.56640625,
+          "total_utility_per_episode": 5.32236385345459,
+          "total_cost_per_episode": 12.53125,
+          "infeasible_rate": 0.0
+        },
+        "always_max": {
+          "action_accuracy": 0.34521484375,
+          "mean_utility": 0.26075440645217896,
+          "mean_cost": 1.67431640625,
+          "total_utility_per_episode": 2.0860352516174316,
+          "total_cost_per_episode": 13.39453125,
+          "infeasible_rate": 0.0
+        },
+        "always_wait": {
+          "action_accuracy": 0.063720703125,
+          "mean_utility": 0.05000000819563866,
+          "mean_cost": 0.0,
+          "total_utility_per_episode": 0.40000006556510925,
+          "total_cost_per_episode": 0.0,
+          "infeasible_rate": 0.0
+        },
+        "random": {
+          "action_accuracy": 0.255615234375,
+          "mean_utility": 0.28502196073532104,
+          "mean_cost": 1.495849609375,
+          "total_utility_per_episode": 2.2801756858825684,
+          "total_cost_per_episode": 11.966796875,
+          "infeasible_rate": 0.0
+        }
+      },
+      "baselines_open_loop": {
+        "oracle": {
+          "action_accuracy": 1.0,
+          "mean_utility": 0.6869018077850342,
+          "mean_cost": 1.646240234375,
+          "total_utility_per_episode": 5.495214939117432,
+          "total_cost_per_episode": 13.169921875
+        },
+        "need_match": {
+          "action_accuracy": 0.8349609375,
+          "mean_utility": 0.7412474751472473,
+          "mean_cost": 1.8564453125,
+          "total_utility_per_episode": 5.929980754852295,
+          "total_cost_per_episode": 14.8515625
+        },
+        "always_max": {
+          "action_accuracy": 0.269287109375,
+          "mean_utility": 0.34138184785842896,
+          "mean_cost": 2.260986328125,
+          "total_utility_per_episode": 2.7310545444488525,
+          "total_cost_per_episode": 18.087890625
+        },
+        "always_wait": {
+          "action_accuracy": 0.1884765625,
+          "mean_utility": 0.05000000819563866,
+          "mean_cost": 0.0,
+          "total_utility_per_episode": 0.40000006556510925,
+          "total_cost_per_episode": 0.0
+        }
+      },
+      "rss_mb": 513.375
+    },
+    {
+      "seed": 2,
+      "params": 201615,
+      "train_seconds": 22.384870000001683,
+      "final_loss": 0.00013779394578250503,
+      "final_action_loss": 0.00010097375241002737,
+      "final_need_loss": 9.98632674509281e-05,
+      "final_confidence_loss": 0.00016847540973685682,
+      "open_loop": {
+        "action_accuracy": 1.0,
+        "raw_action_accuracy": 1.0,
+        "need_accuracy": 1.0,
+        "mean_utility": 0.699816882610321,
+        "mean_cost": 1.68505859375,
+        "total_utility_per_episode": 5.598535060882568,
+        "total_cost_per_episode": 13.48046875,
+        "raw_infeasible_rate": 0.0,
+        "confidence_brier": 6.980641842346813e-08,
+        "confidence_ece": 0.00015544891357421875,
+        "mean_confidence": 0.9998445510864258,
+        "mean_confidence_correct": 0.9998445510864258,
+        "mean_confidence_incorrect": null,
+        "expected_cost_mae": 0.0001815214054659009,
+        "steps": 4096
+      },
+      "closed_loop": {
+        "action_accuracy": 1.0,
+        "mean_utility": 0.699816882610321,
+        "mean_cost": 1.68505859375,
+        "total_utility_per_episode": 5.598535060882568,
+        "total_cost_per_episode": 13.48046875,
+        "infeasible_rate": 0.0,
+        "confidence_brier": 6.980641842346813e-08,
+        "confidence_ece": 0.00015544891357421875,
+        "mean_confidence": 0.9998445510864258,
+        "expected_cost_mae": 0.0001815214054659009
+      },
+      "baselines_closed_loop": {
+        "oracle": {
+          "action_accuracy": 1.0,
+          "mean_utility": 0.699816882610321,
+          "mean_cost": 1.68505859375,
+          "total_utility_per_episode": 5.598535060882568,
+          "total_cost_per_episode": 13.48046875,
+          "infeasible_rate": 0.0
+        },
+        "need_match": {
+          "action_accuracy": 0.873046875,
+          "mean_utility": 0.6800293326377869,
+          "mean_cost": 1.6162109375,
+          "total_utility_per_episode": 5.440234661102295,
+          "total_cost_per_episode": 12.9296875,
+          "infeasible_rate": 0.0
+        },
+        "always_max": {
+          "action_accuracy": 0.34619140625,
+          "mean_utility": 0.27177733182907104,
+          "mean_cost": 1.7109375,
+          "total_utility_per_episode": 2.1742186546325684,
+          "total_cost_per_episode": 13.6875,
+          "infeasible_rate": 0.0
+        },
+        "always_wait": {
+          "action_accuracy": 0.056884765625,
+          "mean_utility": 0.05000000819563866,
+          "mean_cost": 0.0,
+          "total_utility_per_episode": 0.40000006556510925,
+          "total_cost_per_episode": 0.0,
+          "infeasible_rate": 0.0
+        },
+        "random": {
+          "action_accuracy": 0.2412109375,
+          "mean_utility": 0.281982421875,
+          "mean_cost": 1.572265625,
+          "total_utility_per_episode": 2.255859375,
+          "total_cost_per_episode": 12.578125,
+          "infeasible_rate": 0.0
+        }
+      },
+      "baselines_open_loop": {
+        "oracle": {
+          "action_accuracy": 1.0,
+          "mean_utility": 0.699816882610321,
+          "mean_cost": 1.68505859375,
+          "total_utility_per_episode": 5.598535060882568,
+          "total_cost_per_episode": 13.48046875
+        },
+        "need_match": {
+          "action_accuracy": 0.84375,
+          "mean_utility": 0.7530760765075684,
+          "mean_cost": 1.896240234375,
+          "total_utility_per_episode": 6.024609565734863,
+          "total_cost_per_episode": 15.169921875
+        },
+        "always_max": {
+          "action_accuracy": 0.2763671875,
+          "mean_utility": 0.35211181640625,
+          "mean_cost": 2.319580078125,
+          "total_utility_per_episode": 2.816894292831421,
+          "total_cost_per_episode": 18.556640625
+        },
+        "always_wait": {
+          "action_accuracy": 0.178955078125,
+          "mean_utility": 0.05000000819563866,
+          "mean_cost": 0.0,
+          "total_utility_per_episode": 0.40000006556510925,
+          "total_cost_per_episode": 0.0
+        }
+      },
+      "rss_mb": 511.9921875
+    }
+  ],
+  "summary": {
+    "seeds": 3,
+    "open_loop_action_accuracy_mean": 0.9998372395833334,
+    "open_loop_action_accuracy_std": 0.00023017798866749594,
+    "open_loop_mean_utility_mean": 0.6967447598775228,
+    "open_loop_mean_utility_std": 0.007292976044106987,
+    "open_loop_mean_cost_mean": 1.6765950520833333,
+    "open_loop_mean_cost_std": 0.022921787036720327,
+    "open_loop_total_utility_per_episode_mean": 5.573958237965901,
+    "open_loop_total_utility_per_episode_std": 0.05834396070723784,
+    "open_loop_total_cost_per_episode_mean": 13.412760416666666,
+    "open_loop_total_cost_per_episode_std": 0.18337429629376262,
+    "open_loop_confidence_brier_mean": 0.00016256895580468722,
+    "open_loop_confidence_brier_std": 0.0002298230445494963,
+    "open_loop_confidence_ece_mean": 0.0002153317133585612,
+    "open_loop_confidence_ece_std": 8.842192299507017e-05,
+    "open_loop_expected_cost_mae_mean": 0.00018394196619434902,
+    "open_loop_expected_cost_mae_std": 4.5441201993223716e-05,
+    "closed_loop_action_accuracy_mean": 0.9998372395833334,
+    "closed_loop_action_accuracy_std": 0.00023017798866749594,
+    "closed_loop_mean_utility_mean": 0.6967447797457377,
+    "closed_loop_mean_utility_std": 0.00729299508840473,
+    "closed_loop_mean_cost_mean": 1.6765950520833333,
+    "closed_loop_mean_cost_std": 0.022921787036720327,
+    "closed_loop_total_utility_per_episode_mean": 5.573958237965901,
+    "closed_loop_total_utility_per_episode_std": 0.05834396070723784,
+    "closed_loop_total_cost_per_episode_mean": 13.412760416666666,
+    "closed_loop_total_cost_per_episode_std": 0.18337429629376262,
+    "closed_loop_infeasible_rate_mean": 0.0,
+    "closed_loop_infeasible_rate_std": 0.0,
+    "closed_loop_confidence_brier_mean": 0.00016256896550714828,
+    "closed_loop_confidence_brier_std": 0.00022982305826833608,
+    "closed_loop_confidence_ece_mean": 0.0002153317133585612,
+    "closed_loop_confidence_ece_std": 8.842192299507017e-05,
+    "closed_loop_expected_cost_mae_mean": 0.00018394196619434902,
+    "closed_loop_expected_cost_mae_std": 4.5441201993223716e-05,
+    "oracle_action_accuracy_mean": 1.0,
+    "oracle_action_accuracy_std": 0.0,
+    "oracle_mean_utility_mean": 0.6968180338541666,
+    "oracle_mean_utility_std": 0.007191956977340296,
+    "oracle_mean_cost_mean": 1.6769205729166667,
+    "oracle_mean_cost_std": 0.022477148720263157,
+    "oracle_total_utility_per_episode_mean": 5.574544270833333,
+    "oracle_total_utility_per_episode_std": 0.057535655818722366,
+    "oracle_total_cost_per_episode_mean": 13.415364583333334,
+    "oracle_total_cost_per_episode_std": 0.17981718976210526,
+    "oracle_infeasible_rate_mean": 0.0,
+    "oracle_infeasible_rate_std": 0.0,
+    "need_match_action_accuracy_mean": 0.8705240885416666,
+    "need_match_action_accuracy_std": 0.005575583702135625,
+    "need_match_mean_utility_mean": 0.6757405996322632,
+    "need_match_mean_utility_std": 0.007425065552600557,
+    "need_match_mean_cost_mean": 1.6016438802083333,
+    "need_match_mean_cost_std": 0.025041048470735527,
+    "need_match_total_utility_per_episode_mean": 5.4059247970581055,
+    "need_match_total_utility_per_episode_std": 0.05940052442080446,
+    "need_match_total_cost_per_episode_mean": 12.813151041666666,
+    "need_match_total_cost_per_episode_std": 0.2003283877658842,
+    "need_match_infeasible_rate_mean": 0.0,
+    "need_match_infeasible_rate_std": 0.0,
+    "always_max_action_accuracy_mean": 0.34521484375,
+    "always_max_action_accuracy_std": 0.0007973599423122325,
+    "always_max_mean_utility_mean": 0.26997069517771405,
+    "always_max_mean_utility_std": 0.00690668414708589,
+    "always_max_mean_cost_mean": 1.704345703125,
+    "always_max_mean_cost_std": 0.02231984814089726,
+    "always_max_total_utility_per_episode_mean": 2.1597655614217124,
+    "always_max_total_utility_per_episode_std": 0.05525347317668712,
+    "always_max_total_cost_per_episode_mean": 13.634765625,
+    "always_max_total_cost_per_episode_std": 0.17855878512717807,
+    "always_max_infeasible_rate_mean": 0.0,
+    "always_max_infeasible_rate_std": 0.0,
+    "always_wait_action_accuracy_mean": 0.059244791666666664,
+    "always_wait_action_accuracy_std": 0.0031665163506418813,
+    "always_wait_mean_utility_mean": 0.05000000819563866,
+    "always_wait_mean_utility_std": 0.0,
+    "always_wait_mean_cost_mean": 0.0,
+    "always_wait_mean_cost_std": 0.0,
+    "always_wait_total_utility_per_episode_mean": 0.40000006556510925,
+    "always_wait_total_utility_per_episode_std": 0.0,
+    "always_wait_total_cost_per_episode_mean": 0.0,
+    "always_wait_total_cost_per_episode_std": 0.0,
+    "always_wait_infeasible_rate_mean": 0.0,
+    "always_wait_infeasible_rate_std": 0.0,
+    "random_action_accuracy_mean": 0.24715169270833334,
+    "random_action_accuracy_std": 0.00614514880490002,
+    "random_mean_utility_mean": 0.28382161259651184,
+    "random_mean_utility_std": 0.0013205526633335682,
+    "random_mean_cost_mean": 1.543701171875,
+    "random_mean_cost_std": 0.034047479613352395,
+    "random_total_utility_per_episode_mean": 2.2705729007720947,
+    "random_total_utility_per_episode_std": 0.010564421306668546,
+    "random_total_cost_per_episode_mean": 12.349609375,
+    "random_total_cost_per_episode_std": 0.27237983690681916,
+    "random_infeasible_rate_mean": 0.0,
+    "random_infeasible_rate_std": 0.0,
+    "model_beats_always_max_utility": true,
+    "model_beats_need_match_utility": true,
+    "model_beats_random_utility": true,
+    "model_not_above_oracle": true
+  },
+  "limits": [
+    "synthetic supervised imitation of a known oracle, not reinforcement learning",
+    "the need and budget are observed, so this does not test latent need inference",
+    "cost prediction is derived from action probabilities, not a dedicated cost head",
+    "three seeds; CPU timing is noisy"
+  ],
+  "elapsed_seconds": 70.14064769999823
+}
