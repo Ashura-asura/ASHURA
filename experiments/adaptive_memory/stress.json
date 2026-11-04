@@ -1,0 +1,160 @@
+{
+  "experiment": "P22/P24/P25",
+  "dim": 256,
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "results": {
+    "partial_cue": [
+      {
+        "cue_fraction": 1.0,
+        "partial_acc": 0.9967,
+        "full_acc": 0.9967
+      },
+      {
+        "cue_fraction": 0.75,
+        "partial_acc": 1.0,
+        "full_acc": 0.9967
+      },
+      {
+        "cue_fraction": 0.5,
+        "partial_acc": 1.0,
+        "full_acc": 0.9967
+      },
+      {
+        "cue_fraction": 0.35,
+        "partial_acc": 1.0,
+        "full_acc": 0.9967
+      },
+      {
+        "cue_fraction": 0.25,
+        "partial_acc": 1.0,
+        "full_acc": 0.9967
+      }
+    ],
+    "noisy": [
+      {
+        "distractors": 0,
+        "accuracy": 0.9967
+      },
+      {
+        "distractors": 2,
+        "accuracy": 0.95
+      },
+      {
+        "distractors": 5,
+        "accuracy": 0.77
+      },
+      {
+        "distractors": 10,
+        "accuracy": 0.41
+      }
+    ],
+    "capacity": [
+      {
+        "facts": 50,
+        "exact": 0.9933,
+        "related": 0.9889,
+        "fts_exact": 1.0,
+        "fts_related": 1.0,
+        "write_ms": 0.2023,
+        "params": 65536
+      },
+      {
+        "facts": 100,
+        "exact": 0.9967,
+        "related": 0.9944,
+        "fts_exact": 1.0,
+        "fts_related": 1.0,
+        "write_ms": 0.1842,
+        "params": 65536
+      },
+      {
+        "facts": 200,
+        "exact": 0.99,
+        "related": 0.9294,
+        "fts_exact": 1.0,
+        "fts_related": 1.0,
+        "write_ms": 0.1744,
+        "params": 65536
+      },
+      {
+        "facts": 400,
+        "exact": 0.9858,
+        "related": 0.8803,
+        "fts_exact": 1.0,
+        "fts_related": 1.0,
+        "write_ms": 0.1769,
+        "params": 65536
+      }
+    ],
+    "idf": {
+      "no_idf": 0.01,
+      "idf": 0.9967
+    },
+    "long_run": {
+      "rounds": [
+        {
+          "round": 1,
+          "task": "A",
+          "A_exact": 0.84,
+          "B_exact": 0.008,
+          "C_exact": 0.004
+        },
+        {
+          "round": 2,
+          "task": "B",
+          "A_exact": 0.332,
+          "B_exact": 0.776,
+          "C_exact": 0.0
+        },
+        {
+          "round": 3,
+          "task": "C",
+          "A_exact": 0.04,
+          "B_exact": 0.2,
+          "C_exact": 0.856
+        },
+        {
+          "round": 4,
+          "task": "A",
+          "A_exact": 0.896,
+          "B_exact": 0.012,
+          "C_exact": 0.228
+        },
+        {
+          "round": 5,
+          "task": "B",
+          "A_exact": 0.28,
+          "B_exact": 0.836,
+          "C_exact": 0.012
+        },
+        {
+          "round": 6,
+          "task": "C",
+          "A_exact": 0.036,
+          "B_exact": 0.224,
+          "C_exact": 0.876
+        },
+        {
+          "round": 7,
+          "task": "A",
+          "A_exact": 0.9,
+          "B_exact": 0.012,
+          "C_exact": 0.24
+        },
+        {
+          "round": 8,
+          "task": "B",
+          "A_exact": 0.28,
+          "B_exact": 0.84,
+          "C_exact": 0.016
+        }
+      ],
+      "contradictory_writes": 100,
+      "old_answer_overwritten": 0.05
+    }
+  }
+}

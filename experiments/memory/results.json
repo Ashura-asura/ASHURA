@@ -1,0 +1,24 @@
+{
+  "planned": 100,
+  "forgotten": 100,
+  "unverified_forgotten": 1.0,
+  "unverified_over_forgotten": 0,
+  "used_forgotten": 0,
+  "verified_retained": 1.0,
+  "trusted_retained": 1.0,
+  "user_retained": 1.0,
+  "retrieved_retained": 1.0,
+  "repeated_retained": 1.0,
+  "integrity": {
+    "stale_fts_removed": 0,
+    "orphan_facts_removed": 0
+  },
+  "rows_left": 200,
+  "kept_fact_retrievable": true,
+  "removed_not_retrievable": true,
+  "utility_separate_from_truth": {
+    "accepted": 0.6,
+    "rejected": 0.0,
+    "reliability_unchanged": 1.0
+  }
+}

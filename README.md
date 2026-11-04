@@ -4,18 +4,18 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 `spec/New_approach.txt` and the v2 blueprint `spec/New_approach_2.txt`.
 
 **Status:** Phase 0 foundation baseline measured on the target laptop; Phases 1–6 implemented;
-Phase 1 trust repair (P01–P14) implemented and tested; local OCR and a HARN arithmetic candidate
-are integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
-subproject. **204 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
-experimental and out of the response path. BrainSim is not imported by ASHURA. The verified
-learning loop is **not** complete: CAGE is not yet connected to candidate training, and
-natural-language corrections are not independently verified.
+Phase 1 trust repair (P01–P14) and Phase 2 memory reliability (P15–P29) implemented and tested;
+local OCR and a HARN arithmetic candidate are integrated behind optional dependencies/checkpoints;
+BrainSim B1–B6 measured as an independent subproject. **233 ASHURA tests and 46 BrainSim tests
+pass.** The adaptive memory remains experimental and out of the response path. BrainSim is not
+imported by ASHURA. The verified learning loop is **not** complete: CAGE is not yet connected to
+candidate training, and natural-language corrections are not independently verified.
 
 ## Run
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 204 tests
+python -m pytest -q                       # 233 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -24,6 +24,11 @@ python -m experiments.nfd.run             # EXP-003  NFD vs always-run
 python -m experiments.adaptive_memory.run # EXP-004  neural adaptive memory vs FTS5
 python -m experiments.adaptive_memory.conflict  # EXP-005  same-key conflicts
 python -m experiments.dream.run           # EXP-006  DREAM replay vs new-only
+python -m experiments.ama.calibrate       # EXP-009  AMA threshold/cost/storage
+python -m experiments.adaptive_memory.stress     # EXP-011  adaptive memory under stress
+python -m experiments.dream.replay_sweep  # EXP-012  replay ratio/policy sweep
+python -m experiments.memory.retention_bench     # EXP-012  retention/utility
+python -m evaluation.contradiction_bench  # EXP-010  structured answer comparison
 python -m evaluation.ollama_baseline      # PHASE 0   real-model baseline
 python -m memory.retention --db data/ashura.db   # forgetting policy dry run
 ```
@@ -47,7 +52,7 @@ failure modes without changing the measured research claims:
 - **Config/experiments:** unknown `[foundation]` keys are clear errors; the `[retention]` section
   is honoured; all model tags are benchmarked even if one non-reference model fails.
 
-Details are in `research/failures.md` F-020–F-034. The `.github/workflows/ci.yml` workflow is
+Details are in `research/failures.md` F-020–F-040. The `.github/workflows/ci.yml` workflow is
 added but has not yet been executed on GitHub; the local Windows/Python 3.13 run is the measured
 result.
 
@@ -75,6 +80,36 @@ The 2026-11-05 Phase 1 pass makes the response-to-learning path conservative:
 Measured evidence, four-arm DREAM results and the remaining limits are in
 `research/phase1_trust.md`, `research/experiment_log.md` EXP-006/EXP-008 and
 `research/failures.md` F-029–F-034.
+
+## Phase 2 memory reliability (P15–P29)
+
+The 2026-11-05 Phase 2 pass makes memory evidence auditable and keeps the neural memory out of the
+response path:
+
+- **Structured comparison.** `learning/compare.py` normalises numbers, units, dates and identifiers
+  and scopes negation per clause. On 28 author-written pairs it scores 1.00 accuracy vs 0.64 for the
+  old lexical comparator; this is not general semantic understanding.
+- **Conflict index.** A `conflicts` table stores every contradiction and its policy. A claim
+  supersedes only when independently `verified` and strictly stronger than every old claim; two
+  verified claims stay open. `resolve_conflict()` requires an explicit explanation.
+- **Utility feedback.** `memory_feedback` records retrieval hits, acceptance/rejection, task
+  completion and corrections. Utility changes usefulness ranking only, never reliability.
+- **Measured AMA.** Admission is one transaction with cached tokenisation: 1.40 ms/item vs 1.13 ms
+  for store-everything on EXP-001 (1.24x, down from ~6x). The remaining +27% storage is audit and
+  derived evidence; the threshold sweep is in `experiments/ama/calibration.json`.
+- **Measured retention.** Recently used records are protected. The benchmark forgot 100/100
+  intended unverified records, lost 0 protected records and left 0 stale index/fact rows.
+- **Adaptive memory stays experimental.** IDF is essential (0.997 vs 0.010 exact), but FTS5 stays
+  1.00 while adaptive recall falls to 0.41 with 10 distractors and 0.04 after task switches. Its
+  queue now requires verified status, a reliability floor, no unresolved conflict and a hard update
+  bound.
+- **Semantic provenance.** A semantic fact requires a verified source episode and stores
+  verification method, provenance, derivation and source id; deleting the source deletes the fact.
+
+Measured evidence and limits: `research/phase2_memory.md`, `research/experiment_log.md`
+EXP-009–EXP-012, `experiments/adaptive_memory/stress.json`, `experiments/dream/replay_sweep.json`
+and `evaluation/contradiction_results.json`. Replay ratios remain uncalibrated (all arms tie), and
+the adaptive memory is still not integrated.
 
 ### Ollama (Windows PowerShell)
 
@@ -128,14 +163,15 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 | Area | Files | State |
 |---|---|---|
 | Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; `tony:7b` pinned; Phase 0 0.94 strict / 2.35 s p50 (EXP-000d, n=16); 4.6 GB shared footprint; llama.cpp untested |
-| Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + verified semantic facts, FTS5, provenance fields, bounded working memory, deletion integrity, retention policy |
-| AMA | `learning/ama.py` | duplicate/conflict detection, scoring, surprise, queues, decision log; reliability-aware retrieval with provenance labels; weights uncalibrated |
+| Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + verified semantic facts, FTS5, provenance/derivation, conflict index, utility feedback, bounded working memory, deletion integrity, utility-aware retention |
+| AMA | `learning/ama.py`, `learning/compare.py` | duplicate/conflict detection, scoring, continuous surprise, conflict index, feedback-based utility, decision log, reliability-aware retrieval; weights hand-set except the measured threshold sweep |
 | NFD + router | `brain/need_field.py`, `brain/router.py`, `brain/controller.py` | priority scoring, RAM/CPU-aware selection, cheap-skill path, traces, measured costs when calibrated |
 | Arithmetic | `skills/arithmetic/*` | exact rational path + independent Decimal verifier; neural addition is a non-authoritative candidate |
 | OCR | `skills/perception/ocr.py`, `evaluation/ocr_benchmark.py` | optional local Tesseract, confidence, corrections, CER/WER runner; no target-corpus measurement yet |
 | Adaptive memory | `memory/adaptive_memory.py` | Titans-inspired linear memory; **no advantage over FTS5 yet** |
 | DPF + CAGE | `plasticity/*`, `learning/cage.py` | bounded fast state, candidate checkpoints, NGR-only promotion, trace attribution, gated update consumer (`GatedUpdater`) |
-| DREAM / NGR | `learning/dream.py`, `learning/replay.py`, `evaluation/ngr.py` | four consolidation arms (stable/fresh × new/replay, EXP-006), training-only vocabulary, real cold-start baseline, hardened promotion/rollback gate |
+| DREAM / NGR | `learning/dream.py`, `learning/replay.py`, `evaluation/ngr.py` | four consolidation arms (stable/fresh × new/replay, EXP-006), ratio/policy sweep (all arms tie), training-only vocabulary, real cold-start baseline, hardened promotion/rollback gate |
+| Adaptive memory | `memory/adaptive_memory.py` | experimental IDF memory; verified/conflict-gated queue; stress and long-run measurements; not in the response path |
 | BrainSim | `BrainSim/*` | independent B1–B6; 46 tests; not imported by ASHURA |
 | Evaluation | `evaluation/*` | strict/lenient judge, 16-item suite, Ollama baseline with CIs and paired sign test, latency, retrieval bench |
 

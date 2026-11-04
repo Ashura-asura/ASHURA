@@ -22,17 +22,20 @@ working_memory_slots = 8
 working_memory_ttl_s = 600
 
 [ama]
-# Experimental weights. NOT calibrated yet (see research/hypotheses.md H-AMA).
+# Experimental weights. Calibrated for admission precision but still evaluated on synthetic data
+# (see research/experiment_log.md EXP-009). The default threshold preserves unverified audit
+# evidence; 1.6 maximises precision/recall on the synthetic stream by discarding it.
 w_novelty = 1.0
 w_surprise = 0.5
 w_reliability = 1.0
 w_utility = 0.7
 w_conflict = 0.8
 w_cost = 0.3
-discard_threshold = 0.45
+discard_threshold = 0.45        # P15: 1.6 best F1 on synthetic, but drops unverified audit rows
 duplicate_similarity = 0.9
 reliable_fact_threshold = 0.8
 retrieval_min_reliability = 0.5   # below this (unverified model output = 0.2) is not retrieval evidence
+record_retrieval_feedback = false  # opt-in write on the read path; used by retention experiments
 
 [nfd]
 # Experimental weights for P = aE + bU + cR + dI - eK. NOT calibrated yet.
@@ -56,3 +59,4 @@ critical_epsilon = 0.0
 # Forgetting policy (memory/retention.py). Only unverified, never-reinforced, unrelated records are ever forgotten.
 max_age_days = 30
 max_rows = 0                   # 0 = no cap
+protect_recent_days = 7        # recently retrieved/used unverified records are not forgotten

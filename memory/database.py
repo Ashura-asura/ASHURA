@@ -50,6 +50,20 @@ class Database:
             c.executemany("UPDATE experiences SET input_norm = ? WHERE id = ?",
                           [(normalize(r["input"]), r["id"]) for r in stale])
 
+        # Phase 2 (P29): facts carry explicit provenance, not just a reliability number.
+        fcols = {r["name"] for r in c.execute("PRAGMA table_info(facts)")}
+        for name, ddl in (("verification_method", "TEXT NOT NULL DEFAULT ''"),
+                          ("provenance", "TEXT NOT NULL DEFAULT '{}'"),
+                          ("derivation", "TEXT NOT NULL DEFAULT ''")):
+            if name not in fcols:
+                c.execute(f"ALTER TABLE facts ADD COLUMN {name} {ddl}")
+        c.execute("""UPDATE facts SET verification_method = 'independent verification'
+                     WHERE verification_method = ''""")
+        c.execute("""UPDATE facts SET provenance = json_object(
+                        'source_exp_id', source_exp_id, 'verification', 'verified',
+                        'derivation', 'legacy fact migrated without a derivation chain')
+                     WHERE provenance = '{}'""")
+
     def close(self) -> None:
         self.conn.close()
 

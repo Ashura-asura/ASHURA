@@ -41,13 +41,16 @@ def test_weaker_conflict_is_kept_as_evidence_but_not_searchable():
     assert db.conn.execute("SELECT COUNT(*) FROM dream_queue WHERE exp_id=?", (d.exp_id,)).fetchone()[0] == 0
 
 
-def test_stronger_correction_supersedes_without_deleting_history():
+def test_user_correction_does_not_supersede_by_reliability_alone():
+    """P21: 0.6 user evidence is stronger than 0.2 unverified, but it is still not verified truth."""
     db, ama = mk()
     old = ama.admit(Experience("code for project p1", "code is 9999", verification_status="unverified"))
-    ama.admit(Experience("code for project p1", "code is 4821", verification_status="user_corrected"))
+    d = ama.admit(Experience("code for project p1", "code is 4821", verification_status="user_corrected"))
+    assert d.decision == "REVIEW_REQUIRED"
     assert EpisodicMemory(db).count() == 2
+    assert db.conn.execute("SELECT COUNT(*) FROM conflicts WHERE status='open'").fetchone()[0] == 1
     ids = [i for i, _ in FTS5Index(db).search("code project p1")]
-    assert old.exp_id not in ids and len(ids) == 1
+    assert old.exp_id in ids and d.exp_id not in ids          # old search result retained, new is evidence only
 
 
 def test_near_duplicate_with_formatting_noise_is_merged():

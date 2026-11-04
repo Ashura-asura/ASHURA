@@ -66,7 +66,7 @@ class EpisodicMemory:
     def __init__(self, db: Database):
         self.db = db
 
-    def add(self, e: Experience) -> str:
+    def add(self, e: Experience, commit: bool = True) -> str:
         self.db.conn.execute(
             """INSERT INTO experiences(id, ts, input, output, task_category, source, verification_status,
                verification_method, reliability, outcome, content_hash, repeat_count, related_ids, input_norm)
@@ -75,7 +75,8 @@ class EpisodicMemory:
              e.verification_method, e.reliability, e.outcome, content_hash(e.input, e.output), e.repeat_count,
              json.dumps(e.related_ids), normalize(e.input)),
         )
-        self.db.conn.commit()
+        if commit:
+            self.db.conn.commit()
         return e.id
 
     def get(self, exp_id: str) -> Experience | None:
@@ -93,7 +94,7 @@ class EpisodicMemory:
             (normalize(inp), category)).fetchall()
         return [self._row(r) for r in rows]
 
-    def bump_repeat(self, exp_id: str, new_status: str | None = None) -> None:
+    def bump_repeat(self, exp_id: str, new_status: str | None = None, commit: bool = True) -> None:
         self.db.conn.execute("UPDATE experiences SET repeat_count = repeat_count + 1 WHERE id = ?", (exp_id,))
         if new_status and RELIABILITY_BY_STATUS.get(new_status, 0) > 0:
             self.db.conn.execute(
@@ -101,7 +102,22 @@ class EpisodicMemory:
                    reliability = MAX(reliability, ?) WHERE id = ?""",
                 (new_status, VERIFICATION_METHOD_BY_STATUS[new_status],
                  RELIABILITY_BY_STATUS[new_status], exp_id))
-        self.db.conn.commit()
+        if commit:
+            self.db.conn.commit()
+
+    def link(self, exp_id: str, other_id: str, commit: bool = True) -> bool:
+        """Record that two experiences conflict, on both records (used by retrieval warnings)."""
+        r = self.db.conn.execute("SELECT related_ids FROM experiences WHERE id = ?", (exp_id,)).fetchone()
+        if r is None:
+            return False
+        ids = json.loads(r["related_ids"])
+        if other_id not in ids:
+            ids = sorted(set(ids) | {other_id})
+            self.db.conn.execute("UPDATE experiences SET related_ids = ? WHERE id = ?",
+                                 (json.dumps(ids), exp_id))
+            if commit:
+                self.db.conn.commit()
+        return True
 
     def filter(self, category: str | None = None, status: str | None = None, limit: int = 100) -> list[Experience]:
         rows = self.db.conn.execute(

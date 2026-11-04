@@ -24,6 +24,7 @@ class DreamConfig:
     new_ratio: float = 0.5       # target share of the replay set; NOT calibrated
     seed: int = 0
     replay: bool = True          # False = new-only training (baseline for H-DREAM)
+    replay_policy: str = "random"  # "random" | "recent" (P28 sampling policy)
     initialization: str = "fresh"  # "fresh" | "stable" (consolidation from the stable model)
     answer_vocabulary: tuple[str, ...] | None = None  # fixed before evaluation; default = training values
     cold_start_checkpoint: str | None = None           # independently evaluated baseline when no stable exists
@@ -36,6 +37,8 @@ class DreamConfig:
             raise ValueError("min_train and dim must be positive")
         if self.initialization not in {"fresh", "stable"}:
             raise ValueError("initialization must be 'fresh' or 'stable'")
+        if self.replay_policy not in {"random", "recent"}:
+            raise ValueError("replay_policy must be 'random' or 'recent'")
         if not 0.0 <= self.cold_start_min_target_accuracy <= 1.0:
             raise ValueError("cold_start_min_target_accuracy must be in [0, 1]")
 
@@ -123,7 +126,8 @@ class DREAM:
     # ---- orchestration ----------------------------------------------------------------------
     def run(self) -> DreamResult:
         if self.cfg.replay:
-            train = self.buffer.replay_set(self.cfg.target, self.cfg.new_ratio, self.cfg.seed)
+            train = self.buffer.replay_set(self.cfg.target, self.cfg.new_ratio, self.cfg.seed,
+                                           policy=self.cfg.replay_policy)
         else:
             train = [i for i in self.buffer.training_set() if i.category == self.cfg.target]
         if len(train) < self.cfg.min_train:

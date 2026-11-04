@@ -8,8 +8,8 @@ experiment and not a formal security audit.
 
 Status legend: **CRITICAL** = fix before trusting learning or promoting updates;
 **HIGH** = fix before claiming the capability works; **MEDIUM** = improve after the
-foundations are reliable. The implementation status is tracked separately in
-`research/phase1_trust.md`.
+foundations are reliable. Implementation status is tracked in `research/phase1_trust.md`
+(P01-P14) and `research/phase2_memory.md` (P15-P29).
 
 ## 1. Critical: learning safety and correctness
 
@@ -49,6 +49,25 @@ foundations are reliable. The implementation status is tracked separately in
 | P27 | Forgetting thresholds are guessed. | Measure utility and retrieval frequency over time; test retention and recovery benchmarks. |
 | P28 | Replay new/old ratio is not calibrated. | Compare ratios, sampling policies and capacities across distribution shifts; report acquisition and retention. |
 | P29 | Semantic memory is not verified understanding; a status flag can make a fact "reliable". | Require explicit provenance and verification evidence; preserve the original episode and derivation path. |
+
+### Phase 2 resolution (2026-11-05)
+
+| ID | Status | Evidence / remaining gap |
+|---|---|---|
+| P15 | measured, default kept | EXP-009: 0.45 precision 0.35 / recall 1.00; 1.6 precision/recall 1.00 but discards unverified audit rows. Synthetic only (F-035). |
+| P16 | fixed | 1.40 ms/item vs 1.13 baseline on EXP-001 (1.24x, was ~6x); one transaction + token cache. |
+| P17 | measured, audit kept | +27% DB; `admission_log` ~308 KB, facts ~99 KB, conflicts ~18 KB; fact text deduplicated. |
+| P18 | fixed | `memory_feedback`; utility separate from reliability; read-path logging opt-in. |
+| P19/P20 | fixed (rule-based) | EXP-010: 1.00 vs 0.64 accuracy; units/dates/ids/negation. Not general semantics. |
+| P21 | fixed | `conflicts` table; verified + strictly stronger only; explicit resolution API. |
+| P22 | measured, FTS5 default | EXP-011: adaptive loses under noise/capacity; FTS5 1.00. |
+| P23 | fixed (queue gate) | Verified + reliability + conflict + bounded update; rejected items logged. |
+| P24 | measured, open | ~2,100 writes: task-switch accuracy 0.84 -> 0.04; gate does not solve interference (F-036). |
+| P25 | fixed | IDF exact 0.997 vs 0.010 without. |
+| P26 | fixed (proxy) | Continuous surprise; Brier 0.013 vs 0.381; not a calibrated probability. |
+| P27 | fixed | 100/100 intended forgotten, 0 protected lost, 0 stale rows; recent use protected. |
+| P28 | measured, not calibrated | All ratios/policies tie at 1.00 on EXP-006 (F-038). |
+| P29 | fixed | Verified source required; provenance/derivation stored; cascade delete. |
 
 Recommended separation: episodic (what happened, including uncertainty), verified
 semantic (facts that passed an independent policy), and adaptive neural memory

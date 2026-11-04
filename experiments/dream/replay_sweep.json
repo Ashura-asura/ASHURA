@@ -1,0 +1,80 @@
+{
+  "experiment": "P28",
+  "hypothesis": "H-DREAM",
+  "n_facts": 20,
+  "dim": 256,
+  "results": [
+    {
+      "new_ratio": 0.25,
+      "policy": "random",
+      "train_n": 40,
+      "new": 1.0,
+      "old_retention": 1.0,
+      "promoted": true,
+      "seconds": 0.063
+    },
+    {
+      "new_ratio": 0.5,
+      "policy": "random",
+      "train_n": 40,
+      "new": 1.0,
+      "old_retention": 1.0,
+      "promoted": true,
+      "seconds": 0.055
+    },
+    {
+      "new_ratio": 0.75,
+      "policy": "random",
+      "train_n": 27,
+      "new": 1.0,
+      "old_retention": 1.0,
+      "promoted": true,
+      "seconds": 0.054
+    },
+    {
+      "new_ratio": 1.0,
+      "policy": "random",
+      "train_n": 20,
+      "new": 1.0,
+      "old_retention": 1.0,
+      "promoted": true,
+      "seconds": 0.053
+    },
+    {
+      "new_ratio": 0.25,
+      "policy": "recent",
+      "train_n": 40,
+      "new": 1.0,
+      "old_retention": 1.0,
+      "promoted": true,
+      "seconds": 0.069
+    },
+    {
+      "new_ratio": 0.5,
+      "policy": "recent",
+      "train_n": 40,
+      "new": 1.0,
+      "old_retention": 1.0,
+      "promoted": true,
+      "seconds": 0.069
+    },
+    {
+      "new_ratio": 0.75,
+      "policy": "recent",
+      "train_n": 27,
+      "new": 1.0,
+      "old_retention": 1.0,
+      "promoted": true,
+      "seconds": 0.056
+    },
+    {
+      "new_ratio": 1.0,
+      "policy": "recent",
+      "train_n": 20,
+      "new": 1.0,
+      "old_retention": 1.0,
+      "promoted": true,
+      "seconds": 0.061
+    }
+  ]
+}

@@ -220,3 +220,32 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 - **Supported:** the response path no longer marks `None`/unavailable verification as success; a language-generated reply cannot borrow an arithmetic verification result; unverified FTS records are not retrieved by default; user corrections are stored separately and are not counted as verified; NGR rejects NaN/inf, out-of-range scores, missing capabilities and (when required) missing performance measurements; DREAM refuses a fabricated zero baseline.
 - **Not supported:** the full CAGE -> candidate -> NGR learning loop, independent natural-language correction verification, calibrated AMA weights, a general replay advantage, or any real-model accuracy improvement from these safety changes. This is an engineering/trust result, not a capability result.
 - **Decision:** keep the Phase 1 changes; proceed to Phase 2 (memory reliability) before claiming the learning loop is complete. Details and remaining limits: `research/phase1_trust.md`.
+
+---
+## EXP-009 - AMA calibration, admission cost and storage (P15-P17, 2026-11-05)
+- **Setup:** synthetic project stream, 3 seeds, labelled useful/repeated/contradictory/unverified/noise records; threshold sweep 0.0-2.0; `experiments/ama/calibrate.py`. Target laptop is not used.
+- **Results:** at the default 0.45, precision 0.350 / recall 1.000 (294 negatives admitted); at 1.4, 0.994/1.000; at 1.6, 1.000/1.000. On the original EXP-001 stream admission fell to 1.40 ms/item vs 1.13 ms store-everything (1.24x, previously ~6x); DB size 1184 KB vs 931 KB (+27%).
+- **Storage breakdown:** `admission_log` ~308 KB, `facts` ~99 KB, `conflicts` ~18 KB. This is audit and derived evidence; semantic fact text is no longer duplicated when identical to its source episode.
+- **Decision:** keep 0.45 as the default because it preserves unverified audit records; 1.6 is documented as the precision-maximising setting for deployments that prefer to discard them. Do not describe the synthetic threshold as truth calibration. Details: `research/phase2_memory.md`, `experiments/ama/calibration.json`.
+
+---
+## EXP-010 - Structured answer comparison and contradiction benchmark (P19/P20/P26, 2026-11-05)
+- **Setup:** 28 author-written pairs (14 equivalent, 14 contradictory), covering units, dates, number words, entity ids, negation, hedges and swaps; compared with the previous lexical/parity comparator. `evaluation/contradiction_bench.py`.
+- **Results:** structured comparator accuracy 1.000, Brier 0.013; lexical baseline accuracy 0.643, Brier 0.381.
+- **Does not support:** general semantic understanding, synonymy, entailment or long paraphrases. Same-author data is optimistic; unknown cases are stored as conflicts, not merged.
+- **Decision:** keep the rule-based comparator; do not add a local encoder without a held-out win. Details: `evaluation/contradiction_results.json`.
+
+---
+## EXP-011 - Adaptive-memory stress and long-run interference (P22/P24/P25, 2026-11-05)
+- **Setup:** 100 facts, dim 256, 3 seeds; partial cues, 0/2/5/10 distractor tokens, capacity 50-400, IDF on/off; a single-seed long run of 8 x 250 writes across three task families plus 100 contradictory writes. `experiments/adaptive_memory/stress.py`.
+- **Results:** exact 0.997; related 0.880 at 400 facts; noisy recall 0.95/0.77/0.41 at 2/5/10 distractors; FTS5 1.00 throughout. IDF exact 0.997 vs 0.010 without. Long run: old-task accuracy 0.84 -> 0.33 -> 0.04 across switches, ~0.90 after retraining; 5% of direct contradictory writes overwrote the old answer.
+- **Supports:** IDF is essential for hashed-token keys; the adaptive memory can recall a partial cue on this synthetic task.
+- **Does not support:** any advantage over FTS5, semantic generalisation, or safe task-switch retention. FTS5 remains the default; adaptive memory stays out of the response path.
+- **Decision:** keep the queue gate and experimental status; do not integrate. Details: `experiments/adaptive_memory/stress.json`.
+
+---
+## EXP-012 - Retention, replay ratio and semantic provenance (P27-P29, 2026-11-05)
+- **Retention:** 100 intended unverified records forgotten; 0 verified/trusted/user/recently-used/reinforced records forgotten; 0 stale FTS/fact rows; kept facts still retrievable. Utility feedback changed usefulness (0.60 accepted vs 0.00 rejected) without changing reliability 1.00. `experiments/memory/retention_bench.py`.
+- **Replay:** ratios 0.25/0.5/0.75/1.0 and random/recent sampling all scored 1.00 new / 1.00 old retention on the EXP-006 buffer. The task cannot distinguish them; the default 0.5 is not a calibrated optimum. `experiments/dream/replay_sweep.py`.
+- **Provenance:** semantic facts now require a verified source episode and store verification method, provenance JSON, derivation and source id; deleting the source removes the fact. Legacy facts are migrated with a legacy derivation.
+- **Decision:** keep the retention policy, feedback path, replay-policy option and provenance checks. Do not claim replay calibration or fact understanding. Details: `research/phase2_memory.md`.

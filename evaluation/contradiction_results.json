@@ -1,0 +1,294 @@
+{
+  "n": 28,
+  "accuracy": 1.0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0,
+  "baseline_accuracy": 0.6429,
+  "brier_new": 0.0134,
+  "brier_lexical": 0.3807,
+  "false_merges": [],
+  "false_conflicts": [],
+  "rows": [
+    {
+      "question": "what is the access code for project P7",
+      "first": "The access code for project P7 is 4821",
+      "second": "code is 4821",
+      "label": 1,
+      "predicted": true,
+      "baseline": false,
+      "similarity": 1.0,
+      "baseline_similarity": 0.375
+    },
+    {
+      "question": "what is 6*7",
+      "first": "42",
+      "second": "The answer is 42",
+      "label": 1,
+      "predicted": true,
+      "baseline": false,
+      "similarity": 1.0,
+      "baseline_similarity": 0.25
+    },
+    {
+      "question": "capital of france",
+      "first": "It is Paris",
+      "second": "The capital of France is Paris",
+      "label": 1,
+      "predicted": true,
+      "baseline": false,
+      "similarity": 1.0,
+      "baseline_similarity": 0.2857
+    },
+    {
+      "question": "capital of france",
+      "first": "Paris",
+      "second": "Paris.",
+      "label": 1,
+      "predicted": true,
+      "baseline": true,
+      "similarity": 1.0,
+      "baseline_similarity": 1.0
+    },
+    {
+      "question": "how far is the office",
+      "first": "it is 1.5 km",
+      "second": "it is 1500 m",
+      "label": 1,
+      "predicted": true,
+      "baseline": false,
+      "similarity": 1.0,
+      "baseline_similarity": 0.2857
+    },
+    {
+      "question": "how far is the office",
+      "first": "5 km",
+      "second": "5000 metres",
+      "label": 1,
+      "predicted": true,
+      "baseline": false,
+      "similarity": 1.0,
+      "baseline_similarity": 0.0
+    },
+    {
+      "question": "what is the weight",
+      "first": "2 kg",
+      "second": "2000 grams",
+      "label": 1,
+      "predicted": true,
+      "baseline": false,
+      "similarity": 1.0,
+      "baseline_similarity": 0.0
+    },
+    {
+      "question": "how long is the trip",
+      "first": "2 hours",
+      "second": "120 minutes",
+      "label": 1,
+      "predicted": true,
+      "baseline": false,
+      "similarity": 1.0,
+      "baseline_similarity": 0.0
+    },
+    {
+      "question": "when is the meeting",
+      "first": "May 6, 2024",
+      "second": "2024-05-06",
+      "label": 1,
+      "predicted": true,
+      "baseline": false,
+      "similarity": 1.0,
+      "baseline_similarity": 0.2
+    },
+    {
+      "question": "when is the meeting",
+      "first": "6 May 2024",
+      "second": "2024-05-06",
+      "label": 1,
+      "predicted": true,
+      "baseline": false,
+      "similarity": 1.0,
+      "baseline_similarity": 0.2
+    },
+    {
+      "question": "how many items",
+      "first": "twenty three",
+      "second": "23",
+      "label": 1,
+      "predicted": true,
+      "baseline": false,
+      "similarity": 1.0,
+      "baseline_similarity": 0.0
+    },
+    {
+      "question": "which project",
+      "first": "project P7",
+      "second": "project p7",
+      "label": 1,
+      "predicted": true,
+      "baseline": true,
+      "similarity": 1.0,
+      "baseline_similarity": 1.0
+    },
+    {
+      "question": "what is the access code for project P7",
+      "first": "code is 4821",
+      "second": "code is 4812",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.5
+    },
+    {
+      "question": "what is the access code for project P7",
+      "first": "code is 4821",
+      "second": "code is not 4821",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.5,
+      "baseline_similarity": 0.75
+    },
+    {
+      "question": "what is the access code for project P7",
+      "first": "code is 4821",
+      "second": "code is 4821 or 9999",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.25,
+      "baseline_similarity": 0.6
+    },
+    {
+      "question": "what is the access code for project P7",
+      "first": "code is 4821",
+      "second": "I do not know",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.0
+    },
+    {
+      "question": "capital of france",
+      "first": "Paris",
+      "second": "Lyon",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.0
+    },
+    {
+      "question": "capital of france",
+      "first": "Paris",
+      "second": "Paris is not the capital",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.25,
+      "baseline_similarity": 0.2
+    },
+    {
+      "question": "meeting day",
+      "first": "The meeting is on Monday",
+      "second": "The meeting is on Friday",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.6667
+    },
+    {
+      "question": "how far is the office",
+      "first": "1.5 km",
+      "second": "1.5 miles",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.5
+    },
+    {
+      "question": "what is the weight",
+      "first": "2 kg",
+      "second": "2 pounds",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.3333
+    },
+    {
+      "question": "how long is the trip",
+      "first": "2 hours",
+      "second": "2 minutes",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.3333
+    },
+    {
+      "question": "when is the meeting",
+      "first": "2024-05-06",
+      "second": "2024-05-07",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.5
+    },
+    {
+      "question": "how many items",
+      "first": "twenty three",
+      "second": "twenty four",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.3333
+    },
+    {
+      "question": "which project",
+      "first": "project P7",
+      "second": "project P8",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.3333
+    },
+    {
+      "question": "what is the box colour",
+      "first": "the box is not red",
+      "second": "the box is not blue",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.6667
+    },
+    {
+      "question": "did the test pass",
+      "first": "the test passed",
+      "second": "the test did not pass",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.3333
+    },
+    {
+      "question": "who owns it",
+      "first": "Alice owns it",
+      "second": "Bob owns it",
+      "label": 0,
+      "predicted": false,
+      "baseline": false,
+      "similarity": 0.0,
+      "baseline_similarity": 0.5
+    }
+  ]
+}

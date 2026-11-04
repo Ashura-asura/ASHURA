@@ -10,20 +10,30 @@ Design rules taken from the spec:
 from __future__ import annotations
 
 import json
-import re
 import time
 from dataclasses import asdict, dataclass, field
 
+from learning.compare import (answer_similarity, answers_agree, extract_values, jaccard,  # noqa: F401
+                              negation_scope, surprise_from_prior, tokens)
 from memory.database import Database
 from memory.episodic import EpisodicMemory, Experience, content_hash
 from memory.fts import FTS5Index
 from memory.semantic import SemanticMemory
 
-_TOK = re.compile(r"\w+", re.UNICODE)
 # Only independently verified records may enter verified learning queues (P03).
 VERIFIED_STATUSES = {"verified"}
 
 # Retrieval labels: the model must be told what kind of evidence it is being given (P01/P02).
+# Utility feedback (P18). These affect *usefulness* ranking only, never reliability or truth.
+FEEDBACK_WEIGHTS = {
+    "retrieval_hit": 0.05,
+    "user_accepted": 0.30,
+    "user_rejected": -0.30,
+    "task_completed": 0.20,
+    "corrected": -0.40,
+    "repeated_use": 0.10,
+}
+
 PROVENANCE_LABELS = {
     "verified": "verified fact",
     "trusted_material": "trusted material, not independently verified",
@@ -31,66 +41,6 @@ PROVENANCE_LABELS = {
     "user_corrected": "user correction, not independently verified",
     "unverified": "unverified experience",
 }
-
-
-def tokens(text: str) -> set[str]:
-    return set(_TOK.findall(text.lower()))
-
-
-def jaccard(a: set[str], b: set[str]) -> float:
-    return len(a & b) / len(a | b) if (a or b) else 1.0
-
-
-# ---- answer comparison (fixes F-002: token overlap alone flagged 63% of correct rewordings as conflicts) ----
-_STOP = frozenset("""a an the is are was were be been being am of for to in on at by with from as that this these those it its
-it's and or but so then than there here what which who whom whose when where why how do does did has have had will would can
-could should may might must shall i you he she we they me my your our their""".split())
-_NEG = frozenset("not no never none cannot n't isnt arent wasnt werent dont doesnt didnt wont without neither nor".split())
-
-
-def _answer_values(answer: str, question: str) -> set[str]:
-    """Digit-bearing tokens of the answer (codes, numbers, dates) that are not just repeating the question.
-
-    Tokens already present in the question are entity identifiers ("project P7"), not answer values.
-    """
-    q = tokens(question)
-    return {t for t in tokens(answer) if any(ch.isdigit() for ch in t) and t not in q}
-
-
-def _content(answer: str, question: str) -> set[str]:
-    q = tokens(question)
-    return {t for t in tokens(answer) if t not in _STOP and t not in _NEG and t not in q and not any(ch.isdigit() for ch in t)}
-
-
-def _negated(answer: str) -> bool:
-    toks = _TOK.findall(answer.lower().replace("n't", "nt").replace("\u2019t", "t"))
-    return sum(t in _NEG for t in toks) % 2 == 1
-
-
-def answers_agree(question: str, new: str, old: str, dup_similarity: float = 0.9, content_overlap: float = 0.75) -> bool:
-    """True if two answers to the same question say the same thing (possibly worded differently).
-
-    1. Near-identical token sets agree (formatting noise, punctuation).
-    2. Otherwise a negation mismatch means they disagree ("is 4821" vs "is not 4821").
-    3. If either contains answer values (numbers/codes), the value sets must be identical; a value present
-       in only one answer (or an extra hedge like "4821 or 9999") is treated as disagreement - the safe direction.
-    4. With no values, agree if the non-stopword content words overlap strongly (overlap coefficient).
-
-    Known limits (documented in research/failures.md F-002): number words vs digits ("four" vs 4), units
-    ("5 km" vs "5 miles"), and synonyms/paraphrase without shared content words are not understood; those
-    cases fall back to "disagree" and are stored as evidence for review, never silently merged.
-    """
-    if jaccard(tokens(new), tokens(old)) >= dup_similarity:
-        return True
-    if _negated(new) != _negated(old):
-        return False
-    vn, vo = _answer_values(new, question), _answer_values(old, question)
-    if vn or vo:
-        return bool(vn) and vn == vo
-    cn, co = _content(new, question), _content(old, question)
-    if not cn or not co:
-        return False
-    return len(cn & co) / min(len(cn), len(co)) >= content_overlap
 
 
 @dataclass
@@ -106,6 +56,7 @@ class AMAConfig:
     reliable_fact_threshold: float = 0.8
     retrieval_min_reliability: float = 0.5   # unverified model answers (0.2) are not retrieval evidence
     neural_memory_repeats: int = 3     # repeated useful association -> neural memory queue
+    record_retrieval_feedback: bool = False  # opt-in: record retrieval hits for utility measurement
 
     @classmethod
     def from_dict(cls, d: dict) -> "AMAConfig":
@@ -162,23 +113,40 @@ class RetrievalItem:
         return f"Memory ({self.label}{suffix}): {self.experience.text.strip()}"
 
 
-def surprise_from_prior(question: str, actual: str, prior: str | None, dup_similarity: float = 0.9) -> float:
-    """Prediction error in [0,1]: 0 if memory already believed this answer, 1 if it believed something else.
-
-    `prior` is what memory returned for this exact question before answering. With no prior belief there was
-    nothing to be surprised about (0.0) - that case is already scored by novelty, not surprise.
-    """
-    if not prior:
-        return 0.0
-    return 0.0 if answers_agree(question, actual, prior, dup_similarity) else 1.0
-
-
 class AMA:
     def __init__(self, db: Database, cfg: AMAConfig | None = None):
         self.db, self.cfg = db, cfg or AMAConfig()
         self.episodic = EpisodicMemory(db)
         self.semantic = SemanticMemory(db)
         self.fts = FTS5Index(db)
+
+    # ---- utility feedback (P18) ---------------------------------------------------------
+    def record_feedback(self, exp_id: str, event: str, value: float = 1.0, source: str = "user",
+                        note: str = "", commit: bool = True) -> None:
+        """Record a later usefulness signal. Does not alter truth/reliability (P18)."""
+        if event not in FEEDBACK_WEIGHTS:
+            raise ValueError(f"unknown feedback event {event!r}; expected one of {sorted(FEEDBACK_WEIGHTS)}")
+        if not 0.0 <= float(value) <= 1.0:
+            raise ValueError("feedback value must be in [0, 1]")
+        if self.episodic.get(exp_id) is None:
+            raise ValueError(f"experience {exp_id!r} does not exist")
+        self.db.conn.execute(
+            "INSERT INTO memory_feedback(ts, exp_id, event, value, source, note) VALUES (?,?,?,?,?,?)",
+            (time.time(), exp_id, event, float(value), source, note))
+        if commit:
+            self.db.conn.commit()
+
+    def utility_from_feedback(self, exp_id: str, default: float | None = None) -> float | None:
+        """Utility [0,1] from accumulated feedback, or ``default`` when there is none."""
+        rows = self.db.conn.execute(
+            "SELECT event, value FROM memory_feedback WHERE exp_id = ?", (exp_id,)).fetchall()
+        e = self.episodic.get(exp_id)
+        repeats = max(0, (e.repeat_count if e else 1) - 1)
+        if not rows and repeats == 0:
+            return default
+        delta = sum(FEEDBACK_WEIGHTS[r["event"]] * r["value"] for r in rows if r["event"] in FEEDBACK_WEIGHTS)
+        delta += FEEDBACK_WEIGHTS["repeated_use"] * min(repeats, 3)
+        return max(0.0, min(1.0, 0.3 + delta))
 
     # ---- feature extraction -------------------------------------------------------------
     def analyse(self, x: Experience, surprise: float = 0.0, utility: float | None = None) -> Features:
@@ -209,9 +177,12 @@ class AMA:
         f.novelty = 1.0 - best
         if best >= self.cfg.duplicate_similarity and not f.conflicts_with:
             f.duplicate_of = best_id
-        # utility: heuristic placeholder (documented as uncalibrated)
-        f.utility = utility if utility is not None else min(1.0, 0.3 + 0.4 * (f.reliability >= self.cfg.reliable_fact_threshold)
-                                                           + 0.3 * (x.outcome in {"success", "corrected"}))
+        # utility: measured feedback when available, otherwise the documented heuristic proxy
+        measured = self.utility_from_feedback(x.id) if x.id else None
+        f.utility = utility if utility is not None else (
+            measured if measured is not None
+            else min(1.0, 0.3 + 0.4 * (f.reliability >= self.cfg.reliable_fact_threshold)
+                     + 0.3 * (x.outcome in {"success", "corrected"})))
         return f
 
     def score(self, f: Features) -> float:
@@ -244,73 +215,188 @@ class AMA:
             if not include_unverified and e.reliability < threshold:
                 continue
             out.append(RetrievalItem(e, self.provenance_label(e), conflict=bool(e.related_ids)))
+            if self.cfg.record_retrieval_feedback:
+                self.record_feedback(memory_id, "retrieval_hit", note=query[:200])
             if len(out) >= limit:
                 break
         return out
 
+    # ---- conflict index (P21) ------------------------------------------------------------
+    def conflicts(self, open_only: bool = True, limit: int = 100) -> list[dict]:
+        where = "WHERE status = 'open'" if open_only else ""
+        rows = self.db.conn.execute(
+            f"SELECT * FROM conflicts {where} ORDER BY ts DESC LIMIT ?", (limit,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def resolve_conflict(self, conflict_id: int, resolution: str,
+                         verified_exp_id: str | None = None) -> bool:
+        """Explicitly resolve a conflict. Superseding requires a verified experience (P21)."""
+        if not resolution.strip():
+            raise ValueError("conflict resolution requires an explanation")
+        row = self.db.conn.execute("SELECT * FROM conflicts WHERE id = ?", (conflict_id,)).fetchone()
+        if row is None:
+            return False
+        if verified_exp_id:
+            e = self.episodic.get(verified_exp_id)
+            if e is None or e.verification_status != "verified":
+                raise ValueError("superseding a conflict requires an independently verified experience")
+            self.fts.delete(row["old_exp_id"], commit=False)
+            self.fts.add(e.id, e.text, commit=False)
+            status = "superseded"
+        else:
+            status = "dismissed"
+        self.db.conn.execute(
+            """UPDATE conflicts SET status = ?, resolution = ?, resolved_ts = ?, policy = ?
+               WHERE id = ?""",
+            (status, resolution, time.time(), "explicit human/resolver decision", conflict_id))
+        self._log(Decision("CONFLICT_RESOLVED", 0.0, f"{status}: {resolution}",
+                           verified_exp_id, ["conflict_index"], Features()), commit=False)
+        self.db.conn.commit()
+        return True
+
     # ---- decision -----------------------------------------------------------------------
     def admit(self, x: Experience, surprise: float = 0.0, utility: float | None = None) -> Decision:
+        """Analyse and store in one transaction, so a partial admission is never visible."""
+        conn = self.db.conn
+        started = not conn.in_transaction
+        try:
+            if started:
+                conn.execute("BEGIN IMMEDIATE")
+            d = self._admit(x, surprise, utility)
+            if started:
+                conn.commit()
+            return d
+        except Exception:
+            if started and conn.in_transaction:
+                conn.rollback()
+            raise
+
+    def _admit(self, x: Experience, surprise: float, utility: float | None) -> Decision:
         f = self.analyse(x, surprise, utility)
         s = self.score(f)
 
         if f.duplicate_of:
             old = self.episodic.get(f.duplicate_of)
-            self.episodic.bump_repeat(f.duplicate_of, x.verification_status if x.verification_status in VERIFIED_STATUSES else None)
+            self.episodic.bump_repeat(f.duplicate_of,
+                                      x.verification_status if x.verification_status in VERIFIED_STATUSES else None,
+                                      commit=False)
             dests = ["episodic(merge)"]
             new_count = (old.repeat_count + 1) if old else 2
             if new_count >= self.cfg.neural_memory_repeats and (old and old.reliability >= self.cfg.reliable_fact_threshold):
-                self._enqueue(f.duplicate_of, "neural_memory"); dests.append("neural_memory_queue")
-            return self._log(Decision("MERGED", s, f"duplicate of {f.duplicate_of}", f.duplicate_of, dests, f))
+                self._enqueue(f.duplicate_of, "neural_memory", commit=False); dests.append("neural_memory_queue")
+            return self._log(Decision("MERGED", s, f"duplicate of {f.duplicate_of}", f.duplicate_of, dests, f),
+                             commit=False)
 
         if f.conflicts_with:
-            return self._handle_conflict(x, f, s)
+            return self._handle_conflict(x, f, s, commit=False)
 
         if s < self.cfg.discard_threshold:
-            return self._log(Decision("DISCARDED", s, f"score {s:.2f} < {self.cfg.discard_threshold}", None, [], f))
+            return self._log(Decision("DISCARDED", s, f"score {s:.2f} < {self.cfg.discard_threshold}", None, [], f),
+                             commit=False)
 
-        return self._log(self._store(x, f, s, index=True))
+        return self._log(self._store(x, f, s, index=True, commit=False), commit=False)
 
-    def _handle_conflict(self, x: Experience, f: Features, s: float) -> Decision:
+    def _handle_conflict(self, x: Experience, f: Features, s: float, commit: bool = True) -> Decision:
         olds = [o for o in (self.episodic.get(i) for i in f.conflicts_with) if o]
         best_old = max((o.reliability for o in olds), default=0.0)
-        if x.reliability > best_old:
-            # Stronger evidence supersedes: keep the old records as history, remove them from search.
+        # Superseding requires independent verification of the new claim AND strictly stronger
+        # evidence than every old claim. Two verified claims stay in conflict for review.
+        can_supersede = (x.verification_status == "verified"
+                         and x.reliability > best_old
+                         and all(o.verification_status != "verified" for o in olds))
+        if can_supersede:
             for o in olds:
-                self.fts.delete(o.id)
-            d = self._store(x, f, s, index=True)
-            d.reason = f"conflict resolved by stronger evidence (reliability {x.reliability:.2f} > {best_old:.2f}); " \
-                       f"{len(olds)} older record(s) de-indexed but retained"
-            return self._log(d)
-        # Weaker or equal evidence: keep as conflicting evidence, do NOT make it retrievable.
-        d = self._store(x, f, s, index=False)
+                self.fts.delete(o.id, commit=False)
+                self.episodic.link(o.id, x.id, commit=False)
+            d = self._store(x, f, s, index=True, commit=False)
+            policy = "independent verification + strictly greater reliability than every old claim"
+            d.reason = (f"conflict resolved under policy ({policy}); reliability {x.reliability:.2f} > "
+                        f"{best_old:.2f}; {len(olds)} older record(s) de-indexed but retained")
+            self._record_conflicts(x, olds, "superseded", policy, d.reason, commit=False)
+            return self._log(d, commit=commit)
+        # Weaker, equal or unverified evidence: keep every record auditable but do not index the
+        # new claim. Reliability alone never resolves a conflict.
+        d = self._store(x, f, s, index=False, commit=False)
         d.decision = "REVIEW_REQUIRED"
-        d.reason = f"conflicts with {len(olds)} record(s) of >= reliability ({best_old:.2f}); stored as evidence only"
-        return self._log(d)
+        policy = "reliability alone does not resolve; independent verification + explicit review required"
+        d.reason = (f"conflicts with {len(olds)} record(s) of >= reliability ({best_old:.2f}); "
+                    f"stored as evidence only")
+        self._record_conflicts(x, olds, "open", policy, "", commit=False)
+        return self._log(d, commit=commit)
 
-    def _store(self, x: Experience, f: Features, s: float, index: bool) -> Decision:
+    def _record_conflicts(self, x: Experience, olds: list[Experience], status: str,
+                          policy: str, resolution: str, commit: bool) -> None:
+        for o in olds:
+            self.episodic.link(o.id, x.id, commit=False)
+            self.db.conn.execute(
+                """INSERT OR IGNORE INTO conflicts(ts, question, new_exp_id, old_exp_id, new_status,
+                   old_status, new_reliability, old_reliability, status, policy, resolution)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                (time.time(), x.input, x.id, o.id, x.verification_status, o.verification_status,
+                 x.reliability, o.reliability, status, policy, resolution))
+        if commit:
+            self.db.conn.commit()
+
+    def _store(self, x: Experience, f: Features, s: float, index: bool, commit: bool = True) -> Decision:
         x.related_ids = sorted(set(x.related_ids) | set(f.conflicts_with))
-        self.episodic.add(x)
+        self.episodic.add(x, commit=False)
         dests = ["episodic"]
         if index:
-            self.fts.add(x.id, x.text); dests.append("fts5")
+            self.fts.add(x.id, x.text, commit=False); dests.append("fts5")
             # Semantic memory is the verified-fact store. A reliability score alone is not
-            # verification evidence (P01/P29).
+            # verification evidence (P01/P29); SemanticMemory re-checks the source experience.
             if x.verification_status == "verified" and x.reliability >= self.cfg.reliable_fact_threshold:
-                self.semantic.add_fact(x.text, x.id, x.reliability); dests.append("semantic")
+                self.semantic.add_fact(
+                    x.text, x.id, x.reliability,
+                    derivation=f"admitted from verified experience {x.id} (method: {x.verification_method})",
+                    commit=False)
+                dests.append("semantic")
         if x.verification_status in VERIFIED_STATUSES and not f.conflicts_with:
-            self._enqueue(x.id, "dream"); dests.append("dream_queue")
+            self._enqueue(x.id, "dream", commit=False); dests.append("dream_queue")
+        if commit:
+            self.db.conn.commit()
         return Decision("ADMITTED", s, f"score {s:.2f}", x.id, dests, f)
 
-    def _enqueue(self, exp_id: str, queue: str) -> None:
+    def _enqueue(self, exp_id: str, queue: str, commit: bool = True) -> None:
         self.db.conn.execute("INSERT OR REPLACE INTO dream_queue(exp_id, queue, ts) VALUES (?,?,?)", (exp_id, queue, time.time()))
-        self.db.conn.commit()
+        if commit:
+            self.db.conn.commit()
 
-    def _log(self, d: Decision) -> Decision:
+    def _log(self, d: Decision, commit: bool = True) -> Decision:
+        features = {k: (round(v, 4) if isinstance(v, float) else v) for k, v in asdict(d.features).items()}
         self.db.conn.execute(
             "INSERT INTO admission_log(ts, exp_id, decision, score, features, reason) VALUES (?,?,?,?,?,?)",
-            (time.time(), d.exp_id, d.decision, d.score, json.dumps(asdict(d.features)), d.reason))
-        self.db.conn.commit()
+            (time.time(), d.exp_id, d.decision, round(d.score, 6), json.dumps(features), d.reason))
+        if commit:
+            self.db.conn.commit()
         return d
+
+    def storage_report(self) -> dict:
+        """Approximate payload bytes per table, for measuring storage overhead (P17)."""
+        pages: dict[str, int] = {}
+        for table in ("experiences", "fts_index", "facts", "admission_log", "conflicts",
+                      "memory_feedback", "dream_queue"):
+            try:
+                cols = [r["name"] for r in self.db.conn.execute(f"PRAGMA table_info({table})")]
+                if not cols:
+                    continue
+                expr = " + ".join(f"COALESCE(LENGTH(CAST({c} AS BLOB)), 0)" for c in cols)
+                pages[table] = int(self.db.conn.execute(
+                    f"SELECT COALESCE(SUM({expr}), 0) FROM {table}").fetchone()[0])
+            except Exception:
+                pages[table] = 0
+        return {
+            "pages": pages,
+            "total_bytes": sum(pages.values()),
+            "rows": {
+                "experiences": self.episodic.count(),
+                "fts": self.fts.count(),
+                "facts": self.semantic.count(),
+                "admission_log": self.db.conn.execute("SELECT COUNT(*) FROM admission_log").fetchone()[0],
+                "conflicts": self.db.conn.execute("SELECT COUNT(*) FROM conflicts").fetchone()[0],
+                "feedback": self.db.conn.execute("SELECT COUNT(*) FROM memory_feedback").fetchone()[0],
+            },
+        }
 
 
 class StoreEverything:

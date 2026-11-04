@@ -16,6 +16,7 @@ from __future__ import annotations
 import math
 import os
 import re
+import time
 import zlib
 from dataclasses import asdict, dataclass
 
@@ -50,10 +51,23 @@ class AdaptiveMemory:
         self.S = np.zeros_like(self.M)
         self.df: dict[str, int] = {}
         self.n_writes = 0
+        self.last_snapshot = None
 
     @property
     def param_count(self) -> int:
         return self.M.size
+
+    def snapshot(self) -> dict:
+        """Recoverable copy of the learned state (bounded by the parameter count)."""
+        return {"M": self.M.copy(), "S": self.S.copy(), "df": dict(self.df), "n_writes": self.n_writes}
+
+    def restore(self, snapshot: dict) -> None:
+        if snapshot["M"].shape != self.M.shape:
+            raise ValueError("snapshot shape does not match config")
+        self.M = snapshot["M"].copy()
+        self.S = snapshot["S"].copy()
+        self.df = dict(snapshot["df"])
+        self.n_writes = int(snapshot["n_writes"])
 
     # ---- featurisation ------------------------------------------------------------------------
     def _tv(self, tok: str, dim: int) -> np.ndarray:
@@ -151,16 +165,62 @@ class AdaptiveMemory:
         return m
 
 
-def drain_neural_queue(db, mem: AdaptiveMemory, payload=lambda e: e.output, passes: int = 1) -> int:
-    """Consume AMA's 'neural_memory' queue (repeated, reliable associations) into the adaptive memory."""
+def _conflicting_verified(ep, e) -> bool:
+    """True when another record with the same key makes a contradictory claim with >= evidence."""
+    from learning.compare import answers_agree
+    for old in ep.find_by_input(e.input, e.task_category):
+        if old.id == e.id:
+            continue
+        if old.verification_status in {"verified", "trusted_material", "user_provided",
+                                       "user_corrected"} and not answers_agree(
+                e.input, e.output, old.output):
+            return True
+    return False
+
+
+def drain_neural_queue(db, mem: AdaptiveMemory, payload=lambda e: e.output, passes: int = 1,
+                       require_verified: bool = True, min_reliability: float = 0.8,
+                       max_updates: int = 1000) -> int:
+    """Consume AMA's 'neural_memory' queue into the adaptive memory under a write gate (P23).
+
+    A record is applied only if it is independently verified, meets the reliability floor, has no
+    unresolved verified conflict, and the drain respects a hard update bound. Rejected records are
+    removed from the queue and logged; they are never silently learned.
+    """
     from .episodic import EpisodicMemory
+    if passes < 1 or max_updates < 1:
+        raise ValueError("passes and max_updates must be positive")
     ep, n = EpisodicMemory(db), 0
-    rows = db.conn.execute("SELECT exp_id FROM dream_queue WHERE queue = 'neural_memory'").fetchall()
-    for r in rows:
-        e = ep.get(r["exp_id"])
-        if e:
-            mem.write(e.input, payload(e), passes)
-            n += 1
-        db.conn.execute("DELETE FROM dream_queue WHERE exp_id = ?", (r["exp_id"],))
+    rows = db.conn.execute(
+        "SELECT exp_id FROM dream_queue WHERE queue = 'neural_memory' ORDER BY ts LIMIT ?",
+        (max_updates,)).fetchall()
+    snapshot = mem.snapshot() if rows else None       # old associations stay recoverable (P23)
+    try:
+        for r in rows:
+            e = ep.get(r["exp_id"])
+            reason = ""
+            if e is None:
+                reason = "experience no longer exists"
+            elif require_verified and e.verification_status != "verified":
+                reason = f"verification_status={e.verification_status!r} is not independently verified"
+            elif e.reliability < min_reliability:
+                reason = f"reliability {e.reliability:.2f} < required {min_reliability:.2f}"
+            elif _conflicting_verified(ep, e):
+                reason = "unresolved conflict with another verified/trusted claim"
+            if reason:
+                db.conn.execute(
+                    """INSERT INTO admission_log(ts, exp_id, decision, score, features, reason)
+                       VALUES (?,?,?,?,?,?)""",
+                    (time.time(), r["exp_id"], "NEURAL_UPDATE_REJECTED", None, "{}", reason))
+            else:
+                mem.write(e.input, payload(e), min(passes, 8))
+                n += 1
+            db.conn.execute("DELETE FROM dream_queue WHERE exp_id = ?", (r["exp_id"],))
+    except Exception:
+        if snapshot is not None:
+            mem.restore(snapshot)
+        db.conn.rollback()
+        raise
+    mem.last_snapshot = snapshot
     db.conn.commit()
     return n

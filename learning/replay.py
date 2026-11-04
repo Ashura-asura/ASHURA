@@ -68,16 +68,22 @@ class ReplayBuffer:
     def categories(self) -> list[str]:
         return sorted({i.category for i in self.items})
 
-    def replay_set(self, target: str, new_ratio: float = 0.5, seed: int = 0) -> list[ReplayItem]:
-        """Target examples plus historical examples. Proportions are NOT calibrated."""
+    def replay_set(self, target: str, new_ratio: float = 0.5, seed: int = 0,
+                   policy: str = "random") -> list[ReplayItem]:
+        """Target examples plus historical examples. Proportions are NOT calibrated (P28)."""
         if not 0.0 < new_ratio <= 1.0:
             raise ValueError("new_ratio must be in (0, 1]")
+        if policy not in {"random", "recent"}:
+            raise ValueError("policy must be 'random' or 'recent'")
         train = self.training_set()
         new = [i for i in train if i.category == target]
         old = [i for i in train if i.category != target]
         rng = random.Random(seed)
         rng.shuffle(new)
-        rng.shuffle(old)
+        if policy == "random":
+            rng.shuffle(old)
+        else:
+            old = list(reversed(old))       # most recently added first
         if not new:
             return old
         n_old = 0 if new_ratio >= 1.0 else round(len(new) * (1.0 - new_ratio) / new_ratio)

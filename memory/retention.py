@@ -28,6 +28,7 @@ from .episodic import EpisodicMemory
 class RetentionPolicy:
     max_age_days: float = 30.0
     max_rows: int = 0            # 0 = no cap
+    protect_recent_days: float = 7.0   # recently retrieved/used records are not forgotten
 
     @classmethod
     def from_dict(cls, d: dict) -> "RetentionPolicy":
@@ -42,11 +43,18 @@ def plan(db: Database, policy: RetentionPolicy | None = None, now: float | None 
     for r in c.execute("SELECT related_ids FROM experiences WHERE related_ids != '[]'"):
         referenced.update(json.loads(r["related_ids"]))
     queued = {r[0] for r in c.execute("SELECT exp_id FROM dream_queue")}
+    # Retrieval frequency is a utility signal (P18/P27). A record used recently is protected even
+    # if it is old, instead of deleting the very thing that is working.
+    recent = {r["exp_id"] for r in c.execute(
+        """SELECT DISTINCT exp_id FROM memory_feedback
+           WHERE ts >= ? AND event IN ('retrieval_hit', 'user_accepted', 'task_completed')""",
+        (now - pol.protect_recent_days * 86400,))}
     candidates = [
         r for r in c.execute(
             """SELECT id, ts, related_ids FROM experiences
                WHERE verification_status = 'unverified' AND repeat_count = 1 ORDER BY ts ASC""")
-        if r["related_ids"] == "[]" and r["id"] not in referenced and r["id"] not in queued
+        if r["related_ids"] == "[]" and r["id"] not in referenced
+        and r["id"] not in queued and r["id"] not in recent
     ]
     out: list[tuple[str, str]] = []
     cutoff = now - pol.max_age_days * 86400
