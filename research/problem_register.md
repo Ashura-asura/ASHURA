@@ -74,11 +74,11 @@ foundations are reliable. Implementation status is tracked in `research/phase1_t
 | ID | Status | Evidence / remaining gap |
 |---|---|---|
 | P05/P06 | extended | Raw correction remains `user_provided`; only an independently checked arithmetic equation adds a verified record. False facts stay user assertions. |
-| P07 | fixed as an explicit loop | `learning/loop.py`: verified correction -> CAGE -> fast update -> DREAM -> NGR -> promote/rollback. Not yet invoked automatically by the controller (F-041). |
+| P07 | fixed as an explicit loop | `learning/loop.py`: verified correction -> CAGE -> fast update -> DREAM -> NGR -> promote/rollback. The controller now retains the previous non-correction trace and accepts an opt-in `correction_loop` hook (F-041); the CLI does not configure one. |
 | P08 | preserved | CAGE still needs a verified outcome and a verifier-covered attributed module; unattributed failures produce no proposal. |
-| P75 | fixed (one scenario) | EXP-013: promoted arm, NGR-rejected arm, three refused arms; stable pointer unchanged on rejection. |
+| P75 | fixed (one scenario) | EXP-013 across five seeds: 4/5 promoted, no-replay rejected 5/5, refused arms 5/5; stable pointer unchanged on rejection. One promotion was refused because the stable baseline accidentally matched the corrected held-out items (F-044). |
 | A01 | partial (isolated) | Fast recall for `6*7`: empty -> `42`; temporary NumPy state only. |
-| A02 | partial (isolated) | Candidate trained from verified data passed/failed NGR against a real stable artifact. |
+| A02 | partial (isolated) | Candidate trained from verified data passed NGR in 4/5 seeds; the no-replay candidate failed 5/5. One seed was rejected because the stable baseline already scored 1.00 on the corrected held-out set. |
 | A03 | partial | Fast `FastWeights` and slow `CheckpointStore` remain separate; rejected candidate leaves stable unchanged. Not a language-model fine-tune. |
 
 Recommended separation: episodic (what happened, including uncertainty), verified
@@ -115,7 +115,7 @@ was too easy to justify recurrence.
 |---|---|---|
 | P45 | HARN addition is linear least squares; 1.000 is expected for a linear function. | Do not present it as learned neural arithmetic. If pursued, test carries, longer numbers and unseen distributions. |
 | P46 | The neural candidate adds no capability over exact arithmetic. | Keep exact arithmetic authoritative; remove the candidate from the normal path unless it shows a distinct advantage. |
-| P47 | Independent verification covers only +, -, *, /. | Add verification for modulo, powers and roots with explicit precision and domain policies. |
+| P47 | Independent verification originally covered only +, -, *, /; `%`, integer powers and perfect-square roots are now cross-checked. | Irrational roots, non-integer powers, comparisons and natural-language facts still have no independent verifier (F-042). |
 | P48 | Qwen3.5-2B is weak at arithmetic and general benchmarks. | Route exact operations to deterministic tools; evaluate reasoning on a larger diverse benchmark before changing foundation. |
 | P49 | The 16-question language benchmark is too small and single-author. | Larger benchmark, independent authors, difficulty levels, paraphrases, adversarial cases and task metrics. |
 | P50 | The judge can under-credit valid answers that think aloud. | Separate exact-answer, semantic-equivalence and format-compliance metrics; audit a sample manually. |

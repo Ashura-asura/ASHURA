@@ -1,0 +1,172 @@
+# Open problems
+
+Status: 2026-11-05, after the Phase 3 follow-up. Test evidence: **256 ASHURA tests** and
+**46 BrainSim tests** pass on Windows/Python 3.13. This file records what is still not closed; it is
+not a roadmap promise and not a claim that the learning loop is complete. The canonical issue list
+with remedies remains `research/problem_register.md` (P01-P80, A01-A10); this file explains which
+items the latest pass could and could not close.
+
+## 1. What the latest pass closed or narrowed
+
+| Item | New status | Evidence | Remaining gap |
+|---|---|---|---|
+| F-041 controller trace retention | **fixed at controller level** | `Controller` keeps the last non-correction `ExecutionTrace`; verified corrections can invoke an opt-in `correction_loop` hook. Hook errors are captured in `Response.correction`, never raised. `test_controller_invokes_the_loop_on_the_previous_trace_after_a_correction`, `test_loop_hook_failure_never_breaks_the_reply` | The CLI does not configure the loop: there is no live replay corpus or stable checkpoint bootstrap. |
+| F-042 / P47 arithmetic coverage | **partly fixed** | Decimal(60) now cross-checks `%`, integer `**` and perfect-square `sqrt`; corrections for these can become verified. Negative-modulo semantics are tested. | Irrational roots, non-integer powers, comparisons and all natural-language facts remain unverified. |
+| F-039 conflict review | **partly fixed** | `learning/review.py list|resolve`; superseding still requires an independently verified experience. Two tests. | No UI, notification, queue prioritisation or background worker; an open conflict can go unseen. |
+| F-044 multi-seed evidence | **partly fixed** | EXP-013 now runs seeds 0-4. Verified+replay promoted 4/5; no-replay rejected 5/5; refused arms refused 5/5. | The task is still tiny: 20 old facts and 2 corrected held-out wordings. The stable baseline produced accidental correct answers in 3/5 seeds. |
+| F-006 arithmetic verifier | **partly fixed** | Same as F-042. | Same as F-042. |
+
+The multi-seed EXP-013 result should be read with care. In seed 3 the stable memory already scored
+1.00 on the corrected held-out items (and 0.50 in seeds 1/4), so NGR correctly refused promotion for
+zero target gain. That is evidence about the noisy NumPy memory and the tiny held-out set, not
+evidence that the loop failed to attribute the correction. Full data:
+`experiments/learning/loop.json`, `research/phase3_learning.md`, EXP-013 in
+`research/experiment_log.md`.
+
+## 2. Phase 3 learning: still open
+
+### 2.1 No production learning loop (F-041 residual, P66/P67)
+
+The controller can call a hook, but no shipped command configures one. A live session has no replay
+buffer of old verified material and no bootstrapped stable checkpoint, so there is nothing DREAM can
+safely train or compare against. Training also runs synchronously; a slow candidate build would
+block the answer path. This is not closable by wiring the existing experiment into the CLI without
+defining data retention, checkpoint lifecycle and a background worker.
+
+**What would close it:** a configured replay source, an initial independently evaluated stable
+checkpoint, a background job with cancellation/timeout, and a restart test showing the stable pointer
+and fast state behave as declared.
+
+### 2.2 Independent verification is narrow (F-042/P47)
+
+Only exact arithmetic equations are independently checked. `sqrt(2)`, `2 ** 0.5`, comparisons and
+factual claims remain `user_provided`. Natural-language truth needs a trusted local knowledge source
+or a verifier that ASHURA does not have, and the project forbids external LLM APIs. A symbolic
+radical representation or a rational-exponent policy could extend arithmetic, but it is a design
+change, not a bug fix.
+
+**Do not** treat a user repeating a claim, or a conflict with memory, as independent evidence.
+
+### 2.3 The candidate is not the language model (F-043, by design)
+
+`FastWeights` and the DREAM candidate are NumPy associative memory. No Qwen weight, adapter or
+LoRA is trained. The target laptop (i7-1165G7, 16 GB RAM, MX350 2 GB) cannot fine-tune the 7.6 GB
+Q4_K_M foundation; the 7B model already spills from the 2 GB GPU (F-014), and there is no verified
+instruction-tuning corpus. Local-only fine-tuning would require a much smaller model and a separate
+measured pipeline. Until then, EXP-013 must not be described as model self-improvement.
+
+### 2.4 EXP-013 is still a control-flow test (F-044)
+
+Five seeds do not turn 20 synthetic facts and two corrected wordings into a capability benchmark.
+The stable baseline's accidental hits show that the evaluation set is too small to estimate whether a
+correction generalises. There are no confidence intervals and no independent task author.
+
+**What would close it:** a frozen, larger corrected-capability set (many held-out wordings and
+several arithmetic forms), a control probe that measures accidental stable hits, more seeds with
+reported intervals, and a task designed so memorising one key cannot pass.
+
+### 2.5 Reviewer workflow is minimal (F-039/F-040)
+
+`learning/review.py` lists and resolves conflicts, but there is no UI, notification or queue
+priority, and no general natural-language verifier. Semantic facts still require a verified source
+within ASHURA's verifier coverage, so most user statements can never become semantic facts. This is
+honest by design, not a hidden capability.
+
+## 3. Earlier memory and consolidation problems
+
+These were not changed in this pass and remain open as documented:
+
+- **F-035 / P15:** AMA threshold calibration is synthetic. The default 0.45 was deliberately kept;
+  precision at 0.45 is 0.35 on the synthetic sweep. A realistic stream of useful and useless
+  unverified items is required. Do not present 0.45 or 1.6 as truth-calibrated.
+- **F-036 / P24:** adaptive memory still suffers catastrophic task-switch interference (old-task
+  accuracy 0.84 -> 0.04 in the long run). The queue gate does not solve continual learning.
+- **F-037 / P22:** the adaptive memory has no measured advantage over FTS5 (FTS5 1.00 throughout;
+  adaptive recall 0.41 under 10 distractors). FTS5 remains the default and the adaptive memory stays
+  out of the response path.
+- **F-038 / P28:** replay ratio and sampling policy are uncalibrated; all arms tied at 1.00 on
+  EXP-006. The 0.5 ratio is a placeholder.
+- **F-040 / P29:** semantic provenance records where a fact came from, not that it is true.
+
+## 4. Foundation, language and evaluation
+
+- **F-014/F-015/P48/P53:** the 7B model is too large for the 2 GB GPU and the 2B fallback is weak at
+  arithmetic/general questions. Exact arithmetic is routed away from the model, but general-answer
+  quality remains limited. Changing the foundation requires a new measured baseline.
+- **P45/P46:** the "neural" addition candidate is linear least squares; 1.000 accuracy is expected
+  for a linear function and adds no capability over exact arithmetic. Keep it non-authoritative.
+- **P49/P50:** the 16-question language benchmark is small and single-author; the judge can
+  under-credit answers that think aloud. A larger independent benchmark and separate exact /
+  semantic / format metrics are still required.
+- **P51/P52:** pin model digests and inference parameters for every reported run; DOIs are present
+  for the chosen model, but reproducibility still depends on the backend version and settings.
+- **P54:** the llama.cpp adapter has not been benchmarked against Ollama.
+- **F-016/P55-P60:** OCR is implemented and code-tested but has no held-out real-document accuracy
+  measurement (CER/WER, languages, low quality, tables). OCR confidence is not calibrated, and OCR
+  corrections do not train a model.
+
+## 5. BrainSim experimental validity (P30-P44)
+
+BrainSim B1-B6 pass their small tests, but the following are not established and were not re-run in
+this pass:
+
+- **P30/P31:** B1 frozen unseen-rule accuracy is weak (~0.085) and fast memory interferes after task
+  switches.
+- **P32/P33:** B2 shows no recurrent advantage over a fixed MLP; evaluation is teacher-forced rather
+  than free-running.
+- **P34/P35:** B3 supplies task identity externally and uses verified writes, bypassing admission.
+- **P36:** B4 is a narrow controlled replay result.
+- **P37-P39:** B5 confidence targets do not match evaluation correctness, learning is supervised
+  imitation of a DP oracle, and need labels are supplied externally.
+- **P40/P41:** B6 depends on full transition coverage and external task identity; 1.000 is
+  consistent with lookup rather than rule induction.
+- **P42-P44:** tasks are small and author-designed, three seeds are weak evidence, and BrainSim is
+  not integrated with ASHURA.
+
+Treat B2's missing recurrent advantage as a valid negative result, not a bug to hide.
+
+## 6. Routing, resources, engineering (P61-P80, A04-A10)
+
+Not addressed by the Phase 3 follow-up:
+
+- **P61-P63:** many module costs are estimates; routing priorities are heuristic; sustained
+  CPU/RAM pressure and concurrency are not measured on the target laptop.
+- **P64/P65:** semantic retrieval and the reasoning module are not built; the registry marks them
+  unavailable. Do not advertise them.
+- **P67:** AMA runs synchronously; consolidation/training has no controlled background worker.
+- **P68:** a failed language backend can still leave general questions unanswered; fallback must
+  keep exact computation, retrieved evidence and generated answers distinct.
+- **P69:** no sustained-workload test for latency, peak RAM, database growth, model reload or
+  recovery.
+- **P70-P74:** CI coverage and clean-install/reproducibility checks are incomplete (including
+  Python 3.13 and Windows BrainSim); unit tests are not real-model correctness tests.
+- **P76-P80:** multiple specifications remain; checkpoint/experiment lifecycle, environment
+  manifests, install verification and backup/recovery tests are not complete.
+- **A04-A10:** hidden-need inference, learned task segmentation, causal attribution, autonomous
+  learning selection, validated dream/consolidation, resource-aware self-preservation and
+  catastrophic-forgetting protection are research gaps. The controller's CAGE hook is a mechanism,
+  not evidence of causal learning or autonomous curriculum selection.
+
+## 7. Conditions before calling the loop complete
+
+At minimum, the register's section 10 tests still need to pass together, including:
+
+1. unverified or false corrections never become verified facts or promotion labels;
+2. an unavailable verifier produces no verified admission;
+3. NGR rejects NaN, missing capabilities and target-gain-with-regression candidates;
+4. a rejected candidate leaves the stable checkpoint unchanged;
+5. contradictory evidence remains auditable and reaches a reviewer;
+6. restart preserves the declared fast/slow state policy;
+7. the response path survives a background training crash;
+8. old-task performance is measured after a real task switch, not just on a frozen replay set.
+
+Items 1-6 have targeted tests today. Items 7-8 and the larger independent evaluation do not.
+
+## 8. Deliberately not doing now
+
+- Do not replace FTS5 with a vector store because neural memory sounds advanced.
+- Do not enlarge the model or add external APIs before the local pipeline is reliable.
+- Do not tune the EXP-013 held-out set until every seed promotes.
+- Do not describe the NumPy candidate as language-model learning, continual learning or
+  self-improvement.
+- Do not claim consciousness, emotion or self-awareness from routing scores or resource rules.

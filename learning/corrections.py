@@ -18,7 +18,7 @@ _PREFIX = re.compile(
     r"^\s*(?:actually|correction|no|nope|wrong|incorrect|that'?s\s+(?:wrong|incorrect)|"
     r"the\s+correct\s+(?:answer|value)\s+is)\b\s*[,:;\-\u2014]?\s*", re.IGNORECASE)
 _ARITH = re.compile(
-    r"^(?P<lhs>[0-9+\-*/%^().\s]+?)\s*(?:==|=|\bis\b)\s*(?P<rhs>-?\d+(?:\.\d+)?)\s*$",
+    r"^(?P<lhs>(?:[0-9+\-*/%^().\s]|sqrt)+?)\s*(?:==|=|\bis\b)\s*(?P<rhs>-?\d+(?:\.\d+)?)\s*$",
     re.IGNORECASE)
 _FACT = re.compile(r"^(?P<key>.+?)\s+(?:is|are|should\s+be|=)\s+(?P<value>.+)$", re.IGNORECASE)
 
@@ -66,7 +66,7 @@ def _canonical(v: Fraction) -> str:
 
 def _arithmetic(lhs: str, rhs: str, text: str) -> Correction:
     lhs = lhs.strip()
-    if not re.search(r"[+\-*/%^]", lhs):
+    if not re.search(r"[+\-*/%^]|\bsqrt\b", lhs, re.IGNORECASE):
         return Correction(text, "unparsed", text, "", "unavailable",
                           "no independent verifier", "not an arithmetic equation")
     try:

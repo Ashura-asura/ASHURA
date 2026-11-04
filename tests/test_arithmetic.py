@@ -28,7 +28,13 @@ def test_independent_verifier_agrees_and_catches_wrong():
     v = exact.evaluate("123456789 * 987654321")
     assert exact.verify("123456789 * 987654321", v)[0] is True
     assert exact.verify("123456789 * 987654321", v + 1)[0] is False
-    assert exact.verify("2 ** 10", exact.evaluate("2 ** 10"))[0] is None   # honest: no independent check
+    assert exact.verify("2 ** 10", exact.evaluate("2 ** 10"))[0] is True
+    assert exact.verify("17 % 5", exact.evaluate("17 % 5"))[0] is True
+    assert exact.verify("sqrt(144)", exact.evaluate("sqrt(144)"))[0] is True
+    assert exact.verify("sqrt(144)", exact.evaluate("13"))[0] is False
+    assert exact.verify("2 ** 10", exact.evaluate("1025"))[0] is False
+    # Beyond the Decimal(60) quotient precision the cross-check refuses rather than guessing.
+    assert exact.verify("10**100 % 7", exact.evaluate("10**100 % 7"))[0] is None
 
 
 def test_parser_words_and_purity():

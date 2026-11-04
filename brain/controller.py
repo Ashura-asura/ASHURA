@@ -11,6 +11,7 @@ import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Callable
 
 from foundation.language_model import LanguageModel
 from learning.ama import AMA, surprise_from_prior
@@ -66,6 +67,14 @@ def default_registry(language_available: bool = True, costs_path: str | os.PathL
     return r
 
 
+def _loop_summary(result: Any) -> dict:
+    """A small, JSON-safe view of a LoopResult-like object for the response record."""
+    if hasattr(result, "stage"):
+        return {"stage": str(result.stage), "promoted": bool(getattr(result, "promoted", False)),
+                "reasons": [str(r) for r in getattr(result, "reasons", []) or []]}
+    return {"stage": "unknown", "result": repr(result)}
+
+
 @dataclass
 class Response:
     text: str
@@ -79,7 +88,8 @@ class Response:
 
 class Controller:
     def __init__(self, model: LanguageModel, db=None, ama: AMA | None = None, nfd: NeedField | None = None,
-                 wm: WorkingMemory | None = None, routing_mode: str = "nfd", cage: CAGE | None = None):
+                 wm: WorkingMemory | None = None, routing_mode: str = "nfd", cage: CAGE | None = None,
+                 correction_loop: Callable[[Any, ExecutionTrace], Any] | None = None):
         self.model, self.ama = model, ama
         self.registry = nfd.registry if nfd else default_registry()
         self.nfd = nfd or NeedField(self.registry)
@@ -88,6 +98,11 @@ class Controller:
         self.ocr_store = OCRCorrectionStore(ama.db.conn) if ama else None
         self.routing_mode = routing_mode
         self.cage = cage
+        # F-041: retain the last non-correction trace so a correction can be attributed to the
+        # execution that produced the answer. The loop is opt-in: it needs a replay corpus and a
+        # checkpoint store, which the plain controller does not own.
+        self.correction_loop = correction_loop
+        self._last_trace: ExecutionTrace | None = None
 
     def close(self) -> None:
         """Release the database connection (flushes the SQLite WAL). Safe to call twice."""
@@ -293,6 +308,19 @@ class Controller:
                 correction["admission"] = admission
                 correction["verified_record"] = verified_record is not None
 
+                # F-041: a verified correction may start the learning loop against the previous
+                # execution trace. The hook is optional and a hook failure never breaks the reply.
+                if parsed.verified and self.correction_loop is not None:
+                    if self._last_trace is None:
+                        correction["loop"] = {"stage": "not_run",
+                                              "reason": "no previous execution trace to attribute"}
+                    else:
+                        try:
+                            correction["loop"] = _loop_summary(
+                                self.correction_loop(parsed, self._last_trace))
+                        except Exception as e:  # noqa: BLE001 - learning must not break answering
+                            correction["loop"] = {"stage": "error", "error": f"{type(e).__name__}: {e}"}
+
         if self.ama and answered and not user_turn:          # learning path; error text is not learned
             # Only an independently verified exact answer may be stored as verified (P03).
             if response_verified:
@@ -313,6 +341,8 @@ class Controller:
             # ago must be findable). This question's own entry is kept: re-asking it should hit the fast path
             # instead of retrieving the answer we just stored.
             self.wm.invalidate(keep={"ctx:" + normalize(task.text)})
+        if not task.user_correction:
+            self._last_trace = trace                 # corrections are attributed to the prior turn
         response_state = (Verification.VERIFIED if response_verified
                           else Verification.FAILED if verification is Verification.FAILED
                           else Verification.UNAVAILABLE)

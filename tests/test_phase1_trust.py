@@ -103,12 +103,12 @@ def test_verified_arithmetic_marks_the_response_verified():
 
 def test_unavailable_verification_is_not_success():
     c, _ = ctl()
-    r = c.handle("what is 2**3?")
-    assert r.text == "8"
+    r = c.handle("what is 5 > 3?")                 # comparisons have no independent cross-check
+    assert r.text == "True"
     assert r.verified is None and r.verification is Verification.UNAVAILABLE
     step = r.trace.step("verification")
     assert step.ok is True and step.verification == "unavailable"   # operational success, not factual
-    e = c.ama.episodic.find_by_input("what is 2**3?")[0]
+    e = c.ama.episodic.find_by_input("what is 5 > 3?")[0]
     assert e.verification_status == "unverified" and e.reliability == 0.2
     assert c.ama.db.conn.execute("SELECT COUNT(*) FROM dream_queue").fetchone()[0] == 0
 

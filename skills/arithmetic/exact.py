@@ -2,7 +2,7 @@
 
 Two independent evaluators:
   * 'fraction' - exact rational arithmetic (primary)
-  * 'decimal'  - 60-digit Decimal arithmetic (independent cross-check for + - * /)
+  * 'decimal'  - 60-digit Decimal arithmetic (independent cross-check for + - * / % ** sqrt)
 Expressions are parsed with `ast` and walked with a whitelist. `eval` is never used.
 """
 from __future__ import annotations
@@ -74,27 +74,39 @@ def _eval(node, backend: str):
                 raise ArithmeticError_("division by zero")
             return a / b
         if op is ast.Mod:
-            if backend != "fraction":
-                raise NotImplementedError
             if b == 0:
                 raise ArithmeticError_("modulo by zero")
-            return a - b * (a // b)
+            if backend == "fraction":
+                return a - b * (a // b)                  # floor modulo, sign follows the divisor
+            # Decimal `%` truncates (sign follows the dividend); adjust to floor modulo so the
+            # independent backend checks the same operation the exact backend computes.
+            r = a % b
+            if r != 0 and (r < 0) != (b < 0):
+                r += b
+            return r
         if op is ast.Pow:
-            if backend != "fraction":
-                raise NotImplementedError
-            if b.denominator != 1:
-                raise ArithmeticError_("only integer exponents are supported")
-            e = int(b)
+            if backend == "fraction":
+                if b.denominator != 1:
+                    raise ArithmeticError_("only integer exponents are supported")
+                e = int(b)
+            else:
+                if b != b.to_integral_value():
+                    raise ArithmeticError_("only integer exponents are supported")
+                e = int(b)
+            if e == 0:
+                return ctor(1)                           # includes 0 ** 0, consistent across backends
             if a == 0 and e < 0:
                 raise ArithmeticError_("zero to a negative power")
-            if a not in (0, 1, -1) and abs(e) * max(a.numerator.bit_length(), a.denominator.bit_length()) > MAX_RESULT_BITS:
+            scale = max(a.numerator.bit_length(), a.denominator.bit_length()) if backend == "fraction" else 0
+            if backend == "fraction" and a not in (0, 1, -1) and abs(e) * scale > MAX_RESULT_BITS:
                 raise ArithmeticError_("result too large")
-            return _check_size(a ** e)
+            return _check_size(a ** e) if backend == "fraction" else a ** e
         raise ArithmeticError_("unsupported operator")
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "sqrt" and len(node.args) == 1:
-        if backend != "fraction":
-            raise NotImplementedError
-        return _frac_sqrt(_eval(node.args[0], backend))
+        x = _eval(node.args[0], backend)
+        if backend == "fraction":
+            return _frac_sqrt(x)
+        return x.sqrt()                                  # context-precision square root (x >= 0)
     if isinstance(node, ast.Compare) and len(node.ops) == 1 and type(node.ops[0]) in _CMP:
         return _CMP[type(node.ops[0])](_eval(node.left, backend), _eval(node.comparators[0], backend))
     raise ArithmeticError_(f"unsupported syntax: {type(node).__name__}")
@@ -154,7 +166,7 @@ def verify(expr: str, value) -> tuple[bool | None, str]:
             tol = max(Decimal(10) ** -40, abs(exact) * Decimal(10) ** -40)
             ok = abs(exact - other) <= tol
         except NotImplementedError:
-            return None, "no independent verifier for % ** sqrt"
+            return None, "no independent verifier for this operation"
         except Exception as e:  # noqa: BLE001 - a failing cross-check must never crash the answer path
             return None, f"decimal check failed: {type(e).__name__}"
     return ok, "decimal(60) cross-check " + ("agrees" if ok else "DISAGREES")

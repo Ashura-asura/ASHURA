@@ -100,6 +100,7 @@ with reliability still 1.00. Utility ranks usefulness; it does not rewrite truth
 - Replay ratios/policies are indistinguishable on the small EXP-006 task; F-033/F-038 remain open.
 - The adaptive memory still suffers severe task-switch interference; the queue gate prevents bad
   writes but is not a continual-learning solution.
-- Conflict resolution has an API and an explicit policy, but no reviewer UI/workflow.
+- Conflict resolution has an API and an explicit policy. `learning/review.py` adds a minimal
+  list/resolve CLI, but there is no UI, notification or queue prioritisation (F-039).
 - AMA weights remain hand-set; only the discard threshold was swept. The 27% storage overhead is
   intentional audit/derived evidence, and no retention/compaction policy for `admission_log` exists.

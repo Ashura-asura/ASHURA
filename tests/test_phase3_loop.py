@@ -1,6 +1,7 @@
 """Phase 3 tests (P05/P06/P07/P75): verified corrections and the end-to-end loop."""
 from __future__ import annotations
 
+import json
 import tempfile
 from pathlib import Path
 
@@ -19,7 +20,7 @@ from learning.dream import DreamConfig
 from learning.loop import run_verified_correction
 from learning.replay import ReplayBuffer, ReplayItem
 from memory.database import Database
-from memory.episodic import EpisodicMemory
+from memory.episodic import EpisodicMemory, Experience
 from plasticity.fast_weights import FastWeights
 from plasticity.gated_update import GatedUpdater
 from plasticity.slow_weights import CheckpointStore
@@ -52,8 +53,20 @@ def test_false_arithmetic_correction_is_rejected_not_relabelled():
     assert c.to_experience() is None
 
 
+@pytest.mark.parametrize("text,value", [
+    ("actually, 2^10 = 1024", "1024"),
+    ("actually, 10%3 = 1", "1"),
+    ("actually, sqrt(144) = 12", "12"),
+])
+def test_power_modulo_and_root_corrections_are_independently_verified(text, value):
+    c = parse_correction(text)
+    assert c.kind == "arithmetic" and c.state == "verified" and c.value == value
+    assert c.to_experience() is not None
+
+
 def test_unchecked_arithmetic_is_unavailable_not_verified():
-    for text in ("actually, 2^10 = 1024", "actually, 10%3 = 1"):
+    # Irrational roots and non-integer powers have no exact value, so they stay unchecked.
+    for text in ("actually, sqrt(2) = 1.41421356", "actually, 2 ** 0.5 = 1.41421356"):
         c = parse_correction(text)
         assert c.kind == "arithmetic" and c.state == "unavailable"
         assert c.to_experience() is None
@@ -166,6 +179,101 @@ def test_ngr_rejects_a_candidate_that_loses_old_capability():
     assert any("regression on old" in r for r in result.dream["ngr"])
     assert store.current().name == "old.npz"                # rollback = unchanged stable pointer
     assert fast.delta_norm > 0                              # temporary state is separate
+
+
+# ---- controller integration: F-041 trace retention and optional loop hook ----
+class WrongArithmeticModel(EchoModel):
+    def generate(self, prompt: str, max_tokens: int = 128) -> str:
+        return "43" if "6*7" in prompt else "I do not know"
+
+
+def test_controller_invokes_the_loop_on_the_previous_trace_after_a_correction():
+    store, buffer, fast = _store(), _buffer(), FastWeights()
+    c = ctl()
+    c.model = WrongArithmeticModel()
+    c.correction_loop = lambda correction, trace: run_verified_correction(
+        correction, trace, cage=CAGE(), updater=GatedUpdater(fast), buffer=buffer, store=store,
+        policy=NGRPolicy("corrected", min_target_gain=0.5),
+        cfg=DreamConfig(target="corrected", dim=DIM, min_train=1, replay=True,
+                        initialization="stable"))
+
+    first = c.handle("If a rectangle is 6*7, what is its area?")
+    assert first.text == "43" and c._last_trace is first.trace   # wrong reply, trace retained
+    r = c.handle(Task("actually, 6*7 = 42", user_correction=True))
+    assert r.correction["state"] == "verified"
+    assert r.correction["loop"]["stage"] == "promoted" and r.correction["loop"]["promoted"] is True
+    assert store.current().name != "old.npz"
+
+
+def test_controller_does_not_invoke_the_loop_without_a_previous_trace():
+    calls = []
+    c = ctl()
+    c.correction_loop = lambda correction, trace: calls.append(trace)
+    r = c.handle(Task("actually, 6*7 = 42", user_correction=True))
+    assert calls == [] and r.correction["loop"]["stage"] == "not_run"
+
+
+def test_controller_does_not_invoke_the_loop_for_an_unverified_correction():
+    calls = []
+    c = ctl()
+    c.correction_loop = lambda correction, trace: calls.append(trace)
+    c.handle("what is 6*7")
+    r = c.handle(Task("actually, the project p12 code is 9999", user_correction=True))
+    assert calls == [] and r.correction["state"] == "unavailable" and "loop" not in r.correction
+
+
+def test_loop_hook_failure_never_breaks_the_reply():
+    def broken(correction, trace):
+        raise RuntimeError("candidate store offline")
+
+    c = ctl()
+    c.correction_loop = broken
+    c.handle("what is 6*7")
+    r = c.handle(Task("actually, 6*7 = 42", user_correction=True))
+    assert r.correction["loop"]["stage"] == "error"
+    assert "candidate store offline" in r.correction["loop"]["error"]
+
+
+# ---- F-039: small reviewer workflow for the conflict index ----
+def _conflict_db(tmp_path):
+    path = tmp_path / "review.db"
+    db = Database(str(path))
+    ama = AMA(db)
+    ama.admit(Experience("code for project p1", "code is 9999", verification_status="unverified"))
+    ama.admit(Experience("code for project p1", "code is 4821", verification_status="user_provided"))
+    db.close()
+    return path
+
+
+def test_review_workflow_lists_and_dismisses_a_conflict(tmp_path):
+    from learning import review
+
+    path = _conflict_db(tmp_path)
+    rows = review.list_conflicts(path)
+    assert len(rows) == 1 and rows[0]["status"] == "open"
+    out = review.resolve_conflict(path, rows[0]["id"], "reviewed: user assertion only")
+    assert out["resolved"] is True and out["status"] == "dismissed"
+    assert review.list_conflicts(path) == []
+    assert review.list_conflicts(path, open_only=False)[0]["status"] == "dismissed"
+
+
+def test_review_cli_accepts_the_documented_argument_order(tmp_path, capsys):
+    from learning import review
+
+    path = _conflict_db(tmp_path)
+    assert review.main(["list", "--db", str(path)]) == 0
+    rows = json.loads(capsys.readouterr().out)
+    assert len(rows) == 1 and rows[0]["status"] == "open"
+
+
+def test_review_workflow_requires_a_verified_experience_to_supersede(tmp_path):
+    from learning import review
+
+    path = _conflict_db(tmp_path)
+    conflict_id = review.list_conflicts(path)[0]["id"]
+    with pytest.raises(ValueError):
+        review.resolve_conflict(path, conflict_id, "looks right", verified_exp="missing")
+    assert review.list_conflicts(path)[0]["status"] == "open"
 
 
 def test_cage_does_not_authorise_an_unattributed_failure():
