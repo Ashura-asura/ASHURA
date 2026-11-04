@@ -13,6 +13,9 @@ points. B5 trains a small policy that matches a finite-horizon DP oracle on a sy
 budgeted-choice task. B6 compares fixed, recurrent, fast-memory and gated-memory arms on disjoint
 held-out rules. **46 BrainSim tests pass.** ASHURA does not import BrainSim.
 
+Detailed cross-milestone results, limits and validity threats:
+[`../results_brainsim.md`](../results_brainsim.md).
+
 ## Quickstart
 
 ```bash

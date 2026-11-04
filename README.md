@@ -130,7 +130,8 @@ externally supplied rule ID, not rule induction or learned task segmentation. Th
 beats the frozen GRU, so B6 does not support a recurrent advantage.
 
 Full reports: `BrainSim/research/experiment_log.md`, `BrainSim/research/failures.md`,
-`BrainSim/research/decisions.md`.
+`BrainSim/research/decisions.md`. Detailed cross-milestone report:
+[`results_brainsim.md`](results_brainsim.md).
 
 ## Remaining work
 
