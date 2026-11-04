@@ -80,11 +80,21 @@ def apply(db: Database, policy: RetentionPolicy | None = None, now: float | None
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default="data/ashura.db")
-    ap.add_argument("--max-age-days", type=float, default=30.0)
-    ap.add_argument("--max-rows", type=int, default=0)
+    ap.add_argument("--config", default="config/ashura.toml", help="read [retention] defaults from this file")
+    ap.add_argument("--max-age-days", type=float, default=None)
+    ap.add_argument("--max-rows", type=int, default=None)
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
-    db, pol = Database(a.db), RetentionPolicy(a.max_age_days, a.max_rows)
+    base = RetentionPolicy()
+    try:                                   # the [retention] section existed in the config but was never read
+        import tomllib
+        with open(a.config, "rb") as f:
+            base = RetentionPolicy.from_dict(tomllib.load(f).get("retention", {}))
+    except FileNotFoundError:
+        pass
+    pol = RetentionPolicy(base.max_age_days if a.max_age_days is None else a.max_age_days,
+                          base.max_rows if a.max_rows is None else a.max_rows)
+    db = Database(a.db)
     p = plan(db, pol)
     print(f"{len(p)} record(s) would be forgotten" + ("" if a.apply else " (dry run; pass --apply to delete)"))
     for i, why in p[:20]:

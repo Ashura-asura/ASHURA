@@ -73,11 +73,25 @@ class Controller:
         self.model, self.ama = model, ama
         self.registry = nfd.registry if nfd else default_registry()
         self.nfd = nfd or NeedField(self.registry)
-        self.wm = wm or WorkingMemory()
+        self.wm = wm if wm is not None else WorkingMemory()   # NOT `wm or ...`: an empty WorkingMemory is falsy
         self.fts = FTS5Index(ama.db) if ama else None
         self.ocr_store = OCRCorrectionStore(ama.db.conn) if ama else None
         self.routing_mode = routing_mode
         self.cage = cage
+
+    def close(self) -> None:
+        """Release the database connection (flushes the SQLite WAL). Safe to call twice."""
+        if self.ama is not None:
+            try:
+                self.ama.db.close()
+            except Exception:  # noqa: BLE001 - already closed
+                pass
+
+    def __enter__(self) -> "Controller":
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()
 
     def handle(self, task: Task | str) -> Response:
         task = Task(task) if isinstance(task, str) else task
@@ -139,7 +153,9 @@ class Controller:
                     trace.add(TraceStep("arithmetic", expr, exact.format_value(value),
                                         (time.perf_counter() - s) * 1000, note=note))
                     outcomes["arithmetic"] = True
-                except ArithmeticError as e:
+                except (ArithmeticError, ValueError, RecursionError, MemoryError) as e:
+                    # A bad or oversized expression must degrade to a failed step, never crash the request.
+                    value = None
                     trace.add(TraceStep("arithmetic", expr, str(e), (time.perf_counter() - s) * 1000, ok=False))
                     outcomes["arithmetic"] = False
 
@@ -174,19 +190,31 @@ class Controller:
             trace.add(TraceStep("verification", expr, note, (time.perf_counter() - s) * 1000, ok=verified is not False))
             outcomes["verification"] = verified is not False
 
+        answered = True
         if "language" in sel:
             s = time.perf_counter()
             facts = f"Known: {format_value_safe(value)}\n" if value is not None else ""
             context = "".join(f"Memory: {c}\n" for c in ctx)
-            text = self.model.generate(f"{context}{facts}Question: {task.text}")
-            trace.add(TraceStep("language", task.text, text, (time.perf_counter() - s) * 1000))
-            outcomes["language"] = True
+            try:
+                text = self.model.generate(f"{context}{facts}Question: {task.text}")
+                trace.add(TraceStep("language", task.text, text, (time.perf_counter() - s) * 1000))
+                outcomes["language"] = True
+            except Exception as e:  # noqa: BLE001 - backend down / timeout / bad response: degrade, don't crash
+                trace.add(TraceStep("language", task.text, "", (time.perf_counter() - s) * 1000, ok=False,
+                                    note=f"language model failed: {e}"))
+                outcomes["language"] = False
+                if value is not None:
+                    text = exact.format_value(value)
+                elif ctx:
+                    text = "\n".join(ctx)
+                else:
+                    text, answered = f"The language model is unavailable right now ({e}).", False
         elif value is not None:
             text = exact.format_value(value)
         elif ctx:
             text = "\n".join(ctx)
         else:
-            text = "I could not compute that."
+            text, answered = "I could not compute that.", False
 
         trace.total_ms = (time.perf_counter() - t0) * 1000
         self.nfd.report(outcomes)
@@ -201,7 +229,7 @@ class Controller:
                            f"update allowed={decision.allowed}")
 
         admission = None
-        if self.ama:                                         # learning path (separate from answering)
+        if self.ama and answered:                            # learning path (separate from answering); error text is not learned
             if value is not None and verified:
                 status, category = "verified", "arithmetic"
             else:
@@ -211,6 +239,11 @@ class Controller:
             e = Experience(task.text, text, task_category=category, source="interaction",
                            verification_status=status, outcome="success" if verified else "unknown")
             admission = self.ama.admit(e, surprise=surprise_from_prior(task.text, text, prior)).decision
+            if admission != "MERGED":
+                # Memory changed, so cached retrieval results for OTHER questions are stale (a fact told a moment
+                # ago must be findable). This question's own entry is kept: re-asking it should hit the fast path
+                # instead of retrieving the answer we just stored.
+                self.wm.invalidate(keep={"ctx:" + normalize(task.text)})
         return Response(text, trace, verified, admission, attribution)
 
 

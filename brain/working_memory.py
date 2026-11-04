@@ -38,6 +38,11 @@ class WorkingMemory:
     def clear(self) -> None:
         self._items.clear()
 
+    def invalidate(self, keep: tuple[str, ...] | set[str] = ()) -> None:
+        """Drop every entry except those in `keep` (used when the backing memory has changed)."""
+        for k in [k for k in self._items if k not in keep]:
+            del self._items[k]
+
     def __len__(self) -> int:
         self._expire()
         return len(self._items)

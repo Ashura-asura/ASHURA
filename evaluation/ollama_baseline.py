@@ -25,7 +25,7 @@ import time
 from pathlib import Path
 
 from foundation.model_config import ModelConfig
-from foundation.ollama_model import OllamaModel, list_models, running_models, unload
+from foundation.ollama_model import OllamaError, OllamaModel, list_models, running_models, unload
 
 from .benchmark_runner import load_suite, suite_hash
 from .judge import judge_both
@@ -168,19 +168,34 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if a.reference not in tags:
         tags.insert(0, a.reference)
+    if a.calibrate and a.calibrate not in tags:              # fail now, not after hours of benchmarking
+        print(f"--calibrate {a.calibrate!r} is not one of the models being run: {tags}", file=sys.stderr)
+        return 2
     suite = load_suite(a.suite)
+    if not suite:
+        print(f"benchmark suite {a.suite} is empty", file=sys.stderr)
+        return 2
 
     results = {}
     for t in tags:
         print(f"[{len(results) + 1}/{len(tags)}] {t} ...", flush=True)
         for m in running_models(a.host):                      # measure each model's footprint alone
             unload(a.host, m["name"])
-        results[t] = run_model(a.host, t, suite, a.max_tokens, a.n_ctx, installed, a.think)
+        try:
+            results[t] = run_model(a.host, t, suite, a.max_tokens, a.n_ctx, installed, a.think)
+        except OllamaError as e:                              # one failing model must not discard the others' results
+            print(f"    FAILED: {e}", file=sys.stderr)
+            if t == a.reference:
+                return 1                                      # nothing can be compared without the reference
+            continue
         r = results[t]
         print(f"    strict {r['strict']:.2f}  lenient {r['lenient']:.2f}  p50 {r['latency_ms_p50_excl_first']:.0f} ms  "
               f"{r['tokens_per_s_median']:.1f} tok/s  {r['server_mem_mb']:.0f} MB", flush=True)
         unload(a.host, t)
 
+    if a.calibrate and a.calibrate not in results:
+        print(f"cannot calibrate: {a.calibrate!r} failed to run", file=sys.stderr)
+        a.calibrate = None
     comp = compare(results, a.reference)
     out = Path(a.out_dir); out.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d_%H%M%S")

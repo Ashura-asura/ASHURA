@@ -5,8 +5,10 @@ from learning.ama import AMA
 from memory.database import Database
 
 
-def ctl(mode="nfd"):
-    return Controller(EchoModel(), ama=AMA(Database()), routing_mode=mode)
+def ctl(mode="nfd", cpu=10.0, ram=16000.0):
+    """Controller with FIXED cpu/ram readings so routing never depends on how busy the test machine is."""
+    nfd = NeedField(default_registry(), cpu_fn=lambda: cpu, ram_fn=lambda: ram)
+    return Controller(EchoModel(), ama=AMA(Database()), nfd=nfd, routing_mode=mode)
 
 
 def sel(c, text, **kw):
@@ -72,24 +74,18 @@ def test_working_memory_fast_path_skips_second_search():
     assert r2.trace.step("exact_retrieval").note == "fast path"
 
 
-def test_low_ram_drops_optional_modules_but_keeps_language(monkeypatch):
-    import brain.need_field as nf
-    monkeypatch.setattr(nf, "available_ram_mb", lambda: 100.0)
-    c = ctl()
+def test_low_ram_drops_optional_modules_but_keeps_language():
+    c = ctl(ram=100.0)
     s = sel(c, "what did I tell you about project p12?")
     assert "language" in s          # already resident, costs no extra RAM
 
 
 # ---- CPU awareness and measured costs ----
-def test_busy_cpu_defers_optional_heavy_modules_but_not_the_answering_path(monkeypatch):
-    import brain.need_field as nf
-    monkeypatch.setattr(nf, "available_ram_mb", lambda: 16000.0)      # isolate from the machine's real free RAM
-    from brain.controller import default_registry
-    from brain.need_field import NeedField, Task
+def test_busy_cpu_defers_optional_heavy_modules_but_not_the_answering_path():
     reg = default_registry()
     reg.get("reasoning").available = True                      # pretend the heavy optional module exists
-    busy = NeedField(reg, cpu_fn=lambda: 97.0).select(Task("Explain step by step why the sky is blue and compare it to sunsets"))
-    idle = NeedField(reg, cpu_fn=lambda: 5.0).select(Task("Explain step by step why the sky is blue and compare it to sunsets"))
+    busy = NeedField(reg, cpu_fn=lambda: 97.0, ram_fn=lambda: 16000.0).select(Task("Explain step by step why the sky is blue and compare it to sunsets"))
+    idle = NeedField(reg, cpu_fn=lambda: 5.0, ram_fn=lambda: 16000.0).select(Task("Explain step by step why the sky is blue and compare it to sunsets"))
     assert "reasoning" in idle.selected
     assert "reasoning" not in busy.selected and "CPU busy" in busy.skipped["reasoning"]
     assert "language" in busy.selected                          # the model itself is resident: never starved
@@ -105,3 +101,53 @@ def test_measured_costs_replace_placeholders(tmp_path):
     assert default_registry(costs_path=tmp_path / "missing.json").get("language").est_latency_ms == 3000   # placeholder
     f.write_text("{not json")
     assert default_registry(costs_path=f).get("language").est_latency_ms == 3000                            # corrupt -> safe
+
+
+# ---- regression tests added in the production-hardening pass ----
+def test_explicit_ocr_request_is_not_deferred_by_cpu_load_or_low_ram():
+    reg = default_registry()
+    reg.get("ocr").available = True
+    task = Task("Read the text in this image.", has_image=True, image_path="x.png")
+    busy = NeedField(reg, cpu_fn=lambda: 99.0, ram_fn=lambda: 100.0)
+    assert "ocr" not in busy.select(task).selected                      # implicit request: deferred under load
+    forced = Task(task.text, has_image=True, image_path="x.png", force=("ocr",))
+    assert "ocr" in busy.select(forced).selected                        # explicit /ocr: always runs
+    reg.get("ocr").available = False
+    assert "ocr" not in busy.select(forced).selected                    # ...but never when the engine is missing
+
+
+def test_model_failure_degrades_instead_of_crashing():
+    class Broken(EchoModel):
+        def generate(self, prompt, max_tokens=128):
+            raise RuntimeError("backend down")
+
+    c = Controller(Broken(), ama=AMA(Database()), nfd=NeedField(default_registry(), cpu_fn=lambda: 5, ram_fn=lambda: 16000))
+    r = c.handle("tell me a story")
+    assert "unavailable" in r.text and "backend down" in r.text
+    assert c.ama.episodic.count() == 0                                  # an error message is not learned as an answer
+    r = c.handle("I have 3 boxes with 12*7 items each, can you tell me a story about them")
+    assert r.text == "84"                                               # exact arithmetic still answers
+
+
+def test_telling_a_new_fact_invalidates_stale_cached_retrievals():
+    c = ctl()
+    q = "what did I tell you about project p12 code?"
+    first = c.handle(q)
+    assert first.trace.step("exact_retrieval").output == "0 hits"       # nothing known yet; result is now cached
+    c.handle("remember that project p12 code is 4821")                    # new fact enters memory via a normal turn
+    again = c.handle(q)
+    step = again.trace.step("exact_retrieval")
+    assert step.note != "fast path"                                       # the stale cache entry was dropped...
+    assert step.output != "0 hits"                                        # ...so the new fact is found
+
+
+def test_arithmetic_failure_is_a_failed_step_not_an_exception():
+    r = ctl().handle("what is " + "(" * 3000 + "1" + ")" * 3000)
+    assert r.trace.step("arithmetic") is None or r.trace.step("arithmetic").ok is False
+    assert isinstance(r.text, str)
+
+
+def test_controller_close_is_idempotent():
+    c = ctl()
+    c.close()
+    c.close()

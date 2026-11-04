@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 import time
 import uuid
 from dataclasses import dataclass, field
 
 from .database import Database
+from .text import normalize  # noqa: F401  (re-exported: other modules import it from here)
 
 RELIABILITY_BY_STATUS = {
     "verified": 1.0,          # exact arithmetic, passing tests, deterministic outcomes
@@ -16,10 +16,6 @@ RELIABILITY_BY_STATUS = {
     "trusted_material": 0.8,
     "unverified": 0.2,        # model-generated and nothing else
 }
-
-
-def normalize(text: str) -> str:
-    return re.sub(r"\s+", " ", text.strip().lower())
 
 
 def content_hash(inp: str, out: str) -> str:
@@ -58,9 +54,11 @@ class EpisodicMemory:
     def add(self, e: Experience) -> str:
         self.db.conn.execute(
             """INSERT INTO experiences(id, ts, input, output, task_category, source, verification_status,
-               reliability, outcome, content_hash, repeat_count, related_ids) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+               reliability, outcome, content_hash, repeat_count, related_ids, input_norm)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (e.id, e.ts, e.input, e.output, e.task_category, e.source, e.verification_status,
-             e.reliability, e.outcome, content_hash(e.input, e.output), e.repeat_count, json.dumps(e.related_ids)),
+             e.reliability, e.outcome, content_hash(e.input, e.output), e.repeat_count, json.dumps(e.related_ids),
+             normalize(e.input)),
         )
         self.db.conn.commit()
         return e.id
@@ -74,11 +72,11 @@ class EpisodicMemory:
         return self._row(r) if r else None
 
     def find_by_input(self, inp: str, category: str | None = None) -> list[Experience]:
-        """Exact (normalised) input matches - used for conflict detection."""
-        rows = self.db.conn.execute("SELECT * FROM experiences WHERE task_category = COALESCE(?, task_category)",
-                                    (category,)).fetchall()
-        n = normalize(inp)
-        return [self._row(r) for r in rows if normalize(r["input"]) == n]
+        """Exact (normalised) input matches - used for conflict detection. Uses the indexed input_norm column."""
+        rows = self.db.conn.execute(
+            "SELECT * FROM experiences WHERE input_norm = ? AND task_category = COALESCE(?, task_category)",
+            (normalize(inp), category)).fetchall()
+        return [self._row(r) for r in rows]
 
     def bump_repeat(self, exp_id: str, new_status: str | None = None) -> None:
         self.db.conn.execute("UPDATE experiences SET repeat_count = repeat_count + 1 WHERE id = ?", (exp_id,))

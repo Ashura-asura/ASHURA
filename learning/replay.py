@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import random
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 _TOK = re.compile(r"\w+", re.UNICODE)
 
@@ -70,6 +70,8 @@ class ReplayBuffer:
 
     def replay_set(self, target: str, new_ratio: float = 0.5, seed: int = 0) -> list[ReplayItem]:
         """Target examples plus historical examples. Proportions are NOT calibrated."""
+        if not 0.0 < new_ratio <= 1.0:
+            raise ValueError("new_ratio must be in (0, 1]")
         train = self.training_set()
         new = [i for i in train if i.category == target]
         old = [i for i in train if i.category != target]

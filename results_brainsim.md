@@ -695,7 +695,7 @@ upper bound created by full coverage and external task identity.
 ## 13. Reproducibility and verification
 
 - **BrainSim tests:** 46 passing.
-- **ASHURA tests:** 139 passing, confirming the subproject does not break the parent repository.
+- **ASHURA tests:** 177 passing, confirming the subproject does not break the parent repository.
 - **Measured commit:** `d3c7695` on `origin/main`.
 - **Result JSONs:** tracked under `BrainSim/experiments/results/`.
 - **Checkpoints:** local under `BrainSim/checkpoints/`, git-ignored.

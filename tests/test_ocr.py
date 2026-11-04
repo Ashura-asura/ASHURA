@@ -3,6 +3,20 @@ import pytest
 from skills.perception import OCRConfig, OCRCorrectionStore, OCREngine, OCRResult, ocr_file
 
 
+def _font(ImageFont, size):
+    """A TrueType font that exists on this OS (the test used to hard-code a Windows path and failed elsewhere)."""
+    for name in ("C:/Windows/Fonts/arial.ttf", "DejaVuSans.ttf", "LiberationSans-Regular.ttf",
+                 "/System/Library/Fonts/Supplemental/Arial.ttf", "Arial.ttf"):
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            continue
+    try:
+        return ImageFont.load_default(size=size)        # Pillow >= 10.1 ships a scalable built-in font
+    except TypeError:
+        pytest.skip("no usable TrueType font available")
+
+
 def test_local_tesseract_pipeline_when_engine_is_installed(tmp_path):
     if not OCREngine().available:
         pytest.skip("local Tesseract engine unavailable")
@@ -10,7 +24,7 @@ def test_local_tesseract_pipeline_when_engine_is_installed(tmp_path):
     ImageDraw = pytest.importorskip("PIL.ImageDraw")
     ImageFont = pytest.importorskip("PIL.ImageFont")
     image = Image.new("RGB", (900, 220), "white")
-    font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 56)
+    font = _font(ImageFont, 56)
     ImageDraw.Draw(image).text((30, 60), "ASHURA OCR 12345", fill="black", font=font)
     path = tmp_path / "ocr.png"
     image.save(path)
@@ -63,11 +77,16 @@ def test_controller_persists_successful_ocr_observation(monkeypatch):
 
     db = Database()
     reg = default_registry(); reg.get("ocr").available = True
-    ctl = Controller(EchoModel(), ama=AMA(db), nfd=NeedField(reg))
+    ctl = Controller(EchoModel(), ama=AMA(db), nfd=NeedField(reg, cpu_fn=lambda: 5.0, ram_fn=lambda: 16000.0))
     fake = OCRResult(True, text="hello from image", confidence=.91, image_ref="image.png",
                      image_sha256="hash", engine_version="tesseract-test")
     monkeypatch.setattr(controller_module, "ocr_file", lambda *a, **k: fake)
-    result = ctl.handle(Task("read this image", has_image=True, image_path="image.png"))
+    ctl.handle(Task("read this image", has_image=True, image_path="image.png"))
     row = db.conn.execute("SELECT extracted_text,confidence,image_sha256 FROM ocr_records").fetchone()
     assert row[0] == "hello from image" and row[1] == .91 and row[2] == "hash"
     db.close()
+
+
+def test_ocr_timeout_must_be_positive():
+    with pytest.raises(ValueError):
+        OCRConfig(timeout_s=0)

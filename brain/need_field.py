@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from skills.arithmetic.parser import extract_expression, is_pure_arithmetic
 
@@ -28,6 +28,9 @@ class Task:
     has_image: bool = False
     image_path: str | None = None
     user_correction: bool = False
+    # Modules the user explicitly asked for (e.g. the CLI's /ocr command). They are still skipped if
+    # unavailable, but are never deferred because of RAM / CPU load or a low priority score.
+    force: tuple[str, ...] = ()
 
 
 @dataclass
@@ -79,9 +82,10 @@ class NeedStats:
 
 class NeedField:
     def __init__(self, registry: ModuleRegistry, cfg: NFDConfig | None = None, stats: NeedStats | None = None,
-                 cpu_fn=cpu_busy_percent):
+                 cpu_fn=cpu_busy_percent, ram_fn=None):
         self.registry, self.cfg, self.stats = registry, cfg or NFDConfig(), stats or NeedStats()
         self._cpu_fn = cpu_fn
+        self._ram_fn = ram_fn            # None -> live system reading; tests/benchmarks inject a fixed value
 
     # 1-3: classify + estimate
     def signals(self, task: Task) -> dict[str, NeedSignals]:
@@ -114,7 +118,8 @@ class NeedField:
         sig = self.signals(task)
         pri = {n: self.priority(n, sig[n]) for n in NEEDS if n in self.registry}
         dec = RoutingDecision(selected=[], priorities=pri)
-        budget = available_ram_mb() - self.cfg.ram_headroom_mb
+        ram = self._ram_fn() if self._ram_fn else available_ram_mb()
+        budget = ram - self.cfg.ram_headroom_mb
         cpu = self._cpu_fn()
         pure = is_pure_arithmetic(task.text)
         for n in sorted(pri, key=pri.get, reverse=True):
@@ -123,6 +128,10 @@ class NeedField:
                 dec.skipped[n] = "cheap skill sufficient"
             elif sig[n].I <= 0 and n != "language":
                 dec.skipped[n] = "not needed"
+            elif n in task.force and spec.available:
+                dec.selected.append(n)                       # explicit user request: no load-based deferral
+                dec.est_latency_ms += spec.est_latency_ms
+                dec.est_ram_mb += spec.extra_ram_mb
             elif pri[n] < self.cfg.activation_threshold:
                 dec.skipped[n] = f"priority {pri[n]:.2f} below threshold"
             elif not spec.available:

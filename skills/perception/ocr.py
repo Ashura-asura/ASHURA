@@ -7,12 +7,11 @@ unverified until a user or downstream verifier confirms it.
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import sqlite3
 import shutil
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +24,7 @@ class OCRConfig:
     max_bytes: int = 25 * 1024 * 1024
     min_confidence: float = 0.0
     tesseract_cmd: str | None = None
+    timeout_s: float = 60.0          # kill a hung Tesseract child instead of blocking the CLI forever
 
     def __post_init__(self) -> None:
         if not self.languages.strip():
@@ -35,6 +35,8 @@ class OCRConfig:
             raise ValueError("max_bytes must be positive")
         if not 0 <= self.min_confidence <= 1:
             raise ValueError("min_confidence must be in [0, 1]")
+        if self.timeout_s <= 0:
+            raise ValueError("timeout_s must be positive")
 
 
 @dataclass(frozen=True)
@@ -127,7 +129,8 @@ class OCREngine:
                 data = self._pytesseract.image_to_data(
                     image, lang=self.config.languages,
                     config=f"--psm {self.config.psm}",
-                    output_type=self._pytesseract.Output.DICT)
+                    output_type=self._pytesseract.Output.DICT,
+                    timeout=self.config.timeout_s)
                 words, confidences = [], []
                 for word, raw_conf in zip(data.get("text", []), data.get("conf", [])):
                     word = str(word).strip()

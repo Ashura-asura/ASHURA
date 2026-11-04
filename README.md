@@ -5,16 +5,17 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 
 **Status:** Phase 0 foundation baseline measured on the target laptop; Phases 1–6 implemented;
 local OCR and a HARN arithmetic candidate are integrated behind optional dependencies/checkpoints;
-BrainSim B1–B6 measured as an independent subproject. **139 ASHURA tests and 46 BrainSim tests
+BrainSim B1–B6 measured as an independent subproject. **177 ASHURA tests and 46 BrainSim tests
 pass.** The adaptive memory remains experimental and out of the response path. BrainSim is not
 imported by ASHURA.
 
 ## Run
 
 ```bash
-pip install psutil numpy pytest
-python -m pytest -q                       # 139 tests
+pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
+python -m pytest -q                       # 177 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
+# at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
 python -m evaluation.retrieval_bench      # EXP-002  FTS5 latency vs size
 python -m experiments.nfd.run             # EXP-003  NFD vs always-run
@@ -24,6 +25,32 @@ python -m experiments.dream.run           # EXP-006  DREAM replay vs new-only
 python -m evaluation.ollama_baseline      # PHASE 0   real-model baseline
 python -m memory.retention --db data/ashura.db   # forgetting policy dry run
 ```
+
+## Hardening pass
+
+The 2026-11-05 hardening pass added 38 regression tests (139 -> 177). It fixes reproducible
+failure modes without changing the measured research claims:
+
+- **CLI:** huge exact results are formatted instead of crashing; dates and phone numbers are no
+  longer treated as verified arithmetic; an explicit `/ocr` is not deferred by CPU/RAM load;
+  `/help` and `/quit` work; one bad request does not kill the session.
+- **Memory/backend:** a failed language backend degrades to exact arithmetic or retrieved memory
+  instead of crashing, and its error text is not learned; admitting a new fact invalidates stale
+  cached retrievals; SQLite gets a busy timeout, WAL, an indexed conflict lookup and an automatic
+  `input_norm` migration.
+- **Files/packaging:** `pip install -e .` works and exposes `ashura`; config discovery works from
+  another directory; checkpoint names cannot traverse paths, promotion is atomic and refuses to
+  overwrite different stable content; adaptive-memory saves are atomic and seed-checked; OCR has a
+  child timeout.
+- **Config/experiments:** unknown `[foundation]` keys are clear errors; the `[retention]` section
+  is honoured; all model tags are benchmarked even if one non-reference model fails.
+
+Details and the still-open reliability question are in `research/failures.md` F-020–F-029. The
+open item is important: retrieved memory is still fed to the model regardless of reliability, and
+unverified model answers can re-enter that retrieval pool. A `min_reliability` filter would change
+behaviour the existing experiments were measured under, so it needs a decision and a re-measurement
+before adoption. The `.github/workflows/ci.yml` workflow is added but has not yet been executed on
+GitHub; the local Windows/Python 3.13 run is the measured result.
 
 ### Ollama (Windows PowerShell)
 

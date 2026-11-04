@@ -14,6 +14,7 @@ becomes non-linear. The memory is independent of Qwen, resettable, and checkpoin
 from __future__ import annotations
 
 import math
+import os
 import re
 import zlib
 from dataclasses import asdict, dataclass
@@ -123,9 +124,18 @@ class AdaptiveMemory:
 
     # ---- persistence --------------------------------------------------------------------------
     def save(self, path: str) -> None:
-        np.savez(path, M=self.M, S=self.S, n_writes=self.n_writes,
-                 df_keys=np.array(list(self.df.keys())), df_vals=np.array(list(self.df.values()), dtype=np.int64),
-                 cfg=np.array([str(asdict(self.cfg))]))
+        """Write atomically (temp file + rename) so an interrupted save never corrupts an existing checkpoint.
+
+        numpy silently appends ".npz" to names that lack it, which made the file land somewhere other than
+        `path`; writing through a file object keeps the exact path the caller asked for.
+        """
+        tmp = f"{path}.tmp"
+        with open(tmp, "wb") as f:
+            np.savez(f, M=self.M, S=self.S, n_writes=self.n_writes, seed=self.cfg.seed,
+                     df_keys=np.array(list(self.df.keys()), dtype=str),
+                     df_vals=np.array(list(self.df.values()), dtype=np.int64),
+                     cfg=np.array([str(asdict(self.cfg))]))
+        os.replace(tmp, path)
 
     @classmethod
     def load(cls, path: str, cfg: AMemConfig | None = None) -> "AdaptiveMemory":
@@ -133,6 +143,9 @@ class AdaptiveMemory:
         m = cls(cfg or AMemConfig())
         if d["M"].shape != m.M.shape:
             raise ValueError("checkpoint shape does not match config")
+        # Token vectors are derived from the seed: loading with a different seed would silently scramble recall.
+        if "seed" in d.files and int(d["seed"]) != m.cfg.seed:
+            raise ValueError(f"checkpoint was trained with seed {int(d['seed'])} but config has seed {m.cfg.seed}")
         m.M, m.S, m.n_writes = d["M"].copy(), d["S"].copy(), int(d["n_writes"])
         m.df = {str(k): int(v) for k, v in zip(d["df_keys"], d["df_vals"])}
         return m

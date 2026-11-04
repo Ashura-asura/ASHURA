@@ -25,6 +25,12 @@ class DreamConfig:
     seed: int = 0
     replay: bool = True          # False = new-only training (baseline for H-DREAM)
 
+    def __post_init__(self) -> None:
+        if not 0.0 < self.new_ratio <= 1.0:
+            raise ValueError("new_ratio must be in (0, 1]")
+        if self.min_train < 1 or self.dim < 1:
+            raise ValueError("min_train and dim must be positive")
+
 
 @dataclass
 class DreamResult:

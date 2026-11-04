@@ -5,7 +5,7 @@ import hashlib
 import os
 import stat
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 
 
@@ -28,6 +28,12 @@ class ModelConfig:
     timeout_s: float = 300.0
     think: bool | None = None       # Ollama thinking models: False for the fast response path, None = model default
 
+    def __post_init__(self) -> None:
+        if self.backend not in {"echo", "llama_cpp", "ollama"}:
+            raise ValueError(f"foundation.backend must be echo, llama_cpp or ollama (got {self.backend!r})")
+        if self.n_ctx < 1 or self.n_threads < 1 or self.timeout_s <= 0:
+            raise ValueError("foundation.n_ctx, n_threads and timeout_s must be positive")
+
     @property
     def is_pinned(self) -> bool:
         """A reproducible baseline needs a concrete checkpoint, licence and a content hash/digest."""
@@ -42,7 +48,14 @@ def load_config(path: str | os.PathLike = "config/ashura.toml") -> dict:
 
 
 def load_model_config(path: str | os.PathLike = "config/ashura.toml") -> ModelConfig:
-    return ModelConfig(**load_config(path)["foundation"])
+    section = load_config(path).get("foundation")
+    if section is None:
+        raise ValueError(f"{path}: missing the [foundation] section")
+    valid = {f.name for f in fields(ModelConfig)}
+    unknown = sorted(set(section) - valid)
+    if unknown:                      # a typo such as `chekpoint` must be a clear error, not a TypeError traceback
+        raise ValueError(f"{path}: unknown [foundation] key(s) {unknown}; valid keys: {sorted(valid)}")
+    return ModelConfig(**section)
 
 
 def sha256_file(path: str | os.PathLike, chunk: int = 1 << 20) -> str:

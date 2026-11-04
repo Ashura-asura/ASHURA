@@ -20,3 +20,14 @@ config/module_costs.json
 .env
 
 *.log
+
+# build / tooling artefacts
+*.egg-info/
+build/
+dist/
+.coverage
+.mypy_cache/
+.ruff_cache/
+*.tmp
+data/*.db-wal
+data/*.db-shm

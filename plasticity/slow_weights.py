@@ -6,6 +6,7 @@ know how to train them.
 """
 from __future__ import annotations
 
+import filecmp
 import json
 import os
 import shutil
@@ -27,6 +28,13 @@ class Version:
     parent: str | None = None
 
 
+def _check_name(name: str) -> str:
+    """Artifact names are plain file names: no directories, no traversal."""
+    if not name or name in {".", ".."} or Path(name).name != name or "\\" in name or "/" in name:
+        raise ValueError(f"invalid checkpoint name {name!r}: must be a plain file name")
+    return name
+
+
 class CheckpointStore:
     def __init__(self, root: str | os.PathLike = "checkpoints"):
         self.root = Path(root)
@@ -43,7 +51,10 @@ class CheckpointStore:
         tmp.replace(self.manifest)
 
     def _read(self) -> dict:
-        return json.loads(self.manifest.read_text())
+        try:
+            return json.loads(self.manifest.read_text())
+        except (OSError, ValueError) as e:
+            raise RuntimeError(f"checkpoint manifest {self.manifest} is unreadable or corrupt: {e}") from e
 
     def current(self) -> Version | None:
         s = self._read()["stable"]
@@ -56,7 +67,7 @@ class CheckpointStore:
     def stage(self, artifact: str | os.PathLike, name: str, kind: str = "candidates") -> Path:
         if kind not in KINDS:
             raise ValueError(f"kind must be one of {KINDS}")
-        dest = self.root / kind / name
+        dest = self.root / kind / _check_name(name)
         if dest.exists():
             raise FileExistsError(f"{dest} already exists; refusing to overwrite")
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -67,11 +78,15 @@ class CheckpointStore:
         """Copy candidates/name to stable/name only if NGR passed. Never mutates the base model."""
         if not ngr.promote:
             raise PermissionError(f"NGR rejected the candidate: {ngr.reasons}")
-        src = self.root / "candidates" / name
+        src = self.root / "candidates" / _check_name(name)
         if not src.exists():
             raise FileNotFoundError(src)
         dest = self.root / "stable" / name
-        shutil.copy2(src, dest)
+        if dest.exists() and not filecmp.cmp(src, dest, shallow=False):
+            raise FileExistsError(f"{dest} already exists with different content; refusing to overwrite a stable artifact")
+        tmp = dest.with_name(dest.name + ".tmp")
+        shutil.copy2(src, tmp)
+        os.replace(tmp, dest)                           # a crash can never leave a half-copied stable file
         data = self._read()
         prev = data["stable"]
         record = Version(name=name, artifact=f"stable/{name}", promoted_at=time.strftime("%Y-%m-%dT%H:%M:%S"),

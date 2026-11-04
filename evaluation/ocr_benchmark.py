@@ -4,7 +4,7 @@ Manifest rows: {"image": "relative/or/absolute/path", "expected_text": "...",
                 "document_type": "document"}. Paths are resolved relative to the manifest.
 """
 from __future__ import annotations
-import argparse, json, re, statistics, time
+import argparse, json, re, statistics
 from pathlib import Path
 from skills.perception import OCRConfig, OCREngine
 

@@ -10,8 +10,19 @@ _FILLER = {"what", "is", "whats", "calculate", "compute", "solve", "evaluate", "
            "please", "equals", "equal", "how", "much", "to", "me", "tell", "can", "you", "give", "a", "and"}
 
 
+# Things that look like subtraction/division but are almost never arithmetic requests. Treating them as
+# arithmetic would inject a wrong "verified" number (e.g. 2026-11-05 -> 2010) into the answer and memory.
+# Only unambiguous shapes (no spaces, 4-digit years, 3-3-4 phone numbers) are masked, so "100-50-25" and
+# "2026 - 11 - 05" are still computed.
+_NOT_ARITHMETIC = re.compile(
+    r"(?<![\d.])(?:\d{4}-(?:0?[1-9]|1[0-2])-(?:0?[1-9]|[12]\d|3[01])"       # ISO date 2026-11-05
+    r"|(?:0?[1-9]|[12]\d|3[01])/(?:0?[1-9]|1[0-2])/\d{4}"                      # 05/11/2026
+    r"|(?:0?[1-9]|1[0-2])/(?:0?[1-9]|[12]\d|3[01])/\d{4}"                      # 11/05/2026
+    r"|\d{3}[-.]\d{3}[-.]\d{4})(?![\d.])")                                    # 555-123-4567
+
+
 def _normalise(text: str) -> str:
-    t = text.lower().replace("×", "*").replace("÷", "/").replace("−", "-").replace("'", "")
+    t = _NOT_ARITHMETIC.sub(" ", text).lower().replace("×", "*").replace("÷", "/").replace("−", "-").replace("'", "")
     for pat, rep in _WORDS:
         t = re.sub(pat, f" {rep} ", t)
     t = re.sub(r"sqrt\s+(\d[\d.]*)", r"sqrt(\1)", t)

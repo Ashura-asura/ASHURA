@@ -8,19 +8,34 @@ Expressions are parsed with `ast` and walked with a whitelist. `eval` is never u
 from __future__ import annotations
 
 import ast
+import math
 import operator
-from decimal import Decimal, getcontext
+from decimal import Decimal, localcontext
 from fractions import Fraction
 from math import isqrt
 
 MAX_RESULT_BITS = 200_000
+# Python refuses str(int) above ~4300 digits (a DoS guard). We never change that global limit; very large
+# exact results are reported in scientific notation instead of being printed in full.
+MAX_PRINT_DIGITS = 4000
 
 
 class ArithmeticError_(ArithmeticError):
     pass
 
 
-_BIN = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul}
+def _check_size(v):
+    """Reject exact results that would grow without bound (long chains of multiplications)."""
+    if isinstance(v, Fraction) and max(v.numerator.bit_length(), v.denominator.bit_length()) > MAX_RESULT_BITS:
+        raise ArithmeticError_("result too large")
+    return v
+
+
+def _mul(a, b):
+    return _check_size(a * b)
+
+
+_BIN = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: _mul}
 _CMP = {ast.Lt: operator.lt, ast.LtE: operator.le, ast.Gt: operator.gt, ast.GtE: operator.ge,
         ast.Eq: operator.eq, ast.NotEq: operator.ne}
 
@@ -74,7 +89,7 @@ def _eval(node, backend: str):
                 raise ArithmeticError_("zero to a negative power")
             if a not in (0, 1, -1) and abs(e) * max(a.numerator.bit_length(), a.denominator.bit_length()) > MAX_RESULT_BITS:
                 raise ArithmeticError_("result too large")
-            return a ** e
+            return _check_size(a ** e)
         raise ArithmeticError_("unsupported operator")
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "sqrt" and len(node.args) == 1:
         if backend != "fraction":
@@ -88,8 +103,19 @@ def _eval(node, backend: str):
 def _parse(expr: str) -> ast.Expression:
     try:
         return ast.parse(expr.replace("^", "**").strip(), mode="eval")
-    except SyntaxError as e:
-        raise ArithmeticError_(f"cannot parse: {expr!r}") from e
+    except (SyntaxError, ValueError, RecursionError, MemoryError) as e:   # ValueError: NUL bytes / oversized literals
+        raise ArithmeticError_(f"cannot parse: {expr[:60]!r}") from e
+
+
+def _format_int(n: int) -> str:
+    """str(n), or scientific notation when n has too many digits to print safely."""
+    digits = len(str(abs(n))) if abs(n).bit_length() < 13_000 else int(math.log10(abs(n))) + 1
+    if digits <= MAX_PRINT_DIGITS:
+        return str(n)
+    exp = int(math.log10(abs(n)))                       # math.log10 accepts arbitrarily large ints
+    mantissa = 10 ** (math.log10(abs(n)) - exp)
+    sign = "-" if n < 0 else ""
+    return f"{sign}{mantissa:.12f}e+{exp} (about {digits} digits; too large to print in full)"
 
 
 def format_value(v) -> str:
@@ -97,9 +123,12 @@ def format_value(v) -> str:
         return str(v)
     if isinstance(v, Fraction):
         if v.denominator == 1:
-            return str(v.numerator)
-        getcontext().prec = 30
-        return f"{Decimal(v.numerator) / Decimal(v.denominator):.15g} (= {v.numerator}/{v.denominator})"
+            return _format_int(v.numerator)
+        if max(v.numerator.bit_length(), v.denominator.bit_length()) > 12_000:
+            return f"{_format_int(v.numerator)} / {_format_int(v.denominator)}"
+        with localcontext() as ctx:                      # never mutate the process-wide decimal context
+            ctx.prec = 30
+            return f"{Decimal(v.numerator) / Decimal(v.denominator):.15g} (= {v.numerator}/{v.denominator})"
     return str(v)
 
 
@@ -108,21 +137,24 @@ def evaluate(expr: str) -> Fraction | bool:
     try:
         return _eval(_parse(expr), "fraction")
     except _Irrational as e:
-        raise ArithmeticError_(f"sqrt({e.x}) is irrational; exact path only returns exact values")
+        raise ArithmeticError_(f"sqrt({e.x}) is irrational; exact path only returns exact values") from None
+    except (RecursionError, MemoryError, OverflowError, ValueError) as e:
+        raise ArithmeticError_(f"expression too complex or too large: {type(e).__name__}") from e
 
 
 def verify(expr: str, value) -> tuple[bool | None, str]:
     """Independent cross-check. Returns (True/False, note) or (None, reason) if no independent check exists."""
     if isinstance(value, bool):
         return None, "no independent verifier for comparisons"
-    getcontext().prec = 60
-    try:
-        other = _eval(_parse(expr), "decimal")
-    except NotImplementedError:
-        return None, "no independent verifier for % ** sqrt"
-    except Exception as e:  # noqa: BLE001
-        return None, f"decimal check failed: {e}"
-    exact = Decimal(value.numerator) / Decimal(value.denominator)
-    tol = max(Decimal(10) ** -40, abs(exact) * Decimal(10) ** -40)
-    ok = abs(exact - other) <= tol
+    with localcontext() as ctx:
+        ctx.prec = 60
+        try:
+            other = _eval(_parse(expr), "decimal")
+            exact = Decimal(value.numerator) / Decimal(value.denominator)
+            tol = max(Decimal(10) ** -40, abs(exact) * Decimal(10) ** -40)
+            ok = abs(exact - other) <= tol
+        except NotImplementedError:
+            return None, "no independent verifier for % ** sqrt"
+        except Exception as e:  # noqa: BLE001 - a failing cross-check must never crash the answer path
+            return None, f"decimal check failed: {type(e).__name__}"
     return ok, "decimal(60) cross-check " + ("agrees" if ok else "DISAGREES")

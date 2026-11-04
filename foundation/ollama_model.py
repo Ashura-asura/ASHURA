@@ -29,7 +29,16 @@ def _call(host: str, path: str, payload: dict | None = None, timeout: float = 30
                                  method="POST" if payload is not None else "GET")
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            return json.loads(r.read().decode())
+            body = json.loads(r.read().decode())
+        if not isinstance(body, dict):
+            raise OllamaError(f"unexpected response from Ollama for {path}: expected a JSON object")
+        if body.get("error"):
+            raise OllamaError(f"Ollama reported an error for {path}: {str(body['error'])[:300]}")
+        return body
+    except OllamaError:
+        raise
+    except json.JSONDecodeError as e:
+        raise OllamaError(f"Ollama returned invalid JSON for {path}: {e}") from e
     except urllib.error.HTTPError as e:
         body = e.read().decode(errors="replace")[:300]
         raise OllamaError(f"Ollama returned HTTP {e.code} for {path}: {body}") from e

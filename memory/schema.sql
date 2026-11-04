@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS experiences (
     outcome             TEXT NOT NULL DEFAULT 'unknown',
     content_hash        TEXT NOT NULL,
     repeat_count        INTEGER NOT NULL DEFAULT 1,
-    related_ids         TEXT NOT NULL DEFAULT '[]'
+    related_ids         TEXT NOT NULL DEFAULT '[]',
+    input_norm          TEXT NOT NULL DEFAULT ''   -- normalised input, indexed for conflict lookups
 );
 CREATE INDEX IF NOT EXISTS idx_exp_category ON experiences(task_category);
 CREATE INDEX IF NOT EXISTS idx_exp_status   ON experiences(verification_status);

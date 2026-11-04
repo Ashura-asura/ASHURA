@@ -15,7 +15,7 @@ import time
 from dataclasses import asdict, dataclass, field
 
 from memory.database import Database
-from memory.episodic import RELIABILITY_BY_STATUS, EpisodicMemory, Experience, content_hash, normalize
+from memory.episodic import EpisodicMemory, Experience, content_hash
 from memory.fts import FTS5Index
 from memory.semantic import SemanticMemory
 

@@ -1,14 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "ashura"
 version = "0.1.0"
+description = "ASHURA - a local cognitive learning architecture (research prototype)"
+readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["psutil", "numpy"]
+dependencies = ["psutil>=5.9", "numpy>=1.24"]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = ["pytest>=7"]
 llm = ["llama-cpp-python"]
-brainsim = ["torch"]
+brainsim = ["torch", "pytest>=7"]
 perception = ["Pillow", "pytesseract"]
+
+[project.scripts]
+ashura = "app.main:main"
+
+# Flat layout with many top-level folders: list the importable packages explicitly, otherwise
+# `pip install -e .` fails with "Multiple top-level packages discovered".
+[tool.setuptools.packages.find]
+include = ["app*", "brain*", "evaluation*", "evolution*", "foundation*", "learning*", "memory*",
+           "plasticity*", "skills*"]
+
+[tool.setuptools.package-data]
+memory = ["schema.sql"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

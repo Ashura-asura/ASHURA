@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import ast
 import os
-import re
+import threading
 from dataclasses import dataclass
 from fractions import Fraction
 from typing import Tuple
@@ -166,10 +166,37 @@ class NeuralAdditionExpert:
         return cls()
 
 
+# Float64 represents integers exactly only up to 2**53. Beyond that the candidate is not applicable
+# (and float(huge_int) would raise OverflowError), so the exact evaluator simply answers alone.
+_MAX_SAFE_INT = 2 ** 53
+
+_cache_lock = threading.Lock()
+_cache: dict[str, tuple[float, NeuralAdditionExpert]] = {}
+
+
+def _cached_expert(path: str | None = None) -> NeuralAdditionExpert:
+    """Load the checkpoint once and reload only when the file changes (was: a disk read per request)."""
+    p = path or NeuralAdditionExpert.default_checkpoint_path()
+    try:
+        mtime = os.path.getmtime(p)
+    except OSError:
+        with _cache_lock:
+            _cache.pop(p, None)
+        return NeuralAdditionExpert()
+    with _cache_lock:
+        hit = _cache.get(p)
+        if hit and hit[0] == mtime:
+            return hit[1]
+    expert = NeuralAdditionExpert.load_if_available(p)
+    with _cache_lock:
+        _cache[p] = (mtime, expert)
+    return expert
+
+
 def try_neural_addition(expr: str, expert: NeuralAdditionExpert | None = None) -> Fraction | None:
     """Try to compute an integer addition expression using the neural expert."""
     if expert is None:
-        expert = NeuralAdditionExpert.load_if_available()
+        expert = _cached_expert()
     if not expert.available:
         return None
 
@@ -178,4 +205,6 @@ def try_neural_addition(expr: str, expert: NeuralAdditionExpert | None = None) -
         return None
 
     a, b = parsed
+    if abs(a) > _MAX_SAFE_INT or abs(b) > _MAX_SAFE_INT:
+        return None
     return expert.predict_fraction(a, b)
