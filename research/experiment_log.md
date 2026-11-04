@@ -153,6 +153,23 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 - **Decision:** pin `qwen3.5:2b` as the Phase 0 stable foundation. Keep the 7B result as the quality baseline; re-pull only for offline adapter experiments.
 
 ---
+## EXP-000d - Reference re-measurement after model-tag drift (2026-11-05)
+- **Why:** `ref-base:7b` and the earlier `tony_control:7b` are no longer installed. `DEFAULT_REFERENCE` now points at `tony:7b` (Qwen2 7.6B, Q4_K_M, digest `0455603ff430`). This is not the historical 7B artifact (`c20c7b08841f`), so the two are not interchangeable.
+- **Setup:** same suite `baseline_v2.jsonl` (16 items, hash `de09e3c57acd647d`), greedy (`temperature=0`, `seed=0`), `think=false`, target laptop, Python 3.13. Results: local `results/baseline_20261105_044047.{md,json}` (the `results/` directory is git-ignored by design).
+
+| model | digest | strict | lenient | p50 ms | p95 ms | tok/s | load s | server MB | vs tony:7b |
+|---|---|---|---|---|---|---|---|---|---|
+| tony:7b | 0455603ff430 | **0.94** | 0.94 | **2,351** | 4,481 | 10.4 | 10.1 | 4,636 | reference |
+| qwen3.5:2b | 0689d44085e0 | 0.56 | 0.69 | 3,899 | 3,964 | 19.1 | 8.2 | 2,341 | 1 win / 7 losses, p=0.07 |
+| lfm3:latest | b36a103fe2f8 | 0.56 | 0.75 | 3,460 | 5,072 | 19.5 | 12.4 | 1,404 | 1 win / 7 losses, p=0.07 |
+
+- Per-category strict (arithmetic/factual/instruction/reasoning): tony 1.00/0.80/1.00/1.00; qwen 0.20/0.80/0.75/0.50; lfm3 0.20/1.00/0.75/0.00.
+- **Finding:** tony:7b keeps the historical 0.94 strict accuracy but measured 2.35 s p50 here, not the 50.7 s recorded for `tony_control:7b`; because the digests differ, the old latency result is not evidence about this artifact (and vice versa). The current build still reports a 4.6 GB footprint, above the 2 GB MX350 budget.
+- **Statistics:** raw accuracy differs by 6/16, but only 8 pairs are discordant, so the exact sign test gives p=0.07. At alpha=0.05 the suite cannot declare tony:7b better; this is a power limit, not parity.
+- **Reproducibility caveat:** lfm3 (same digest) scored 0.125 strict on 2026-11-02 18:21 and 0.56 on 2026-11-02 21:50 and 2026-11-05; the first run returned empty responses, consistent with a thinking/`num_predict` interaction. Single runs of thinking models are not stable until that path is pinned.
+- **Decision:** use `tony:7b` as the default comparison reference; keep `qwen3.5:2b` as the live foundation (D-017). Do not regenerate `config/module_costs.json` from this run.
+
+---
 ## EXP-B1 - BrainSim tiny baseline + first fast-memory experiment (v2 blueprint)
 - **Hypotheses:** H-B1 (a small GRU learns hidden permutation rules), H-FM (an isolated fast memory improves a later related unseen-rule sequence), H-KEY (context keys reduce old-task interference).
 - **Setup:** independent `BrainSim/` subproject; 16 symbols, 8 training + 8 disjoint held-out single-cycle permutations, 3 seeds; hidden 128 (206k params) vs 384 (1.8M); 30 epochs on CPU. Study 12 transitions, test 16 from the same held-out rule. Arms: frozen, recurrent-state carry, token-keyed memory, pair-keyed memory. Full report: `BrainSim/research/experiment_log.md`.

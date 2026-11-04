@@ -45,7 +45,7 @@ failure modes without changing the measured research claims:
 - **Config/experiments:** unknown `[foundation]` keys are clear errors; the `[retention]` section
   is honoured; all model tags are benchmarked even if one non-reference model fails.
 
-Details and the still-open reliability question are in `research/failures.md` F-020–F-029. The
+Details and the still-open reliability question are in `research/failures.md` F-020–F-030. The
 open item is important: retrieved memory is still fed to the model regardless of reliability, and
 unverified model answers can re-enter that retrieval pool. A `min_reliability` filter would change
 behaviour the existing experiments were measured under, so it needs a decision and a re-measurement

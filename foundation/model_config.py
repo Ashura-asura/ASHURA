@@ -21,7 +21,7 @@ class ModelConfig:
     n_ctx: int = 2048
     n_threads: int = 4
     # --- Ollama backend (backend = "ollama") ---
-    model: str = ""                 # tag as shown by `ollama list`, e.g. "ref-base:7b"
+    model: str = ""                 # tag as shown by `ollama list`, e.g. "tony:7b"
     host: str = "http://127.0.0.1:11434"
     digest: str = ""                # ID column of `ollama list` (12+ hex chars); pins the exact weights
     keep_alive: str = "10m"

@@ -1,8 +1,8 @@
 """Phase 0 baseline against real local models served by Ollama.
 
-    python -m evaluation.ollama_baseline                        # every installed model vs ref-base:7b
-    python -m evaluation.ollama_baseline --models ref-base:7b tony_control:7b lfm3:latest
-    python -m evaluation.ollama_baseline --calibrate ref-base:7b   # also write config/module_costs.json
+    python -m evaluation.ollama_baseline                        # every installed model vs tony:7b
+    python -m evaluation.ollama_baseline --models tony:7b qwen3.5:2b lfm3:latest
+    python -m evaluation.ollama_baseline --calibrate qwen3.5:2b   # also write config/module_costs.json
 
 What it measures, per model: strict and lenient accuracy (Wilson 95% interval), per-category strict
 accuracy, request latency p50/p95, generation tokens/s, model load time, and *server-side* memory from
@@ -32,7 +32,7 @@ from .judge import judge_both
 from .latency import percentile
 
 DEFAULT_SUITE = "evaluation/benchmarks/baseline_v2.jsonl"
-DEFAULT_REFERENCE = "ref-base:7b"
+DEFAULT_REFERENCE = "tony:7b"             # installed local 7B quality reference
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
