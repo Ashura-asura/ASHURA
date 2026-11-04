@@ -1,0 +1,3 @@
+Pillow
+pytesseract
+# Tesseract OCR is a separate local system executable; install it for your OS and language packs.

@@ -11,6 +11,7 @@ checkpoints/experimental/*
 checkpoints/candidates/*
 !checkpoints/candidates/.gitkeep
 checkpoints/stable/*
+checkpoints/neural_arithmetic/
 !checkpoints/stable/.gitkeep
 *.gguf
 *.db

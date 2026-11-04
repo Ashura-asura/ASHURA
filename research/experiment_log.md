@@ -160,9 +160,34 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 
 | arm | train-rule acc | frozen unseen | adapted unseen | old-rule active | old-rule after reset |
 |---|---:|---:|---:|---:|---:|
-| hidden 128 | 0.956 | 0.095 | token **0.775** / pair **0.686** | token 0.309 / pair 0.903 | 0.956 |
-| hidden 384 | 0.956 | 0.090 | token **0.773** / pair **0.682** | token 0.309 / pair 0.904 | 0.956 |
+| hidden 128 | 0.957 | 0.085 | token **0.771** / pair **0.681** | token 0.309 / pair 0.904 | 0.957 |
+| hidden 384 | 0.957 | 0.096 | token **0.777** / pair **0.688** | token 0.309 / pair 0.904 | 0.957 |
 
-- **Supports:** B1 learns the training rules; fast memory raises unseen-rule accuracy from ~0.09 to 0.69-0.78; save/load reproduces the adapted accuracy exactly; pair keys cut cross-task interference from 64.7 to 5.3 points.
-- **Does not support:** rule induction (memory is a lookup; coverage 0.75 token / ~0.65 pair); safe cross-task use (both arms exceed the 2% retention tolerance while active); a benefit from 8.7x more parameters. Study-state carry alone scored 0.089, so the gain is the memory, not hidden-state context.
+- **Supports:** B1 learns the training rules; fast memory raises unseen-rule accuracy from ~0.09 to 0.68-0.78; save/load reproduces the adapted accuracy exactly; pair keys cut cross-task interference from 64.8 to 5.3 points.
+- **Does not support:** rule induction (memory is a lookup; coverage 0.75 token / ~0.65 pair); safe cross-task use (both arms exceed the 2% retention tolerance while active); a benefit from 8.7x more parameters. Study-state carry alone scored 0.081, so the gain is the memory, not hidden-state context.
 - **Decision:** keep BrainSim independent and task-scoped; no ASHURA integration yet. Next: B2 working memory/delayed recall and B3 gated/surprise plasticity. See `BrainSim/research/decisions.md`.
+
+---
+## EXP-B2 - Delayed recall: recurrent core vs fixed MLP (v2 blueprint B2/B6)
+- **Hypotheses:** H-B2 (the GRU solves trained-delay recall), H-DELAY (the GRU generalizes to longer delays better than a fixed MLP), H-COST (compare parameters and training time).
+- **Setup:** 3 cue symbols, blank delay, GO, reproduce cues. Train delays 2/4/6/8; evaluate 1/2/4/6/8/12/16/20. 4,096 sequences, 30 epochs, 3 seeds, CPU. GRU 204,183 params; parameter-matched MLP 217,560. Full report: `BrainSim/research/experiment_log.md` BS-EXP-002.
+- **Results:** both arms scored 1.000 token and 1.000 full-recall at every delay, including unseen 12-20. GRU trained 112-144 s/seed; MLP 9-18 s/seed.
+- **Supports:** the GRU can hold and reproduce cue information across a 20-step delay; B2's capability check is met.
+- **Does not support:** a recurrent advantage. H-DELAY is falsified; the fixed MLP is equally accurate and much faster. The task only requires copying the cue block, so recurrence is not necessary. The MLP is a strong upper bound, not a memoryless baseline (memoryless is at chance: 1/8 token, 1/512 full).
+- **Decision:** keep B2 as a capability baseline. Do not cite it as evidence for recurrence. Next: B2b with variable-length cues or a relational/delay-dependent query.
+
+---
+## EXP-B3 - Task-scoped gate vs shared memory (v2 blueprint B3)
+- **Setup:** two disjoint 16-symbol permutation rules, full transition coverage, verified writes, 3 seeds. Shared arm uses one token-keyed fast memory; gated arm uses `TaskScopedMemory` with external task IDs. Full report: `BrainSim/research/experiment_log.md` BS-EXP-003.
+- **Results (means):** shared old-rule accuracy 1.000 before switch -> **0.104** after; gated 1.000 -> **1.000**; new-rule accuracy 1.000 for both.
+- **Supports:** per-task isolation prevents overwrite; bounded cache and save/load are implemented and tested.
+- **Does not support:** learned task identification, boundary detection, or surprise-gated admission. The task ID is supplied externally and all writes are verified, so the gate's admission logic is bypassed in this experiment.
+- **Decision:** task-scoped memory remains the only safe operating mode; do not integrate BrainSim into ASHURA yet.
+
+---
+## EXP-007 - HARN addition candidate vs exact arithmetic
+- **Setup:** NumPy linear least-squares model `y = w1*a + w2*b + bias`, trained on 50,000 random integer pairs in [-1000, 1000], evaluated on 5,000 held-out pairs. Seed 0. `skills/arithmetic/train_addition.py`.
+- **Results:** exact match 1.000, MAE 0.000, train time 0.016 s. The fitted weights are ~1.0/1.0 with bias ~0.
+- **Supports:** the candidate plumbing works and agrees with exact arithmetic on this distribution.
+- **Does not support:** neural arithmetic as a capability. This is a linear model on a linear function, not a deep network; it adds nothing over `skills/arithmetic/exact.py`. The exact path remains authoritative, and the candidate is logged only as agreeing/rejected.
+- **Decision:** keep the candidate behind a checkpoint and the exact path as the answer source. Do not claim HARN success. A real HARN test needs a task where a learned model is competitive under held-out distribution shift (for example digit-string arithmetic), compared with exact evaluation.

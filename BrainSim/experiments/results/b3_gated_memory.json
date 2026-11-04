@@ -1,0 +1,49 @@
+{
+  "experiment": "B3 task-scoped memory gate vs shared token memory",
+  "generated": "2026-11-05T02:54:21",
+  "hypothesis": "task-scoped memory prevents cross-task overwrite while retaining task-local associations",
+  "task": "two disjoint permutation rules; all token transitions observed in each task",
+  "runs": [
+    {
+      "seed": 0,
+      "shared_old_before": 1.0,
+      "shared_old_after_switch": 0.125,
+      "shared_new": 1.0,
+      "gated_old_before": 1.0,
+      "gated_old_after_switch": 1.0,
+      "gated_new": 1.0
+    },
+    {
+      "seed": 1,
+      "shared_old_before": 1.0,
+      "shared_old_after_switch": 0.0625,
+      "shared_new": 1.0,
+      "gated_old_before": 1.0,
+      "gated_old_after_switch": 1.0,
+      "gated_new": 1.0
+    },
+    {
+      "seed": 2,
+      "shared_old_before": 1.0,
+      "shared_old_after_switch": 0.125,
+      "shared_new": 1.0,
+      "gated_old_before": 1.0,
+      "gated_old_after_switch": 1.0,
+      "gated_new": 1.0
+    }
+  ],
+  "summary": {
+    "shared_old_before": 1.0,
+    "shared_old_after_switch": 0.10416666666666667,
+    "shared_new": 1.0,
+    "gated_old_before": 1.0,
+    "gated_old_after_switch": 1.0,
+    "gated_new": 1.0
+  },
+  "limits": [
+    "synthetic lookup task",
+    "does not test rule induction",
+    "does not test learned gate generalization",
+    "task identity is supplied externally"
+  ]
+}

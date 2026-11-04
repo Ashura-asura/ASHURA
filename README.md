@@ -1,81 +1,125 @@
 # ASHURA
-Adaptive Self-modifying Hierarchical Unified Reasoning Architecture - built from `New_approach.txt`.
 
-**Current status: Phase 0 baseline measured on the target laptop; Phases 1-6 implemented (Phase 6 uses a synthetic replay experiment), OCR/HARN-neural/LoRA/PACE not started.** The adaptive memory is experimental and is *not* wired into the response path; EXP-004 found no advantage over FTS5. **128 ASHURA tests pass. BrainSim (v2 blueprint) is an independent subproject under `BrainSim/`: B1 + first fast-memory experiment complete, 19 tests pass, not integrated into ASHURA.**
+Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
+`spec/New_approach.txt` and the v2 blueprint `spec/New_approach_2.txt`.
+
+**Status:** Phase 0 foundation baseline measured on the target laptop; Phases 1–6 implemented;
+local OCR and a HARN arithmetic candidate are integrated behind optional dependencies/checkpoints;
+BrainSim B1–B3 measured as an independent subproject. **138 ASHURA tests and 28 BrainSim tests
+pass.** The adaptive memory remains experimental and out of the response path. BrainSim is not
+imported by ASHURA.
 
 ## Run
+
 ```bash
 pip install psutil numpy pytest
-python -m pytest -q                       # 128 tests
-python -m app.main --trace                # CLI (uses the echo stub model until a real GGUF is configured)
+python -m pytest -q                       # 138 tests
+python -m app.main --trace                # CLI (echo stub until a real model is configured)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
 python -m evaluation.retrieval_bench      # EXP-002  FTS5 latency vs size
 python -m experiments.nfd.run             # EXP-003  NFD vs always-run
-python -m experiments.adaptive_memory.run # EXP-004  neural adaptive memory vs FTS5 (needs numpy)
-python -m experiments.adaptive_memory.conflict  # EXP-005  same-key conflicting updates
-python -m experiments.dream.run           # EXP-006  DREAM replay vs new-only training
-python -m evaluation.ollama_baseline      # PHASE 0   real-model baseline over every installed Ollama model
-python -m memory.retention --db data/ashura.db   # forgetting policy (dry run; add --apply)
-# BrainSim is independent; run its tests and experiment from its own directory
-cd BrainSim
-python -m pytest -q                       # 19 BrainSim tests
-python -m experiments.b1_sequence         # B1 + first fast-memory experiment (CPU)
+python -m experiments.adaptive_memory.run # EXP-004  neural adaptive memory vs FTS5
+python -m experiments.adaptive_memory.conflict  # EXP-005  same-key conflicts
+python -m experiments.dream.run           # EXP-006  DREAM replay vs new-only
+python -m evaluation.ollama_baseline      # PHASE 0   real-model baseline
+python -m memory.retention --db data/ashura.db   # forgetting policy dry run
 ```
-### Using your Ollama models (Windows PowerShell)
+
+### Ollama (Windows PowerShell)
+
 ```powershell
-cd path\to\ASHURA
-pip install psutil numpy pytest
-ollama serve                                   # if it is not already running as a service
-# 1) Phase 0 baseline for the pinned foundation
+ollama serve
 python -m evaluation.ollama_baseline --models qwen3.5:2b --reference qwen3.5:2b --calibrate qwen3.5:2b
-# 2) compare any other installed model (optional; --think allows reasoning before answering)
-python -m evaluation.ollama_baseline --models qwen3.5:2b lfm3:latest --reference qwen3.5:2b
-# 3) chat through ASHURA's controller with a real model
 python -m app.main --config config/ashura.ollama.toml --trace
 ```
-Results land in `results/baseline_<timestamp>.md/.json`. `--calibrate` writes `config/module_costs.json`, which replaces the router's placeholder cost for the language module. A model is only reported as better/worse than the reference when a sign test on the paired results gives p < 0.05.
 
-To use a llama.cpp model instead: install `llama-cpp-python`, download a Qwen Instruct GGUF, and set `backend`, `path`, `checkpoint`, `quantization`, `licence`, `sha256` in `config/ashura.toml`. The loader refuses a file whose hash does not match.
+The foundation is pinned to `qwen3.5:2b` (Q8_0, Apache-2.0, digest `0689d44085e0`); a digest
+mismatch is refused. No external LLM API is used.
+
+## Local OCR (optional)
+
+```powershell
+pip install -e ".[perception]"     # Pillow + pytesseract
+# Install the Tesseract executable for your OS; add it to PATH or set OCRConfig.tesseract_cmd.
+python -m app.main --config config/ashura.ollama.toml --trace
+# at the prompt:
+/ocr "C:\path\to\image.png"
+```
+
+`skills/perception/ocr.py` validates the image, hashes it, optionally preprocesses/upscales it,
+calls local Tesseract, and records text/confidence/engine/version. OCR output is **unverified**.
+Explicit user corrections are stored separately in `ocr_records`; they are not automatic training
+labels. `evaluation.ocr_benchmark` computes CER/WER against a labelled JSONL manifest, but no
+held-out OCR corpus has been measured on the target laptop yet, so no OCR accuracy claim is made.
+
+## HARN arithmetic candidate
+
+The exact rational evaluator in `skills/arithmetic/exact.py` remains authoritative. A NumPy
+addition candidate (`skills/arithmetic/neural_expert.py`) is trained on random integer pairs and,
+when a checkpoint exists, logged as agreeing/rejected against the exact answer. It cannot replace
+or veto exact arithmetic.
+
+```bash
+python -m skills.arithmetic.train_addition --samples 50000 --test-samples 5000
+```
+
+Measured on seed 0, range −1000..1000: 50,000 training pairs, 5,000 held-out pairs, exact match
+1.000, MAE 0.000, train time 0.016 s. This is a **linear least-squares fit**, not a deep network or
+evidence that a learned arithmetic circuit is needed; the result is expected and the candidate adds
+no capability over the exact path. See `research/experiment_log.md` EXP-007.
 
 ## What exists
+
 | Area | Files | State |
 |---|---|---|
-| Foundation | `foundation/*` | config, digest/read-only protection, real Ollama backend, **`qwen3.5:2b` pinned (Q8_0, Apache-2.0, digest `0689d44085e0`)**; Phase 0 baseline 0.56 strict / 4.5 s p50 (EXP-000c); llama.cpp backend (**untested**) |
-| Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + semantic facts, FTS5 behind `MemoryIndex`, bounded/expiring working memory, persistence tested, **deletion cleans index + facts (F-010 fixed)**, conservative forgetting policy |
-| AMA | `learning/ama.py` | duplicates, value-aware conflict detection (F-002 fixed), scoring, surprise (prediction error vs memory), queues, decision log (**weights uncalibrated**) |
-| NFD + router | `brain/need_field.py`, `router.py`, `controller.py` | priority scoring, module registry, RAM- and CPU-aware selection, cheap-skill path, execution traces, measured costs when `config/module_costs.json` exists |
-| Arithmetic | `skills/arithmetic/*` | exact path + independent Decimal verifier (neural HARN experts not started) |
-| Adaptive memory | `memory/adaptive_memory.py` | Titans-inspired linear memory: surprise/momentum/decay/gate, reset, checkpoint, AMA-queue consumer; NumPy; **no advantage over FTS5 yet** |
-| DPF + CAGE | `plasticity/*`, `learning/cage.py` | resettable bounded fast state, versioned stable/candidate/experimental checkpoints, NGR-only promotion + rollback, trace-based attribution; synthetic tests only |
-| DREAM | `learning/dream.py`, `learning/replay.py` | verified-example replay, new-only vs replay experiment (**EXP-006: old retention 1.00 vs 0.00**), NGR promotion/rejection, JSONL decision log |
-| NGR | `evaluation/ngr.py`, `plasticity/slow_weights.py` | promotion rule with frozen tolerances, mandatory gate on promotion, previous stable kept for rollback |
-| BrainSim | `BrainSim/*` | **independent v2 subproject**: tiny GRU, synthetic sequence tasks, isolated fast memory, B1 + first experiment; 19 tests; **not integrated** (results in `BrainSim/research/experiment_log.md`) |
-| Evaluation | `evaluation/*` | strict+lenient judge (echo-proof), 16-item suite v2, Ollama baseline with CIs and paired sign test, latency p50/p95, retrieval bench |
-| Research record | `research/*` | hypotheses, experiment log, failures, decisions |
+| Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; `qwen3.5:2b` pinned; Phase 0 0.56 strict / 4.5 s p50 (EXP-000c); llama.cpp untested |
+| Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + semantic facts, FTS5, bounded working memory, deletion integrity, retention policy |
+| AMA | `learning/ama.py` | duplicate/conflict detection, scoring, surprise, queues, decision log; weights uncalibrated |
+| NFD + router | `brain/need_field.py`, `brain/router.py`, `brain/controller.py` | priority scoring, RAM/CPU-aware selection, cheap-skill path, traces, measured costs when calibrated |
+| Arithmetic | `skills/arithmetic/*` | exact rational path + independent Decimal verifier; neural addition is a non-authoritative candidate |
+| OCR | `skills/perception/ocr.py`, `evaluation/ocr_benchmark.py` | optional local Tesseract, confidence, corrections, CER/WER runner; no target-corpus measurement yet |
+| Adaptive memory | `memory/adaptive_memory.py` | Titans-inspired linear memory; **no advantage over FTS5 yet** |
+| DPF + CAGE | `plasticity/*`, `learning/cage.py` | bounded fast state, candidate checkpoints, NGR-only promotion, trace attribution |
+| DREAM / NGR | `learning/dream.py`, `learning/replay.py`, `evaluation/ngr.py` | verified replay, new-only vs replay (EXP-006), promotion/rollback gate |
+| BrainSim | `BrainSim/*` | independent B1/B2/B3; 28 tests; not imported by ASHURA |
+| Evaluation | `evaluation/*` | strict/lenient judge, 16-item suite, Ollama baseline with CIs and paired sign test, latency, retrieval bench |
 
 ## BrainSim (v2 blueprint, independent)
-`BrainSim/` is a separate tiny-neural project; it does not import ASHURA and ASHURA does not import it. First measured result (3 seeds, CPU, 30 epochs; details in `BrainSim/research/experiment_log.md`):
 
-| hidden | params | train-rule acc | frozen unseen | token memory | pair memory | old-rule active (token / pair) |
-|---:|---:|---:|---:|---:|---:|---:|
-| 128 | 206k | 0.956 | 0.095 | **0.775** | **0.686** | 0.309 / 0.903 |
-| 384 | 1.8M | 0.956 | 0.090 | **0.773** | **0.682** | 0.309 / 0.904 |
+```bash
+cd BrainSim
+python -m pytest -q                       # 28 tests
+python -m experiments.b1_sequence         # B1 + fast memory
+python -m experiments.b2_delayed_copy     # B2 delayed recall
+python -m experiments.b3_gated_memory     # B3 task-scoped gate
+```
 
-Fast memory improves a later unseen-rule sequence and survives save/load, but leaving it active across a task switch drops old-rule accuracy; pair keys reduce the damage from 64.7 to 5.3 points, still above the 2% tolerance. The safe mode is task-scoped reset. The 384 model gives no accuracy gain over 128. **Not integrated**; B2/B3 must address working memory and gating first.
+B1 (3 seeds, CPU, 30 epochs): 128-hidden model, 206k parameters, train-rule 0.957, frozen unseen
+0.085, token memory 0.771, pair memory 0.681. Leaving new-rule memory active drops old-rule
+accuracy to 0.309 (token) or 0.904 (pair); after reset it returns to 0.957. The 384-hidden model
+adds 8.7× parameters with no accuracy gain.
 
-## Not started (by design, per spec section 23)
-Neural HARN experts (7), OCR (8), LoRA adapters (9), PACE (10). Placeholder modules are registered as `available=False`, so the router reports them as "needed but not implemented" instead of silently pretending.
+B2 (3 seeds): GRU and a parameter-matched fixed MLP both score 1.000 token/full recall at every
+delay, including unseen delays 12–20. The fixed MLP trains 6–16× faster. **This is a capability
+baseline, not evidence that recurrence is necessary**; the task saturates and the delay carries no
+task-relevant information.
 
-## Acceptance checklist (spec section 22) - honest status
-- Foundation: locally running Ollama foundation pinned to `qwen3.5:2b` (digest, quantization, Apache-2.0); real 16-item baseline recorded on the target laptop; stable checkpoint protection implemented. The 7B quality reference was measured then deleted (F-014).
-- Memory: working memory, SQLite episodic (delete verified), FTS5, forgetting policy done; admission evaluated on synthetic data only; vector retrieval not built (intentionally).
-- Controller: intent/need analysis, routing, skipping and traces done (keyword-based heuristics), CAGE attribution on failed traces.
-- Learning: fast adaptive memory works and resets; DREAM teaches a small candidate from verified examples; NGR rejects a forgetting candidate and the stable version is restored by pointer. Generalisation is lexical only.
-- Resource efficiency: measured on the target laptop for three models (7B, 2B, 1.7B); consolidation is not yet asynchronous, so "background learning does not block responses" is only true for the small NumPy candidate.
+B3 (3 seeds): shared token memory retains old-rule accuracy 0.104 after a task switch; a
+task-scoped gate retains 1.000. The task ID is supplied externally, so this proves isolation when
+the boundary is known, not learned task identification or general interference control.
 
-## Next steps
-1. BrainSim B2/B3: working memory + delayed recall, then gated/surprise plasticity and a gate that can preserve old-rule accuracy while adapting; do not integrate into ASHURA before that. See `BrainSim/research/experiment_log.md`.
-2. Phase 7: build one neural HARN arithmetic expert and compare against the exact path; Phase 8: OCR via Qwen3.5 vision or Tesseract, with confidence + corrections.
-3. Phase 9: LoRA on `qwen3.5:2b` (frozen base), NGR retention suite, then promote/reject.
-4. Calibrate AMA/NFD weights on a realistic stream and test a semantic encoder before any claim that adaptive memory earns its place.
-See `research/failures.md` for known problems.
+Full reports: `BrainSim/research/experiment_log.md`, `BrainSim/research/failures.md`,
+`BrainSim/research/decisions.md`.
+
+## Research boundaries
+
+- AMA/NFD weights and thresholds are uncalibrated defaults.
+- Adaptive memory has no measured advantage over FTS5 and stays behind AMA's reliability gate.
+- DREAM trains a small NumPy memory, never Qwen.
+- Exact arithmetic is authoritative; the HARN candidate is linear regression and adds no capability.
+- OCR is implemented but unmeasured on a held-out target corpus.
+- BrainSim tasks are synthetic and author-designed; B2 does not support a recurrent advantage.
+- LoRA on Qwen, PACE capacity mutation and BrainSim integration into the response path are not done.
+
+See `research/experiment_log.md`, `research/failures.md` and `research/decisions.md` for the
+measured record and known limits.

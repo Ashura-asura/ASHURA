@@ -35,11 +35,15 @@ def test_memory_cue_activates_retrieval_but_ocr_stays_off():
     assert "exact_retrieval" in s and "ocr" not in s
 
 
-def test_unavailable_module_is_reported_not_silently_run():
+def test_ocr_module_is_routed_only_when_local_engine_is_available():
     c = ctl()
     r = c.handle(Task("what is in this picture", has_image=True))
-    assert "ocr" not in r.trace.routing["selected"]
-    assert r.trace.routing["skipped"]["ocr"] == "needed but not implemented yet"
+    from skills.perception import OCREngine
+    if OCREngine().available:
+        assert "ocr" in r.trace.routing["selected"]
+    else:
+        assert "ocr" not in r.trace.routing["selected"]
+        assert r.trace.routing["skipped"]["ocr"] == "needed but not implemented yet"
 
 
 def test_unneeded_expensive_modules_never_selected():

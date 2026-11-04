@@ -26,6 +26,7 @@ _LEARN_CUES = re.compile(r"\b(that'?s wrong|incorrect|actually,|correction|the c
 class Task:
     text: str
     has_image: bool = False
+    image_path: str | None = None
     user_correction: bool = False
 
 

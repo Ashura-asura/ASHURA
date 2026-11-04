@@ -16,8 +16,9 @@ from learning.ama import AMA, surprise_from_prior
 from learning.cage import CAGE
 from memory.episodic import Experience, normalize
 from memory.fts import FTS5Index
-from skills.arithmetic import exact
+from skills.arithmetic import exact, try_neural_addition
 from skills.arithmetic.parser import extract_expression
+from skills.perception import OCRCorrectionStore, ocr_file
 
 from .execution_trace import ExecutionTrace, TraceStep
 from .need_field import NeedField, Task, always_all
@@ -45,7 +46,12 @@ def default_registry(language_available: bool = True, costs_path: str | os.PathL
     r.register(ModuleSpec("exact_retrieval", 20, 20))
     r.register(ModuleSpec("semantic_retrieval", 150, 600, available=False))   # optional, not built
     r.register(ModuleSpec("arithmetic", 1, 1))
-    r.register(ModuleSpec("ocr", 1500, 600, available=False))                # Phase 8
+    try:
+        from skills.perception.ocr import OCREngine
+        ocr_available = OCREngine().available
+    except Exception:
+        ocr_available = False
+    r.register(ModuleSpec("ocr", 1500, 600, available=ocr_available))                # Phase 8
     r.register(ModuleSpec("reasoning", 8000, 2500, available=False))         # later phase
     r.register(ModuleSpec("verification", 5, 5))
     r.register(ModuleSpec("learning", 30, 10, available=False))              # Phase 4+
@@ -69,6 +75,7 @@ class Controller:
         self.nfd = nfd or NeedField(self.registry)
         self.wm = wm or WorkingMemory()
         self.fts = FTS5Index(ama.db) if ama else None
+        self.ocr_store = OCRCorrectionStore(ama.db.conn) if ama else None
         self.routing_mode = routing_mode
         self.cage = cage
 
@@ -107,13 +114,59 @@ class Controller:
         if "arithmetic" in sel:
             s = time.perf_counter()
             expr = extract_expression(task.text)
-            try:
-                value = exact.evaluate(expr)
-                trace.add(TraceStep("arithmetic", expr, exact.format_value(value), (time.perf_counter() - s) * 1000))
-                outcomes["arithmetic"] = True
-            except ArithmeticError as e:
-                trace.add(TraceStep("arithmetic", expr, str(e), (time.perf_counter() - s) * 1000, ok=False))
+
+            if not expr:
+                trace.add(TraceStep("arithmetic", task.text, "no arithmetic expression found", (time.perf_counter() - s) * 1000,
+                                     ok=False))
                 outcomes["arithmetic"] = False
+            else:
+                try:
+                    # Exact CPU arithmetic is authoritative. Neural HARN is a logged candidate
+                    # and can never replace or veto the exact result.
+                    value = exact.evaluate(expr)
+                    neural_value = try_neural_addition(expr)
+                    if neural_value is not None:
+                        agrees = neural_value == value
+                        trace.add(TraceStep("neural_arithmetic_candidate", expr,
+                                            exact.format_value(neural_value),
+                                            (time.perf_counter() - s) * 1000, ok=agrees,
+                                            note="candidate agrees with exact" if agrees
+                                            else "candidate rejected; exact retained"))
+                        note = ("exact evaluator; neural candidate agrees" if agrees
+                                else "exact evaluator; neural candidate rejected")
+                    else:
+                        note = "exact evaluator"
+                    trace.add(TraceStep("arithmetic", expr, exact.format_value(value),
+                                        (time.perf_counter() - s) * 1000, note=note))
+                    outcomes["arithmetic"] = True
+                except ArithmeticError as e:
+                    trace.add(TraceStep("arithmetic", expr, str(e), (time.perf_counter() - s) * 1000, ok=False))
+                    outcomes["arithmetic"] = False
+
+        if "ocr" in sel and task.image_path:
+            s = time.perf_counter()
+            try:
+                ocr_result = ocr_file(task.image_path, image_ref=task.image_path,
+                                      document_type="document")
+                outcomes["ocr"] = ocr_result.ok
+                if ocr_result.ok:
+                    if self.ocr_store is not None:
+                        self.ocr_store.add(ocr_result)
+                    ocr_text = ocr_result.text
+                    ctx.append(f"OCR ({ocr_result.confidence:.0%}): {ocr_text}")
+                    trace.add(TraceStep("ocr", task.image_path, ocr_text, (time.perf_counter() - s) * 1000,
+                                         note=f"conf={ocr_result.confidence:.2f} engine={ocr_result.engine}"))
+                else:
+                    trace.add(TraceStep("ocr", task.image_path, "", (time.perf_counter() - s) * 1000,
+                                         ok=False, note=ocr_result.reason))
+            except Exception as e:
+                trace.add(TraceStep("ocr", task.image_path, "", (time.perf_counter() - s) * 1000,
+                                     ok=False, note=f"ocr error: {e}"))
+                outcomes["ocr"] = False
+        elif "ocr" in sel:
+            trace.add(TraceStep("ocr", task.image_path or "", "", 0.0, ok=False,
+                                 note="no image path provided"))
+            outcomes["ocr"] = False
 
         if "verification" in sel and value is not None:
             s = time.perf_counter()
@@ -130,6 +183,8 @@ class Controller:
             outcomes["language"] = True
         elif value is not None:
             text = exact.format_value(value)
+        elif ctx:
+            text = "\n".join(ctx)
         else:
             text = "I could not compute that."
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 
 from brain.controller import Controller
-from brain.need_field import NFDConfig, NeedField
+from brain.need_field import NFDConfig, NeedField, Task
 from foundation.language_model import build_model
 from foundation.model_config import load_config, load_model_config
 from learning.ama import AMA, AMAConfig
@@ -36,7 +36,12 @@ def main() -> None:
             q = input("> ").strip()
             if not q:
                 continue
-            r = c.handle(q)
+            if q.startswith("/ocr "):
+                path = q[5:].strip().strip('"')
+                r = c.handle(Task("Read the text in this image.", has_image=True,
+                                  image_path=path))
+            else:
+                r = c.handle(q)
             print(r.text)
             if args.trace:
                 print(f"  [route={r.trace.routing['selected']} routing={r.trace.routing_ms:.2f}ms "
