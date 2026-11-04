@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS experiences (
     task_category       TEXT NOT NULL DEFAULT 'general',
     source              TEXT NOT NULL DEFAULT 'interaction',
     verification_status TEXT NOT NULL DEFAULT 'unverified',
+    verification_method TEXT NOT NULL DEFAULT '',
     reliability         REAL NOT NULL DEFAULT 0.2,
     outcome             TEXT NOT NULL DEFAULT 'unknown',
     content_hash        TEXT NOT NULL,

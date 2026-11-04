@@ -7,6 +7,8 @@ from foundation.language_model import EchoModel
 from learning.ama import AMA
 from learning.cage import CAGE
 from memory.database import Database
+from plasticity.fast_weights import FastWeights
+from plasticity.gated_update import GatedUpdater
 from plasticity.update_policy import UpdatePolicy
 
 
@@ -64,7 +66,36 @@ def test_cage_records_decisions(tmp_path):
 
 
 def test_controller_attributes_arithmetic_failure_without_updating():
-    c = Controller(EchoModel(), ama=AMA(Database()), cage=CAGE())
+    cage = CAGE()
+    c = Controller(EchoModel(), ama=AMA(Database()), cage=cage)
     r = c.handle(Task("calculate 1/0"))
     assert r.attribution is not None and "arithmetic" in r.attribution
     assert "update allowed=False" in r.attribution
+    assert cage.decisions[-1]["verified"] is False        # an ordinary failure is not a learning signal
+
+
+# ---- Phase 1 P07/P08: an authorisation is consumed, and only when verified ----
+def test_gated_updater_consumes_a_verified_authorisation():
+    cage = CAGE()
+    t = trace(TraceStep("language", "q", "wrong", 1.0))
+    attr = cage.attribute(t, expected="right", verifiers={"language": lambda out: out == "right"})
+    decision = cage.authorise(attr, verified=True)
+    proposal = cage.propose(attr, decision, verified=True, key="q", value="right", source="test")
+    fast = FastWeights()
+    outcome = GatedUpdater(fast).apply(decision, proposal)
+    assert outcome.applied and fast.delta_norm > 0 and fast.writes_since_reset == 1
+
+
+def test_gated_updater_rejects_unverified_or_unattributed_signals():
+    cage = CAGE()
+    t = trace(TraceStep("language", "q", "wrong", 1.0))
+    attr = cage.attribute(t, expected="right")
+    decision = cage.authorise(attr, verified=False)
+    proposal = cage.propose(attr, decision, verified=True, key="q", value="right")
+    fast = FastWeights()
+    outcome = GatedUpdater(fast).apply(decision, proposal)
+    assert proposal is None and not outcome.applied and fast.delta_norm == 0
+
+    unattributed = cage.attribute(trace(TraceStep("language", "q", "wrong", 1.0)), expected="right")
+    allowed = cage.authorise(unattributed, verified=True)
+    assert cage.propose(unattributed, allowed, verified=True, key="q", value="right") is None

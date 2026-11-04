@@ -15,6 +15,7 @@ class TraceStep:
     ms: float
     ok: bool = True
     note: str = ""
+    verification: str = ""       # verified | failed | unavailable (factual status, separate from ok)
 
 
 @dataclass

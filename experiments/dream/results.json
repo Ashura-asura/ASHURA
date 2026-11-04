@@ -4,19 +4,21 @@
   "n_facts": 20,
   "dim": 256,
   "results": {
-    "new_only": {
+    "stable_new": {
       "new": 1.0,
-      "old_retention": 0.0,
+      "old_retention": 1.0,
       "stable_new": 0.0,
       "stable_old": 1.0,
-      "promoted": false,
+      "promoted": true,
       "ngr": [
-        "regression on old: 1.000 -> 0.000 (eps 0.02)"
+        "all promotion conditions met"
       ],
       "train_n": 20,
-      "seconds": 0.063
+      "initialization": "stable",
+      "vocabulary_size": 40,
+      "seconds": 0.053
     },
-    "dream_replay": {
+    "stable_replay": {
       "new": 1.0,
       "old_retention": 1.0,
       "stable_new": 0.0,
@@ -26,7 +28,37 @@
         "all promotion conditions met"
       ],
       "train_n": 40,
-      "seconds": 0.073
+      "initialization": "stable",
+      "vocabulary_size": 40,
+      "seconds": 0.055
+    },
+    "fresh_new": {
+      "new": 1.0,
+      "old_retention": 0.0,
+      "stable_new": 0.0,
+      "stable_old": 1.0,
+      "promoted": false,
+      "ngr": [
+        "regression on old: 1.000 -> 0.000 (eps 0.02)"
+      ],
+      "train_n": 20,
+      "initialization": "fresh",
+      "vocabulary_size": 40,
+      "seconds": 0.046
+    },
+    "fresh_replay": {
+      "new": 1.0,
+      "old_retention": 1.0,
+      "stable_new": 0.0,
+      "stable_old": 1.0,
+      "promoted": true,
+      "ngr": [
+        "all promotion conditions met"
+      ],
+      "train_n": 40,
+      "initialization": "fresh",
+      "vocabulary_size": 40,
+      "seconds": 0.052
     }
   }
 }

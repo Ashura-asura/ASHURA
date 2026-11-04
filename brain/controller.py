@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,7 +24,13 @@ from skills.perception import OCRCorrectionStore, ocr_file
 from .execution_trace import ExecutionTrace, TraceStep
 from .need_field import NeedField, Task, always_all
 from .router import ModuleRegistry, ModuleSpec
+from .verification import Verification
 from .working_memory import WorkingMemory
+
+# A declarative user turn is evidence about what the user said, not a model answer. These cues
+# keep such statements at user-provided reliability instead of admitting the generated reply as
+# if the model had produced the fact.
+_USER_ASSERTION = re.compile(r"^\s*(remember|note|store|save|keep in mind)\b", re.I)
 
 
 def load_measured_costs(path: str | os.PathLike = "config/module_costs.json") -> dict:
@@ -62,9 +69,10 @@ def default_registry(language_available: bool = True, costs_path: str | os.PathL
 class Response:
     text: str
     trace: ExecutionTrace
-    verified: bool | None = None
+    verified: bool | None = None          # compatibility view: True / False / None (unavailable)
     admission: str | None = None
     attribution: str | None = None
+    verification: Verification | None = None
 
 
 class Controller:
@@ -104,11 +112,13 @@ class Controller:
         trace.routing = {"selected": routing.selected, "skipped": routing.skipped,
                          "priorities": {k: round(v, 3) for k, v in routing.priorities.items()}}
 
-        ctx, value, verified, expr, prior = [], None, None, None, None
+        ctx, value, expr, prior = [], None, None, None
+        verification = Verification.UNAVAILABLE
+        verification_note = ""
         outcomes: dict[str, bool] = {}
         sel = set(routing.selected)
 
-        if "exact_retrieval" in sel and self.fts:
+        if "exact_retrieval" in sel and self.ama:
             key = "ctx:" + normalize(task.text)
             cached = self.wm.get(key)                       # fast path: working memory first
             if cached is not None:
@@ -116,13 +126,15 @@ class Controller:
                 trace.add(TraceStep("exact_retrieval", task.text, "working-memory hit", 0.0, note="fast path"))
             else:
                 s = time.perf_counter()
-                hits = self.fts.search(task.text, limit=3)
-                found = [e for e in (self.ama.episodic.get(h) for h, _ in hits) if e]
-                ctx = [e.text for e in found]
-                # prior belief = what memory already holds for this exact question (used for AMA's surprise)
-                prior = next((e.output for e in found if normalize(e.input) == normalize(task.text)), None)
+                found = self.ama.retrieve(task.text, limit=3)   # reliability-filtered + provenance-labelled
+                ctx = [item.prompt_line for item in found]
+                # prior belief = what reliable memory already holds for this exact question
+                prior = next((item.experience.output for item in found
+                              if normalize(item.experience.input) == normalize(task.text)), None)
                 self.wm.put(key, (ctx, prior))
-                trace.add(TraceStep("exact_retrieval", task.text, f"{len(ctx)} hits", (time.perf_counter() - s) * 1000))
+                trace.add(TraceStep("exact_retrieval", task.text, f"{len(ctx)} hits",
+                                    (time.perf_counter() - s) * 1000,
+                                    note="reliability-filtered" if found else ""))
             outcomes["exact_retrieval"] = True
 
         if "arithmetic" in sel:
@@ -186,15 +198,20 @@ class Controller:
 
         if "verification" in sel and value is not None:
             s = time.perf_counter()
-            verified, note = exact.verify(expr, value)
-            trace.add(TraceStep("verification", expr, note, (time.perf_counter() - s) * 1000, ok=verified is not False))
-            outcomes["verification"] = verified is not False
+            ok, verification_note = exact.verify(expr, value)
+            verification = Verification.from_optional(ok)
+            # `ok` is operational: the verifier ran. Factual status lives in `verification`.
+            trace.add(TraceStep("verification", expr, verification_note, (time.perf_counter() - s) * 1000,
+                                ok=verification is not Verification.FAILED,
+                                note=f"{verification.value}: {verification_note}",
+                                verification=verification.value))
+            outcomes["verification"] = True
 
         answered = True
         if "language" in sel:
             s = time.perf_counter()
             facts = f"Known: {format_value_safe(value)}\n" if value is not None else ""
-            context = "".join(f"Memory: {c}\n" for c in ctx)
+            context = "".join(f"{c}\n" for c in ctx)
             try:
                 text = self.model.generate(f"{context}{facts}Question: {task.text}")
                 trace.add(TraceStep("language", task.text, text, (time.perf_counter() - s) * 1000))
@@ -219,32 +236,71 @@ class Controller:
         trace.total_ms = (time.perf_counter() - t0) * 1000
         self.nfd.report(outcomes)
 
+        # A response is only verified if it *is* the independently checked exact answer. If the
+        # language model wrote the text, a verified arithmetic value elsewhere in the turn does
+        # not verify the response (P02/P03).
+        response_verified = (verification is Verification.VERIFIED and value is not None
+                             and outcomes.get("language") is not True
+                             and text.strip() == exact.format_value(value).strip())
+
         attribution = None
         if self.cage is not None and outcomes and not all(outcomes.values()):
             expected = exact.format_value(value) if value is not None else None
-            verifiers = {"arithmetic": (lambda out, e=expected: out == e)} if expected is not None else {}
+            verifiers = {}
+            if expected is not None:
+                verifiers["arithmetic"] = lambda out, e=expected: out == e
+                if outcomes.get("language"):
+                    verifiers["language"] = lambda out, e=expected: out == e
             attr = self.cage.attribute(trace, expected=expected, verifiers=verifiers)
-            decision = self.cage.authorise(attr, verified=False)   # a failure is not a verified learning signal
+            # A verified learning signal requires both a VERIFIED outcome and a verifier that
+            # covers the attributed module. An ordinary model failure never qualifies (P08).
+            verified_signal = (verification is Verification.VERIFIED and attr.module is not None
+                               and attr.module in verifiers)
+            decision = self.cage.authorise(attr, verified=verified_signal)
             attribution = (f"{attr.module or 'unattributed'} ({attr.confidence:.2f}): {attr.reason}; "
                            f"update allowed={decision.allowed}")
 
         admission = None
-        if self.ama and answered:                            # learning path (separate from answering); error text is not learned
-            if value is not None and verified:
+        category = "arithmetic" if value is not None else "general"
+        user_turn = task.user_correction or bool(_USER_ASSERTION.match(task.text))
+        admitted = False
+
+        # P05/P06: a user correction is a separate record of what the user said. It is not a
+        # verdict on the assistant's reply, and its factual truth is not established by the user
+        # merely saying it. The generated reply is never relabelled as corrected.
+        if self.ama and user_turn:
+            e_user = Experience(task.text, "", task_category=category, source="user",
+                                verification_status="user_provided",
+                                verification_method="user assertion; factual truth not independently verified",
+                                outcome="corrected" if task.user_correction else "reported")
+            d = self.ama.admit(e_user)
+            admission = d.decision
+            admitted = d.decision != "MERGED"
+
+        if self.ama and answered and not user_turn:          # learning path; error text is not learned
+            # Only an independently verified exact answer may be stored as verified (P03).
+            if response_verified:
                 status, category = "verified", "arithmetic"
+                method = "exact arithmetic + Decimal(60) cross-check"
             else:
-                status, category = "unverified", "arithmetic" if value is not None else "general"
-            if task.user_correction:
-                status = "user_corrected"
+                status = "unverified"
+                method = "none (model-generated or unverified)"
             e = Experience(task.text, text, task_category=category, source="interaction",
-                           verification_status=status, outcome="success" if verified else "unknown")
-            admission = self.ama.admit(e, surprise=surprise_from_prior(task.text, text, prior)).decision
-            if admission != "MERGED":
-                # Memory changed, so cached retrieval results for OTHER questions are stale (a fact told a moment
-                # ago must be findable). This question's own entry is kept: re-asking it should hit the fast path
-                # instead of retrieving the answer we just stored.
-                self.wm.invalidate(keep={"ctx:" + normalize(task.text)})
-        return Response(text, trace, verified, admission, attribution)
+                           verification_status=status, verification_method=method,
+                           outcome="success" if response_verified else "unknown")
+            d = self.ama.admit(e, surprise=surprise_from_prior(task.text, text, prior))
+            admission = d.decision if admission is None else f"{admission} / {d.decision}"
+            admitted = admitted or d.decision != "MERGED"
+
+        if self.ama and admitted:
+            # Memory changed, so cached retrieval results for OTHER questions are stale (a fact told a moment
+            # ago must be findable). This question's own entry is kept: re-asking it should hit the fast path
+            # instead of retrieving the answer we just stored.
+            self.wm.invalidate(keep={"ctx:" + normalize(task.text)})
+        response_state = (Verification.VERIFIED if response_verified
+                          else Verification.FAILED if verification is Verification.FAILED
+                          else Verification.UNAVAILABLE)
+        return Response(text, trace, response_state.legacy_bool, admission, attribution, response_state)
 
 
 def format_value_safe(v) -> str:

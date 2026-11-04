@@ -11,10 +11,20 @@ from .database import Database
 from .text import normalize  # noqa: F401  (re-exported: other modules import it from here)
 
 RELIABILITY_BY_STATUS = {
-    "verified": 1.0,          # exact arithmetic, passing tests, deterministic outcomes
-    "user_corrected": 0.9,
-    "trusted_material": 0.8,
+    "verified": 1.0,          # independently checked (exact arithmetic + Decimal cross-check, passing tests)
+    "trusted_material": 0.8,  # declared trusted source, NOT independently checked by ASHURA
+    "user_provided": 0.6,     # what the user said; a record of an assertion, not proof of its truth
+    "user_corrected": 0.6,    # legacy status for a user correction; same evidence class as user_provided
     "unverified": 0.2,        # model-generated and nothing else
+}
+
+# Human-readable verification method stored with every experience (P02 provenance).
+VERIFICATION_METHOD_BY_STATUS = {
+    "verified": "independent verification",
+    "trusted_material": "declared trusted source; not independently verified",
+    "user_provided": "user assertion; factual truth not independently verified",
+    "user_corrected": "user correction; factual truth not independently verified",
+    "unverified": "none",
 }
 
 
@@ -29,6 +39,7 @@ class Experience:
     task_category: str = "general"
     source: str = "interaction"
     verification_status: str = "unverified"
+    verification_method: str = ""
     outcome: str = "unknown"
     reliability: float | None = None
     related_ids: list[str] = field(default_factory=list)
@@ -39,8 +50,12 @@ class Experience:
     def __post_init__(self):
         if self.verification_status not in RELIABILITY_BY_STATUS:
             raise ValueError(f"unknown verification_status {self.verification_status!r}")
+        if not self.verification_method:
+            self.verification_method = VERIFICATION_METHOD_BY_STATUS[self.verification_status]
         if self.reliability is None:
             self.reliability = RELIABILITY_BY_STATUS[self.verification_status]
+        if not 0.0 <= self.reliability <= 1.0:
+            raise ValueError(f"reliability must be in [0, 1], got {self.reliability!r}")
 
     @property
     def text(self) -> str:
@@ -54,11 +69,11 @@ class EpisodicMemory:
     def add(self, e: Experience) -> str:
         self.db.conn.execute(
             """INSERT INTO experiences(id, ts, input, output, task_category, source, verification_status,
-               reliability, outcome, content_hash, repeat_count, related_ids, input_norm)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+               verification_method, reliability, outcome, content_hash, repeat_count, related_ids, input_norm)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (e.id, e.ts, e.input, e.output, e.task_category, e.source, e.verification_status,
-             e.reliability, e.outcome, content_hash(e.input, e.output), e.repeat_count, json.dumps(e.related_ids),
-             normalize(e.input)),
+             e.verification_method, e.reliability, e.outcome, content_hash(e.input, e.output), e.repeat_count,
+             json.dumps(e.related_ids), normalize(e.input)),
         )
         self.db.conn.commit()
         return e.id
@@ -82,8 +97,10 @@ class EpisodicMemory:
         self.db.conn.execute("UPDATE experiences SET repeat_count = repeat_count + 1 WHERE id = ?", (exp_id,))
         if new_status and RELIABILITY_BY_STATUS.get(new_status, 0) > 0:
             self.db.conn.execute(
-                "UPDATE experiences SET verification_status = ?, reliability = MAX(reliability, ?) WHERE id = ?",
-                (new_status, RELIABILITY_BY_STATUS[new_status], exp_id))
+                """UPDATE experiences SET verification_status = ?, verification_method = ?,
+                   reliability = MAX(reliability, ?) WHERE id = ?""",
+                (new_status, VERIFICATION_METHOD_BY_STATUS[new_status],
+                 RELIABILITY_BY_STATUS[new_status], exp_id))
         self.db.conn.commit()
 
     def filter(self, category: str | None = None, status: str | None = None, limit: int = 100) -> list[Experience]:
@@ -137,5 +154,6 @@ class EpisodicMemory:
     def _row(r) -> Experience:
         return Experience(
             id=r["id"], ts=r["ts"], input=r["input"], output=r["output"], task_category=r["task_category"],
-            source=r["source"], verification_status=r["verification_status"], reliability=r["reliability"],
+            source=r["source"], verification_status=r["verification_status"],
+            verification_method=r["verification_method"], reliability=r["reliability"],
             outcome=r["outcome"], related_ids=json.loads(r["related_ids"]), repeat_count=r["repeat_count"])

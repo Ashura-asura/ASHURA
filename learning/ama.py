@@ -20,7 +20,17 @@ from memory.fts import FTS5Index
 from memory.semantic import SemanticMemory
 
 _TOK = re.compile(r"\w+", re.UNICODE)
-VERIFIED_STATUSES = {"verified", "user_corrected", "trusted_material"}
+# Only independently verified records may enter verified learning queues (P03).
+VERIFIED_STATUSES = {"verified"}
+
+# Retrieval labels: the model must be told what kind of evidence it is being given (P01/P02).
+PROVENANCE_LABELS = {
+    "verified": "verified fact",
+    "trusted_material": "trusted material, not independently verified",
+    "user_provided": "user-provided, not independently verified",
+    "user_corrected": "user correction, not independently verified",
+    "unverified": "unverified experience",
+}
 
 
 def tokens(text: str) -> set[str]:
@@ -94,6 +104,7 @@ class AMAConfig:
     discard_threshold: float = 0.45
     duplicate_similarity: float = 0.9
     reliable_fact_threshold: float = 0.8
+    retrieval_min_reliability: float = 0.5   # unverified model answers (0.2) are not retrieval evidence
     neural_memory_repeats: int = 3     # repeated useful association -> neural memory queue
 
     @classmethod
@@ -121,6 +132,34 @@ class Decision:
     exp_id: str | None = None
     destinations: list[str] = field(default_factory=list)
     features: Features = field(default_factory=Features)
+
+
+@dataclass(frozen=True)
+class RetrievalItem:
+    """One search result with the provenance needed to interpret it safely (P01/P02)."""
+    experience: Experience
+    label: str
+    conflict: bool = False
+
+    @property
+    def reliability(self) -> float:
+        return self.experience.reliability
+
+    @property
+    def provenance(self) -> dict:
+        return {
+            "source": self.experience.source,
+            "verification_status": self.experience.verification_status,
+            "verification_method": self.experience.verification_method,
+            "timestamp": self.experience.ts,
+            "reliability": self.experience.reliability,
+            "conflict": self.conflict,
+        }
+
+    @property
+    def prompt_line(self) -> str:
+        suffix = "; conflicting evidence on record" if self.conflict else ""
+        return f"Memory ({self.label}{suffix}): {self.experience.text.strip()}"
 
 
 def surprise_from_prior(question: str, actual: str, prior: str | None, dup_similarity: float = 0.9) -> float:
@@ -180,6 +219,35 @@ class AMA:
         return (c.w_novelty * f.novelty + c.w_surprise * f.surprise + c.w_reliability * f.reliability
                 + c.w_utility * f.utility - c.w_conflict * f.conflict - c.w_cost * f.cost)
 
+    # ---- retrieval ----------------------------------------------------------------------
+    @staticmethod
+    def provenance_label(e: Experience) -> str:
+        return PROVENANCE_LABELS.get(e.verification_status, e.verification_status)
+
+    def retrieve(self, query: str, limit: int = 3, min_reliability: float | None = None,
+                 include_unverified: bool = False) -> list[RetrievalItem]:
+        """Reliability-aware FTS5 retrieval.
+
+        By default, records below ``retrieval_min_reliability`` (unverified model output) are not
+        returned at all. Anything returned carries a provenance label and conflict flag, so an
+        unverified experience can never silently masquerade as an established fact.
+        """
+        threshold = self.cfg.retrieval_min_reliability if min_reliability is None else min_reliability
+        if not 0.0 <= threshold <= 1.0:
+            raise ValueError("min_reliability must be in [0, 1]")
+        hits = self.fts.search(query, limit=max(limit * 5, 15))
+        out: list[RetrievalItem] = []
+        for memory_id, _ in hits:
+            e = self.episodic.get(memory_id)
+            if e is None:
+                continue
+            if not include_unverified and e.reliability < threshold:
+                continue
+            out.append(RetrievalItem(e, self.provenance_label(e), conflict=bool(e.related_ids)))
+            if len(out) >= limit:
+                break
+        return out
+
     # ---- decision -----------------------------------------------------------------------
     def admit(self, x: Experience, surprise: float = 0.0, utility: float | None = None) -> Decision:
         f = self.analyse(x, surprise, utility)
@@ -225,7 +293,9 @@ class AMA:
         dests = ["episodic"]
         if index:
             self.fts.add(x.id, x.text); dests.append("fts5")
-            if x.reliability >= self.cfg.reliable_fact_threshold:
+            # Semantic memory is the verified-fact store. A reliability score alone is not
+            # verification evidence (P01/P29).
+            if x.verification_status == "verified" and x.reliability >= self.cfg.reliable_fact_threshold:
                 self.semantic.add_fact(x.text, x.id, x.reliability); dests.append("semantic")
         if x.verification_status in VERIFIED_STATUSES and not f.conflicts_with:
             self._enqueue(x.id, "dream"); dests.append("dream_queue")

@@ -35,6 +35,16 @@ class Database:
         if "input_norm" not in cols:
             c.execute("ALTER TABLE experiences ADD COLUMN input_norm TEXT NOT NULL DEFAULT ''")
         c.execute("CREATE INDEX IF NOT EXISTS idx_exp_input_norm ON experiences(input_norm, task_category)")
+        cols = {r["name"] for r in c.execute("PRAGMA table_info(experiences)")}
+        if "verification_method" not in cols:
+            c.execute("ALTER TABLE experiences ADD COLUMN verification_method TEXT NOT NULL DEFAULT ''")
+            c.execute("""UPDATE experiences SET verification_method = CASE verification_status
+                WHEN 'verified' THEN 'independent verification'
+                WHEN 'trusted_material' THEN 'declared trusted source; not independently verified'
+                WHEN 'user_provided' THEN 'user assertion; factual truth not independently verified'
+                WHEN 'user_corrected' THEN 'user correction; factual truth not independently verified'
+                ELSE 'none' END
+                WHERE verification_method = ''""")
         stale = c.execute("SELECT id, input FROM experiences WHERE input_norm = ''").fetchall()
         if stale:
             c.executemany("UPDATE experiences SET input_norm = ? WHERE id = ?",

@@ -46,8 +46,9 @@ def adaptive(seed: int, lr: float, passes: int) -> dict:
 
 
 def ama_fts(seed: int, new_status: str, old_status: str = "trusted_material") -> dict:
-    # Old facts are trusted_material (0.8) so that user_corrected (0.9) is genuinely stronger and unverified (0.2)
-    # genuinely weaker. (A user_corrected answer does NOT override a `verified` 1.0 fact; it is flagged for review.)
+    # Old facts are trusted_material (0.8). Only independently verified evidence (1.0) is stronger;
+    # a user-provided correction (0.6) and an unverified claim (0.2) are weaker and stay evidence-only.
+    # A user correction is a record of what the user said, not proof of factual truth (Phase 1 P06).
     rng = random.Random(seed)
     facts = make_task(rng, "A", N)
     db = Database(); ama = AMA(db); fts = FTS5Index(db); ep = EpisodicMemory(db)
@@ -79,7 +80,9 @@ if __name__ == "__main__":
         for passes in (1, 3):
             r = mean([adaptive(s, lr, passes) for s in seeds]); out[f"adaptive lr={lr} passes={passes}"] = r
             print(f"  lr={lr} passes={passes}: {r}")
-    for status, label in (("user_corrected", "stronger evidence (user_corrected)"), ("unverified", "weaker evidence (unverified)")):
+    for status, label in (("verified", "stronger evidence (verified over trusted_material)"),
+                          ("user_provided", "user-provided correction (weaker than trusted_material)"),
+                          ("unverified", "weaker evidence (unverified)")):
         r = mean([ama_fts(s, status) for s in seeds]); out[f"AMA+FTS5 {status}"] = r
         print(f"AMA+FTS5, {label}: {r}")
     json.dump(out, open("experiments/adaptive_memory/conflict_results.json", "w"), indent=2)

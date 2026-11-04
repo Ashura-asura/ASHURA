@@ -4,16 +4,18 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 `spec/New_approach.txt` and the v2 blueprint `spec/New_approach_2.txt`.
 
 **Status:** Phase 0 foundation baseline measured on the target laptop; Phases 1–6 implemented;
-local OCR and a HARN arithmetic candidate are integrated behind optional dependencies/checkpoints;
-BrainSim B1–B6 measured as an independent subproject. **177 ASHURA tests and 46 BrainSim tests
-pass.** The adaptive memory remains experimental and out of the response path. BrainSim is not
-imported by ASHURA.
+Phase 1 trust repair (P01–P14) implemented and tested; local OCR and a HARN arithmetic candidate
+are integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
+subproject. **204 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
+experimental and out of the response path. BrainSim is not imported by ASHURA. The verified
+learning loop is **not** complete: CAGE is not yet connected to candidate training, and
+natural-language corrections are not independently verified.
 
 ## Run
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 177 tests
+python -m pytest -q                       # 204 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -45,12 +47,34 @@ failure modes without changing the measured research claims:
 - **Config/experiments:** unknown `[foundation]` keys are clear errors; the `[retention]` section
   is honoured; all model tags are benchmarked even if one non-reference model fails.
 
-Details and the still-open reliability question are in `research/failures.md` F-020–F-030. The
-open item is important: retrieved memory is still fed to the model regardless of reliability, and
-unverified model answers can re-enter that retrieval pool. A `min_reliability` filter would change
-behaviour the existing experiments were measured under, so it needs a decision and a re-measurement
-before adoption. The `.github/workflows/ci.yml` workflow is added but has not yet been executed on
-GitHub; the local Windows/Python 3.13 run is the measured result.
+Details are in `research/failures.md` F-020–F-034. The `.github/workflows/ci.yml` workflow is
+added but has not yet been executed on GitHub; the local Windows/Python 3.13 run is the measured
+result.
+
+## Phase 1 trust repair (P01–P14)
+
+The 2026-11-05 Phase 1 pass makes the response-to-learning path conservative:
+
+- **Tri-state verification.** `VERIFIED` / `FAILED` / `UNAVAILABLE` replace the old boolean.
+  Only `VERIFIED` can produce verified admission, semantic facts or a DREAM label. An unavailable
+  verifier is no longer counted as success (`Response.verified` stays True/False/None for
+  compatibility; `Response.verification` and `TraceStep.verification` carry the real state).
+- **Reliability-aware retrieval.** `AMA.retrieve()` excludes records below reliability 0.5 by
+  default and labels every result (`verified fact`, `user-provided, not independently verified`,
+  etc.). Unverified model answers are still stored for audit but are not presented as memory.
+- **Corrections are separate records.** A user correction is stored as `user_provided` at
+  reliability 0.6 with `source="user"`; the assistant's reply is never relabelled
+  `user_corrected`. User material cannot enter semantic/DREAM queues.
+- **Hardened NGR.** NaN/±infinity, out-of-range scores, missing required capabilities and invalid
+  sample counts reject promotion. `require_performance=True` requires p95 latency and peak RAM.
+- **DREAM arms and baselines.** Four arms are measured (stable/fresh × new/replay), candidates can
+  start from the stable checkpoint, the answer vocabulary comes from training data only, and a
+  missing stable checkpoint requires a real cold-start baseline artifact plus a separate acceptance
+  criterion - no fabricated zero baseline.
+
+Measured evidence, four-arm DREAM results and the remaining limits are in
+`research/phase1_trust.md`, `research/experiment_log.md` EXP-006/EXP-008 and
+`research/failures.md` F-029–F-034.
 
 ### Ollama (Windows PowerShell)
 
@@ -104,14 +128,14 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 | Area | Files | State |
 |---|---|---|
 | Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; `tony:7b` pinned; Phase 0 0.94 strict / 2.35 s p50 (EXP-000d, n=16); 4.6 GB shared footprint; llama.cpp untested |
-| Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + semantic facts, FTS5, bounded working memory, deletion integrity, retention policy |
-| AMA | `learning/ama.py` | duplicate/conflict detection, scoring, surprise, queues, decision log; weights uncalibrated |
+| Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + verified semantic facts, FTS5, provenance fields, bounded working memory, deletion integrity, retention policy |
+| AMA | `learning/ama.py` | duplicate/conflict detection, scoring, surprise, queues, decision log; reliability-aware retrieval with provenance labels; weights uncalibrated |
 | NFD + router | `brain/need_field.py`, `brain/router.py`, `brain/controller.py` | priority scoring, RAM/CPU-aware selection, cheap-skill path, traces, measured costs when calibrated |
 | Arithmetic | `skills/arithmetic/*` | exact rational path + independent Decimal verifier; neural addition is a non-authoritative candidate |
 | OCR | `skills/perception/ocr.py`, `evaluation/ocr_benchmark.py` | optional local Tesseract, confidence, corrections, CER/WER runner; no target-corpus measurement yet |
 | Adaptive memory | `memory/adaptive_memory.py` | Titans-inspired linear memory; **no advantage over FTS5 yet** |
-| DPF + CAGE | `plasticity/*`, `learning/cage.py` | bounded fast state, candidate checkpoints, NGR-only promotion, trace attribution |
-| DREAM / NGR | `learning/dream.py`, `learning/replay.py`, `evaluation/ngr.py` | verified replay, new-only vs replay (EXP-006), promotion/rollback gate |
+| DPF + CAGE | `plasticity/*`, `learning/cage.py` | bounded fast state, candidate checkpoints, NGR-only promotion, trace attribution, gated update consumer (`GatedUpdater`) |
+| DREAM / NGR | `learning/dream.py`, `learning/replay.py`, `evaluation/ngr.py` | four consolidation arms (stable/fresh × new/replay, EXP-006), training-only vocabulary, real cold-start baseline, hardened promotion/rollback gate |
 | BrainSim | `BrainSim/*` | independent B1–B6; 46 tests; not imported by ASHURA |
 | Evaluation | `evaluation/*` | strict/lenient judge, 16-item suite, Ollama baseline with CIs and paired sign test, latency, retrieval bench |
 

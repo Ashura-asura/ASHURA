@@ -29,9 +29,14 @@
     "returns_old": 0.0,
     "untouched_still_correct": 1.0
   },
-  "AMA+FTS5 user_corrected": {
+  "AMA+FTS5 verified": {
     "returns_new": 1.0,
     "returns_old": 0.0,
+    "history_rows_kept": 1.0
+  },
+  "AMA+FTS5 user_provided": {
+    "returns_new": 0.0,
+    "returns_old": 1.0,
     "history_rows_kept": 1.0
   },
   "AMA+FTS5 unverified": {

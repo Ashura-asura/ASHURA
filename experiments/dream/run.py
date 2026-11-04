@@ -1,8 +1,14 @@
-"""EXP-006: DREAM replay vs new-only training (H-DREAM). EXPERIMENTAL / synthetic.
+"""EXP-006: DREAM consolidation arms (H-DREAM). EXPERIMENTAL / synthetic.
 
-Baseline: a candidate trained only on the new capability.
-Proposed: DREAM replay (new + historical examples) with NGR promotion.
-Both start from the same stable memory trained on the old capability.
+Four explicit arms, as required by Phase 1 P12:
+  stable + new      candidate starts from the stable memory, trains only on the new capability
+  stable + replay   candidate starts from stable, trains on new + historical examples
+  fresh + new       candidate starts from scratch, trains only on the new capability
+  fresh + replay    candidate starts from scratch, trains on new + historical examples
+
+Every arm is evaluated on the same held-out set and passed through the same NGR policy. The answer
+vocabulary comes from the training split only (P13), and every arm has a real, independently
+evaluated stable baseline (P14).
 """
 from __future__ import annotations
 
@@ -42,22 +48,35 @@ def seed_stable(store: CheckpointStore, buffer: ReplayBuffer) -> None:
     store.promote("old_memory.npz", NGRResult(True, ["fixture: stable old-capability memory"], {}))
 
 
+def run_arm(initialization: str, replay: bool) -> dict:
+    store = CheckpointStore(Path(tempfile.mkdtemp(prefix=f"dream_{initialization}_")))
+    buffer = make_buffer()
+    seed_stable(store, buffer)
+    d = DREAM(buffer, store, NGRPolicy("new", min_target_gain=0.05),
+              DreamConfig(target="new", dim=DIM, min_train=4, replay=replay,
+                          initialization=initialization))
+    t0 = time.perf_counter()
+    r = d.run()
+    return {
+        "new": round(r.scores.get("new", 0), 3),
+        "old_retention": round(r.scores.get("old", 0), 3),
+        "stable_new": round(r.stable_scores.get("new", 0), 3),
+        "stable_old": round(r.stable_scores.get("old", 0), 3),
+        "promoted": r.promoted,
+        "ngr": r.ngr.reasons,
+        "train_n": r.train_n,
+        "initialization": r.initialization,
+        "vocabulary_size": len(r.vocabulary),
+        "seconds": round(time.perf_counter() - t0, 3),
+    }
+
+
 def main() -> None:
     rows = {}
-    for mode in (False, True):
-        store = CheckpointStore(Path(tempfile.mkdtemp(prefix="dream_exp_")))
-        buffer = make_buffer()
-        seed_stable(store, buffer)
-        d = DREAM(buffer, store, NGRPolicy("new", min_target_gain=0.05),
-                  DreamConfig(target="new", dim=DIM, min_train=4, replay=mode))
-        t0 = time.perf_counter()
-        r = d.run()
-        label = "dream_replay" if mode else "new_only"
-        rows[label] = {"new": round(r.scores.get("new", 0), 3), "old_retention": round(r.scores.get("old", 0), 3),
-                       "stable_new": round(r.stable_scores.get("new", 0), 3),
-                       "stable_old": round(r.stable_scores.get("old", 0), 3),
-                       "promoted": r.promoted, "ngr": r.ngr.reasons, "train_n": r.train_n,
-                       "seconds": round(time.perf_counter() - t0, 3)}
+    for initialization in ("stable", "fresh"):
+        for replay in (False, True):
+            label = f"{initialization}_{'replay' if replay else 'new'}"
+            rows[label] = run_arm(initialization, replay)
     out = {"experiment": "EXP-006", "hypothesis": "H-DREAM", "n_facts": N, "dim": DIM, "results": rows}
     print(json.dumps(out, indent=2))
     Path("experiments/dream").mkdir(exist_ok=True)

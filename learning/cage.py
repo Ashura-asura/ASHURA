@@ -12,6 +12,7 @@ from pathlib import Path
 
 from brain.execution_trace import ExecutionTrace
 from plasticity.eligibility import Attribution, Verifiers, attribute
+from plasticity.gated_update import UpdateProposal
 from plasticity.update_policy import UpdateDecision, UpdatePolicy, authorise
 
 
@@ -28,6 +29,17 @@ class CAGE:
         d = authorise(attr, verified, delta_norm, self.policy)
         self._record(attr, d, verified, delta_norm)
         return d
+
+    def propose(self, attr: Attribution, decision: UpdateDecision, *, verified: bool,
+                key: str, value: str, source: str = "") -> UpdateProposal | None:
+        """Turn an allowed, independently verified decision into a bounded update proposal.
+
+        A rejected decision, an unattributed failure, or an unverified signal produces no
+        proposal, so no downstream consumer can turn an ordinary model error into a label.
+        """
+        if not verified or not decision.allowed or attr.module is None:
+            return None
+        return UpdateProposal(module=attr.module, key=key, value=value, source=source)
 
     def _record(self, attr: Attribution, decision: UpdateDecision, verified: bool, delta_norm: float) -> None:
         row = {"time": time.strftime("%Y-%m-%dT%H:%M:%S"), "attribution": asdict(attr),

@@ -32,6 +32,7 @@ w_cost = 0.3
 discard_threshold = 0.45
 duplicate_similarity = 0.9
 reliable_fact_threshold = 0.8
+retrieval_min_reliability = 0.5   # below this (unverified model output = 0.2) is not retrieval evidence
 
 [nfd]
 # Experimental weights for P = aE + bU + cR + dI - eK. NOT calibrated yet.

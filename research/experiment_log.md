@@ -112,10 +112,11 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 |---|---|---|---|
 | adaptive memory, lr 0.3 / 0.6 / 1.0, 1 pass | 1.00 | 0.00 | 1.00 |
 | adaptive memory, lr 0.3, 3 passes | 1.00 | 0.00 | 0.93 |
-| AMA + FTS5, **stronger** evidence (user_corrected over trusted_material) | 1.00 | 0.00 | history kept 100% |
-| AMA + FTS5, **weaker** evidence (unverified over trusted_material) | 0.00 | 1.00 | history kept 100% |
+| AMA + FTS5, **verified** evidence (1.0) over trusted_material (0.8) | 1.00 | 0.00 | history kept 100% |
+| AMA + FTS5, **user-provided correction** (0.6) over trusted_material (0.8) | 0.00 | 1.00 | history kept 100% |
+| AMA + FTS5, **unverified** evidence (0.2) over trusted_material | 0.00 | 1.00 | history kept 100% |
 
-- **Finding:** the neural memory always lets the newest write win; it cannot tell a correction from a wrong claim. AMA + FTS5 can. Another reason D-009 stands: the adaptive memory must stay behind AMA's reliability gate. (Note: a `user_corrected` 0.9 answer does not override a `verified` 1.0 fact; it is flagged for review - by design.)
+- **Finding:** the neural memory always lets the newest write win; it cannot tell a correction from a wrong claim. AMA + FTS5 can. Another reason D-009 stands: the adaptive memory must stay behind AMA's reliability gate. Phase 1 (P06) lowered user-provided material to 0.6, so a user correction is now stored as review evidence and does **not** override a trusted 0.8 fact or a verified 1.0 fact. Only independently verified evidence supersedes trusted material. The verified-correction path (CAGE -> bounded update -> candidate -> NGR) is Phase 3.
 - **Limits:** synthetic, 3 seeds, linear memory only, single conflict per key.
 
 ---
@@ -123,18 +124,20 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 - Echo stub: 18.75% (old substring judge) -> **0.0%** lenient and strict (new judge, v1 and v2 suites). Still no real-model baseline: run `python -m evaluation.ollama_baseline` on the target laptop. Its output (results/baseline_*.md) belongs here as EXP-000c.
 
 ---
-## EXP-006 - DREAM replay vs new-only training (H-DREAM, Phase 6)
+## EXP-006 - DREAM consolidation arms (H-DREAM, Phase 6; four-arm update in Phase 1)
 - **Hypothesis:** H-DREAM. **Baseline:** candidate trained only on the new capability. **Proposed:** DREAM replay + NGR.
-- **Setup:** synthetic, 20 old + 20 new facts (plus reordered held-out variants), dim 256 linear adaptive memory; both arms start from the same stable old-capability memory; `experiments/dream/run.py`. Single seed, author-written. **Not** the target hardware.
+- **Setup:** synthetic, 20 old + 20 new facts (plus reordered held-out variants), dim 256 linear adaptive memory; every arm uses the same stable old-capability artifact and the same NGR policy; `experiments/dream/run.py`. Single seed, author-written. **Not** the target hardware. The Phase 1 update measures all four arms required by P12, fixes the answer vocabulary from the training split (P13), and uses the real stable artifact as the baseline (P14).
 - **Results:**
 
 | arm | new capability | old retention | NGR | promoted |
 |---|---|---|---|---|
-| new-only | 1.00 | **0.00** | rejected: old 1.00 -> 0.00 | no |
-| DREAM replay | 1.00 | **1.00** | all conditions met | yes |
+| stable + new | 1.00 | **1.00** | all conditions met | yes |
+| stable + replay | 1.00 | **1.00** | all conditions met | yes |
+| fresh + new | 1.00 | **0.00** | rejected: old 1.00 -> 0.00 | no |
+| fresh + replay | 1.00 | **1.00** | all conditions met | yes |
 
-- **Supports:** in this task, replay prevents catastrophic interference and the NGR rejects the candidate that forgets. Candidate promotion and stable retention are real (files + manifest).
-- **Does not support:** generalisation beyond reordered lexical variants; the memory is still the Phase 4 NumPy module, not a language-model adapter. Single seed, same-author data. Replay proportions are uncalibrated. **Decision:** keep the pipeline; treat the result as a pipeline demonstration, not evidence that DREAM improves Qwen.
+- **Supports:** fresh initialization without replay causes catastrophic interference in this task; replay prevents it; the NGR rejects the forgetful candidate; starting from the stable memory also retains the old capability; candidate promotion and stable retention are real (files + manifest).
+- **Does not support:** a general replay advantage. stable+new and stable+replay tie at 1.00 in this small, single-seed task where all facts fit the memory. It also does not generalise beyond reordered lexical variants, and the memory is still the Phase 4 NumPy module, not a language-model adapter. Replay proportions are uncalibrated. **Decision:** keep the pipeline and the four-arm measurement; treat the result as a pipeline demonstration, not evidence that DREAM improves Qwen or that replay is always required. See F-033.
 
 ---
 ## EXP-000c - Real Phase 0 baseline on the target laptop (Windows 11, i7-1165G7, 16.9 GB, MX350 2 GB)
@@ -208,3 +211,12 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 - **Supports:** the candidate plumbing works and agrees with exact arithmetic on this distribution.
 - **Does not support:** neural arithmetic as a capability. This is a linear model on a linear function, not a deep network; it adds nothing over `skills/arithmetic/exact.py`. The exact path remains authoritative, and the candidate is logged only as agreeing/rejected.
 - **Decision:** keep the candidate behind a checkpoint and the exact path as the answer source. Do not claim HARN success. A real HARN test needs a task where a learned model is competitive under held-out distribution shift (for example digit-string arithmetic), compared with exact evaluation.
+
+---
+## EXP-008 - Phase 1 trust repair (P01-P14, 2026-11-05)
+- **Question:** can an unverified answer be treated as verified or promoted merely because it passed through the response pipeline?
+- **Changes:** tri-state verification (`VERIFIED` / `FAILED` / `UNAVAILABLE`), reliability-aware retrieval with provenance labels, separate `user_provided` records at 0.6, `verified`-only semantic/DREAM admission, NGR non-finite/range/required-capability/performance validation, four-arm DREAM measurement with stable initialization, training-only answer vocabulary, and a real cold-start baseline requirement.
+- **Evidence:** ASHURA **204 passed** (Windows/Python 3.13); BrainSim **46 passed** (unchanged). 12 dedicated Phase 1 trust tests plus NGR, DREAM and CAGE regression tests. DREAM results in EXP-006; conflict results in EXP-005.
+- **Supported:** the response path no longer marks `None`/unavailable verification as success; a language-generated reply cannot borrow an arithmetic verification result; unverified FTS records are not retrieved by default; user corrections are stored separately and are not counted as verified; NGR rejects NaN/inf, out-of-range scores, missing capabilities and (when required) missing performance measurements; DREAM refuses a fabricated zero baseline.
+- **Not supported:** the full CAGE -> candidate -> NGR learning loop, independent natural-language correction verification, calibrated AMA weights, a general replay advantage, or any real-model accuracy improvement from these safety changes. This is an engineering/trust result, not a capability result.
+- **Decision:** keep the Phase 1 changes; proceed to Phase 2 (memory reliability) before claiming the learning loop is complete. Details and remaining limits: `research/phase1_trust.md`.
