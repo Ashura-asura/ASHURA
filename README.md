@@ -56,12 +56,13 @@ GitHub; the local Windows/Python 3.13 run is the measured result.
 
 ```powershell
 ollama serve
-python -m evaluation.ollama_baseline --models qwen3.5:2b --reference qwen3.5:2b --calibrate qwen3.5:2b
+python -m evaluation.ollama_baseline --models tony:7b --reference tony:7b --calibrate tony:7b
 python -m app.main --config config/ashura.ollama.toml --trace
 ```
 
-The foundation is pinned to `qwen3.5:2b` (Q8_0, Apache-2.0, digest `0689d44085e0`); a digest
-mismatch is refused. No external LLM API is used.
+The foundation is pinned to `tony:7b` (Q4_K_M, local Qwen2 7.6B fine-tune, digest `0455603ff430`);
+a digest mismatch is refused. `qwen3.5:2b` remains the 2.3 GB fallback. No external LLM API is
+used.
 
 ## Local OCR (optional)
 
@@ -102,7 +103,7 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 
 | Area | Files | State |
 |---|---|---|
-| Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; `qwen3.5:2b` pinned; Phase 0 0.56 strict / 4.5 s p50 (EXP-000c); llama.cpp untested |
+| Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; `tony:7b` pinned; Phase 0 0.94 strict / 2.35 s p50 (EXP-000d, n=16); 4.6 GB shared footprint; llama.cpp untested |
 | Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + semantic facts, FTS5, bounded working memory, deletion integrity, retention policy |
 | AMA | `learning/ama.py` | duplicate/conflict detection, scoring, surprise, queues, decision log; weights uncalibrated |
 | NFD + router | `brain/need_field.py`, `brain/router.py`, `brain/controller.py` | priority scoring, RAM/CPU-aware selection, cheap-skill path, traces, measured costs when calibrated |

@@ -167,7 +167,7 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 - **Finding:** tony:7b keeps the historical 0.94 strict accuracy but measured 2.35 s p50 here, not the 50.7 s recorded for `tony_control:7b`; because the digests differ, the old latency result is not evidence about this artifact (and vice versa). The current build still reports a 4.6 GB footprint, above the 2 GB MX350 budget.
 - **Statistics:** raw accuracy differs by 6/16, but only 8 pairs are discordant, so the exact sign test gives p=0.07. At alpha=0.05 the suite cannot declare tony:7b better; this is a power limit, not parity.
 - **Reproducibility caveat:** lfm3 (same digest) scored 0.125 strict on 2026-11-02 18:21 and 0.56 on 2026-11-02 21:50 and 2026-11-05; the first run returned empty responses, consistent with a thinking/`num_predict` interaction. Single runs of thinking models are not stable until that path is pinned.
-- **Decision:** use `tony:7b` as the default comparison reference; keep `qwen3.5:2b` as the live foundation (D-017). Do not regenerate `config/module_costs.json` from this run.
+- **Decision:** use `tony:7b` as the default comparison reference and the live foundation (D-025, supersedes D-017); `qwen3.5:2b` remains the 2.3 GB fallback. `config/module_costs.json` is recalibrated from the tony:7b row of this run.
 
 ---
 ## EXP-B1 - BrainSim tiny baseline + first fast-memory experiment (v2 blueprint)

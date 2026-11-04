@@ -2,20 +2,20 @@
 
 [foundation]
 backend = "ollama"             # "echo" (test stub) | "llama_cpp" | "ollama"
-family = "qwen35"               # `ollama show qwen3.5:2b`
-checkpoint = "qwen3.5:2b"
-quantization = "Q8_0"          # from `ollama show qwen3.5:2b`
-licence = "Apache-2.0"         # from `ollama show qwen3.5:2b --modelfile`
+family = "qwen2"               # `ollama show tony:7b`
+checkpoint = "tony:7b"
+quantization = "Q4_K_M"        # from `ollama show tony:7b`
+licence = "Local fine-tune of Qwen2 (Apache-2.0 base)"
 path = ""                      # local .gguf path (not committed)
 sha256 = ""                    # pinned hash of the stable checkpoint
 n_ctx = 2048
 n_threads = 4                  # i7-1165G7: 4 cores / 8 threads
 # --- backend = "ollama" (see config/ashura.ollama.toml for a ready-made example) ---
-model = "qwen3.5:2b"           # selected foundation: fits the 2 GB VRAM budget
+model = "tony:7b"              # selected foundation: 0.94 strict, 2.35 s p50 (EXP-000d)
 host = "http://127.0.0.1:11434"
-digest = "0689d44085e0"        # ID column of `ollama list`; pins the exact weights (mismatch => refuse to run)
+digest = "0455603ff430"        # ID column of `ollama list`; pins the exact weights (mismatch => refuse to run)
 keep_alive = "10m"
-think = false                  # fast response path; route hard tasks to a thinking model later
+think = false                  # fast response path; tony:7b has no thinking capability
 
 [memory]
 db_path = "data/ashura.db"

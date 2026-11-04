@@ -2,6 +2,7 @@
 # Roles are NOT assumed here; fill them in once the baseline shows what each model is good at.
 
 model = [
-  { tag = "qwen3.5:2b", id = "0689d44085e0", size_gb = 2.7, note = "selected foundation: Qwen3.5 1.9B, Q8_0, vision, Apache-2.0" },
-  { tag = "lfm3:latest", id = "b36a103fe2f8", size_gb = 1.1, note = "fast but scored 12% on baseline_v2; not a foundation candidate" },
+  { tag = "tony:7b", id = "0455603ff430", size_gb = 4.7, note = "selected foundation: Qwen2 7.6B Q4_K_M local fine-tune; 0.94 strict, 2.35 s p50 on baseline_v2 (EXP-000d)" },
+  { tag = "qwen3.5:2b", id = "0689d44085e0", size_gb = 2.7, note = "alternative: Qwen3.5 1.9B, Q8_0, vision, Apache-2.0; 0.56 strict (EXP-000c/000d)" },
+  { tag = "lfm3:latest", id = "b36a103fe2f8", size_gb = 1.1, note = "fast but unstable (0.125-0.56 across runs); not a foundation candidate" },
 ]
