@@ -52,8 +52,8 @@ Explicit user corrections are stored separately in `ocr_records`; they are not a
 labels. `evaluation.ocr_benchmark` computes CER/WER against a labelled JSONL manifest, but no
 held-out OCR corpus has been measured on the target laptop yet, so no OCR accuracy claim is made.
 A clean synthetic smoke image (900x220, 56 px text) returned the exact string at 0.935 mean
-confidence in 615 ms with Tesseract 5.4.0 and ~100 MB RSS; this is a smoke test, not document
-accuracy.
+confidence in 0.6-1.2 s with Tesseract 5.4.0; the Tesseract child peaked at ~27 MB RSS in that
+run. This is a smoke test, not document accuracy.
 
 ## HARN arithmetic candidate
 
