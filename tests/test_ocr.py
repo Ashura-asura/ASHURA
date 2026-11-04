@@ -1,4 +1,23 @@
+import pytest
+
 from skills.perception import OCRConfig, OCRCorrectionStore, OCREngine, OCRResult, ocr_file
+
+
+def test_local_tesseract_pipeline_when_engine_is_installed(tmp_path):
+    if not OCREngine().available:
+        pytest.skip("local Tesseract engine unavailable")
+    Image = pytest.importorskip("PIL.Image")
+    ImageDraw = pytest.importorskip("PIL.ImageDraw")
+    ImageFont = pytest.importorskip("PIL.ImageFont")
+    image = Image.new("RGB", (900, 220), "white")
+    font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 56)
+    ImageDraw.Draw(image).text((30, 60), "ASHURA OCR 12345", fill="black", font=font)
+    path = tmp_path / "ocr.png"
+    image.save(path)
+    result = ocr_file(path)
+    assert result.ok, result.reason
+    assert "ASHURA" in result.text.upper()
+    assert result.confidence > 0
 
 
 def test_ocr_config_validation():

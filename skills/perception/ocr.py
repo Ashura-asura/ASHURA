@@ -59,23 +59,38 @@ class OCREngine:
         self.config = config or OCRConfig()
         self._pytesseract = None
         self._pil = None
+        self._tesseract_cmd = self._find_tesseract(self.config.tesseract_cmd)
         try:
             import pytesseract
             from PIL import Image, ImageOps, ImageFilter
             self._pytesseract = pytesseract
             self._pil = (Image, ImageOps, ImageFilter)
-            if self.config.tesseract_cmd:
-                pytesseract.pytesseract.tesseract_cmd = self.config.tesseract_cmd
+            if self._tesseract_cmd:
+                pytesseract.pytesseract.tesseract_cmd = self._tesseract_cmd
         except Exception:
             pass
+
+    @staticmethod
+    def _find_tesseract(configured: str | None = None) -> str | None:
+        """Find the executable in PATH or the usual Windows install locations."""
+        candidates = []
+        if configured:
+            candidates.append(os.path.expandvars(configured))
+        found = shutil.which("tesseract")
+        if found:
+            candidates.append(found)
+        for base in (os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)"),
+                     os.environ.get("LOCALAPPDATA")):
+            if base:
+                candidates.append(os.path.join(base, "Tesseract-OCR", "tesseract.exe"))
+                candidates.append(os.path.join(base, "Programs", "Tesseract-OCR", "tesseract.exe"))
+        return next((p for p in candidates if p and os.path.isfile(p)), None)
 
     @property
     def available(self) -> bool:
         if self._pytesseract is None:
             return False
-        configured = self.config.tesseract_cmd
-        cmd = (shutil.which(configured) or configured) if configured else shutil.which("tesseract")
-        return bool(cmd and os.path.isfile(cmd))
+        return bool(self._tesseract_cmd and os.path.isfile(self._tesseract_cmd))
 
     def recognize(self, image_path: str | os.PathLike, *, image_ref: str | None = None,
                   document_type: str = "document") -> OCRResult:

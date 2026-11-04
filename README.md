@@ -5,7 +5,7 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 
 **Status:** Phase 0 foundation baseline measured on the target laptop; Phases 1–6 implemented;
 local OCR and a HARN arithmetic candidate are integrated behind optional dependencies/checkpoints;
-BrainSim B1–B3 measured as an independent subproject. **138 ASHURA tests and 28 BrainSim tests
+BrainSim B1–B3 measured as an independent subproject. **139 ASHURA tests and 28 BrainSim tests
 pass.** The adaptive memory remains experimental and out of the response path. BrainSim is not
 imported by ASHURA.
 
@@ -13,7 +13,7 @@ imported by ASHURA.
 
 ```bash
 pip install psutil numpy pytest
-python -m pytest -q                       # 138 tests
+python -m pytest -q                       # 139 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
 python -m evaluation.retrieval_bench      # EXP-002  FTS5 latency vs size
@@ -51,6 +51,9 @@ calls local Tesseract, and records text/confidence/engine/version. OCR output is
 Explicit user corrections are stored separately in `ocr_records`; they are not automatic training
 labels. `evaluation.ocr_benchmark` computes CER/WER against a labelled JSONL manifest, but no
 held-out OCR corpus has been measured on the target laptop yet, so no OCR accuracy claim is made.
+A clean synthetic smoke image (900x220, 56 px text) returned the exact string at 0.935 mean
+confidence in 615 ms with Tesseract 5.4.0 and ~100 MB RSS; this is a smoke test, not document
+accuracy.
 
 ## HARN arithmetic candidate
 
