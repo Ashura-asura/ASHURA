@@ -90,22 +90,35 @@ it does not supply an independent author or an independent distribution.
 ## Measured module costs (EXP-015)
 
 `experiments/runtime/load_bench.py` measures the runtime path on the target Windows 11 laptop
-(Python 3.13, 8 logical CPUs). It uses `EchoModel`, so the controller numbers exclude `tony:7b`.
+(Python 3.13, 8 logical CPUs). By default it uses `EchoModel`, so the controller numbers exclude
+`tony:7b`; the optional real-model run is reported separately below.
 
 | module | measurement |
 |---|---|
 | exact arithmetic evaluate (slowest case) | p50 0.015 ms |
 | exact Decimal(60) cross-check | p50 0.007-0.012 ms |
-| AMA admission (200 records, synthetic) | p50 1.15 ms, p95 1.57 ms |
-| FTS5 search / AMA retrieve (200 records) | p50 0.25 / 0.30 ms |
-| controller arithmetic turn (EchoModel) | p50 ~1.1 ms, p95 ~2.0 ms; 40/40 exact-verified |
-| full NumPy correction loop job | p50 ~22 ms, p95 ~26 ms |
-| worker submit / 100 no-op jobs drained | p50 0.004 ms / 1.84 ms total |
-| 300-turn sustained mix | p50 ~1.2 ms, p95 ~1.7 ms, 0 errors, ~1 MB RSS, 548 KB DB |
+| AMA admission (200 records, synthetic) | p50 1.35 ms, p95 1.72 ms |
+| FTS5 search / AMA retrieve (200 records) | p50 0.29 / 0.35 ms |
+| controller arithmetic turn (EchoModel) | p50 1.21 ms, p95 1.38 ms; 40/40 exact-verified |
+| full NumPy correction loop job | p50 24.4 ms, p95 28.7 ms |
+| worker submit / 100 no-op jobs drained | p50 0.004 ms / 1.60 ms total |
+| 300-turn sustained mix | p50 1.39 ms, p95 1.78 ms, 0 errors, ~1 MB RSS, 548 KB DB |
+| `tony:7b` cold-start mixed load (24 general + 8 arithmetic) | language p50 5.52 s, p95 8.06 s; 7.4 generated tokens/s; arithmetic p50 2.42 ms; 0 errors |
 
 The sustained run is single-process and synthetic: 240 of 300 turns were arithmetic with no
-language model. It does not establish `tony:7b` sustained latency, concurrency safety, restart
-recovery or production database growth. Full data: `experiments/runtime/results.json`.
+language model. The optional real-model run (`--real-model --real-cold`) pins `tony:7b` digest
+`0455603ff430`, unloads it first, then runs 24 free-form prompts and 8 exact arithmetic turns. It
+generated 954 tokens over 24 language turns (median answer 182 characters, generation capped at 128
+tokens per call), used 11,030 prompt tokens, and recorded no empty answers or errors. Ollama spent 6.81 s
+loading the model; the first turn took 12.74 s and steady-state language turns p50 5.52 s / p95
+8.06 s. The ASHURA client used ~97 MB RSS and 0.001 CPU utilisation because inference runs in the
+Ollama server; Ollama reported a 4,635.9 MB model footprint (`size_vram`), which does not by itself
+prove GPU residency. A warm rerun measured p50 4.76 s / p95 6.62 s, so run-to-run and thermal
+variation is material. The free-form answers are longer than the short-answer EXP-000d baseline, so
+the two p50 values are not directly comparable. This is a short, single-process mixed load: it does
+not establish sustained production latency, concurrency safety, model reload, restart recovery or
+production database growth, and it must not replace the routing estimates. Full data:
+`experiments/runtime/results.json`.
 
 ## Still open
 
@@ -122,5 +135,7 @@ recovery or production database growth. Full data: `experiments/runtime/results.
   adapter is trained (D-009 stands).
 - EXP-014 is larger but still author-written, with held-out wordings that share expression tokens.
   It is a non-regression and control-flow benchmark, not a capability estimate (F-044).
+- The real-model measurement is one short single-process mixed load. Concurrency, forced model
+  reload, restart recovery and a longer soak are still unmeasured (F-046).
 - A production loop needs a reviewer UI/queue, durable job storage and CLI configuration
   (F-039/P67/P75). The CLI in `learning/review.py` only lists and resolves conflicts.

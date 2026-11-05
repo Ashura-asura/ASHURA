@@ -33,6 +33,7 @@ python -m experiments.memory.retention_bench     # EXP-012  retention/utility
 python -m experiments.learning.loop_e2e   # EXP-013  verified correction -> NGR
 python -m experiments.learning.correction_bench  # EXP-014  larger frozen correction benchmark
 python -m experiments.runtime.load_bench  # EXP-015  module costs + sustained load
+python -m experiments.runtime.load_bench --real-model --real-cold  # optional local tony:7b mixed load
 python -m learning.review list --db data/ashura.db          # open conflicts
 python -m learning.review resolve <id> --db data/ashura.db --reason "reviewed"
 python -m evaluation.contradiction_bench  # EXP-010  structured answer comparison
@@ -150,10 +151,14 @@ The 2026-11-05 Phase 3 pass connects the existing pieces into one explicit chain
   `stop()` drains the queue. The controller can use it as the `correction_loop` hook and returns a
   `job_id`. It is in-process only: jobs are lost on restart and the CLI does not configure it.
 - **Measured runtime (EXP-015).** On this Windows 11 / Python 3.13 machine: exact arithmetic p50
-  <= 0.015 ms, AMA admission p50 1.15 ms, FTS5 search p50 0.25 ms, a full NumPy loop job p50
-  ~22 ms, and a 300-turn EchoModel mix p50 ~1.2 ms / p95 ~1.7 ms with 0 errors, ~1 MB RSS and a
-  548 KB database. The EchoModel is a plumbing stub, not `tony:7b`; no sustained real-model run was
-  made.
+  <= 0.015 ms, AMA admission p50 1.35 ms, FTS5 search p50 0.29 ms, a full NumPy loop job p50
+  ~24 ms, and a 300-turn EchoModel mix p50 ~1.4 ms / p95 ~1.8 ms with 0 errors, ~1 MB RSS and a
+  548 KB database. An optional cold-start `tony:7b` mixed load (24 free-form general turns + 8
+  exact arithmetic turns) measured language p50 5.5 s / p95 8.1 s, 7.4 generated tokens/s and 0
+  errors; the arithmetic turns stayed at p50 2.4 ms because they bypass the model. Ollama reported
+  a 4.64 GB model footprint and the ASHURA client stayed at ~97 MB RSS. This is a short
+  single-process run, not a production soak, concurrency test or routing estimate. The EchoModel
+  numbers remain the non-language baseline.
 - **Not language-model learning.** The candidate is the NumPy adaptive memory; no `tony:7b`
   fine-tune or adapter is trained (D-009 stands).
 

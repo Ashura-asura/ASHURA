@@ -16,6 +16,7 @@ re-measured here; they come from the Ollama baseline run. This experiment does n
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import platform
@@ -30,6 +31,8 @@ from brain.verification import Verification
 from evaluation.latency import percentile, rss_mb
 from evaluation.ngr import NGRPolicy, NGRResult
 from foundation.language_model import EchoModel
+from foundation.model_config import load_model_config
+from foundation.ollama_model import OllamaModel, running_models, unload
 from learning.ama import AMA
 from learning.cage import CAGE
 from learning.corrections import parse_correction
@@ -295,7 +298,116 @@ def bench_sustained(n: int = 300) -> dict:
     return out
 
 
+def _server_models(host: str) -> list[dict]:
+    return [{"name": item["name"], "size_mb": round(item["size"] / 1e6, 1),
+             "vram_mb": round(item["size_vram"] / 1e6, 1)}
+            for item in running_models(host)]
+
+
+def bench_real_model(config_path: str = "config/ashura.ollama.toml", turns: int = 24,
+                     arithmetic_turns: int = 8, cold_start: bool = False) -> dict:
+    """Optional local-model mixed load. Not part of the default fast benchmark."""
+    cfg = load_model_config(config_path)
+    if cfg.backend != "ollama":
+        raise ValueError(f"{config_path}: expected backend='ollama', got {cfg.backend!r}")
+    if cold_start:
+        unload(cfg.host, cfg.model)
+    server_before = _server_models(cfg.host)
+    init0 = time.perf_counter()
+    model = OllamaModel(cfg)
+    init_ms = (time.perf_counter() - init0) * 1000
+
+    path = os.path.join(tempfile.mkdtemp(prefix="exp015_real_"), "real.db")
+    db = Database(path)
+    controller = make_controller(db)
+    controller.model = model
+    general, arithmetic = [], []
+    errors = 0
+    language_steps = 0
+    empty_responses = 0
+    answer_chars = []
+    generated_tokens = 0
+    prompt_tokens = 0
+    eval_ns = 0
+    start_rss = rss_mb()
+    wall0, cpu0 = time.perf_counter(), time.process_time()
+    try:
+        # First real turn includes model load; keep it out of the steady-state samples.
+        t0 = time.perf_counter()
+        controller.handle("Answer briefly: name three primary colors.")
+        load_ms = (time.perf_counter() - t0) * 1000
+        load_stats = model.last_stats
+
+        for i in range(turns):
+            text = f"Answer briefly with one sentence: what is one useful fact about topic {i}?"
+            t0 = time.perf_counter()
+            try:
+                response = controller.handle(text)
+                if response.trace.step("language") is not None:
+                    language_steps += 1
+                answer_chars.append(len(response.text))
+                if not response.text.strip():
+                    empty_responses += 1
+                generated_tokens += model.last_stats.eval_count
+                prompt_tokens += model.last_stats.prompt_eval_count
+                eval_ns += model.last_stats.eval_duration_ns
+            except Exception:  # noqa: BLE001 - a failed turn is measured
+                errors += 1
+            general.append((time.perf_counter() - t0) * 1000)
+
+        for i in range(arithmetic_turns):
+            t0 = time.perf_counter()
+            try:
+                controller.handle(f"what is {i + 1}+{i + 2}")
+            except Exception:  # noqa: BLE001
+                errors += 1
+            arithmetic.append((time.perf_counter() - t0) * 1000)
+
+        wall, cpu = time.perf_counter() - wall0, time.process_time() - cpu0
+        out = {
+            "model": cfg.model,
+            "digest": model.digest[:12],
+            "config": config_path,
+            "cold_start": cold_start,
+            "init_ms": round(init_ms, 2),
+            "first_turn_load_ms": round(load_ms, 2),
+            "ollama_load_ms": round(load_stats.load_duration_ns / 1e6, 2),
+            "general": stats(general),
+            "arithmetic": stats(arithmetic),
+            "general_turns": turns,
+            "arithmetic_turns": arithmetic_turns,
+            "language_steps": language_steps,
+            "empty_responses": empty_responses,
+            "answer_chars_p50": round(percentile(answer_chars, 50), 1) if answer_chars else None,
+            "answer_chars_max": max(answer_chars) if answer_chars else None,
+            "errors": errors,
+            "generated_tokens": generated_tokens,
+            "prompt_tokens": prompt_tokens,
+            "generated_tokens_per_s": (round(generated_tokens / (eval_ns / 1e9), 2)
+                                       if eval_ns else None),
+            "wall_s": round(wall, 2),
+            "cpu_utilisation": round(cpu / wall, 3) if wall else None,
+            "rss_start_mb": round(start_rss, 1),
+            "rss_end_mb": round(rss_mb(), 1),
+            "server_before": server_before,
+            "server_after": _server_models(cfg.host),
+        }
+    finally:
+        controller.close()
+    return out
+
+
 def main() -> None:
+    ap = argparse.ArgumentParser(description="ASHURA module-cost and sustained-load benchmark")
+    ap.add_argument("--real-model", action="store_true",
+                    help="also run an optional local Ollama mixed-load measurement")
+    ap.add_argument("--real-config", default="config/ashura.ollama.toml")
+    ap.add_argument("--real-turns", type=int, default=24)
+    ap.add_argument("--real-arithmetic-turns", type=int, default=8)
+    ap.add_argument("--real-cold", action="store_true",
+                    help="unload the model first so the first turn measures a cold start")
+    args = ap.parse_args()
+
     language = None
     try:
         costs = json.loads(Path("config/module_costs.json").read_text(encoding="utf-8"))
@@ -325,10 +437,14 @@ def main() -> None:
             "EchoModel is a plumbing stub; these controller numbers are not tony:7b latency",
             "the learning loop trains the NumPy adaptive memory, not the language model",
             "the sustained mix is synthetic; database growth is not a production forecast",
+            "the optional real-model run is a short local mixed load, not a long-duration production soak",
         ],
     }
+    if args.real_model:
+        out["real_model"] = bench_real_model(args.real_config, args.real_turns,
+                                             args.real_arithmetic_turns, args.real_cold)
     RESULT.write_text(json.dumps(out, indent=2), encoding="utf-8")
-    print(json.dumps({
+    summary = {
         "environment": out["environment"],
         "exact_arithmetic_slowest_evaluate_p50_ms": out["exact_arithmetic"]["evaluate_p50_slowest_case_ms"],
         "memory": {k: out["memory"][k] for k in ("admit", "fts_search", "ama_retrieve", "db_kb")},
@@ -337,7 +453,10 @@ def main() -> None:
         "learning_worker": out["learning_worker"],
         "learning_loop": out["learning_loop"],
         "sustained_load": out["sustained_load"],
-    }, indent=2))
+    }
+    if "real_model" in out:
+        summary["real_model"] = out["real_model"]
+    print(json.dumps(summary, indent=2))
 
 
 if __name__ == "__main__":

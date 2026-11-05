@@ -15,9 +15,9 @@ items the latest pass could and could not close.
 | F-039 conflict review | **partly fixed** | `learning/review.py list / resolve`; superseding still requires an independently verified experience. Two tests. | No UI, notification, queue prioritisation or background worker; an open conflict can go unseen. |
 | F-044 correction benchmark evidence | **partly fixed** | EXP-013 runs seeds 0-4. EXP-014 adds 10 arithmetic forms x 3 held-out wordings x 5 seeds: 50/50 replay promotions, 0/50 no-replay promotions, 150/150 held-out predictions, 25/25 controls refused. | The corpus is still author-written; held-out wordings share expression tokens with the correction key; no independent distribution or independent author. |
 | F-006 arithmetic verifier | **partly fixed** | Same as F-042. | Same as F-042. |
-| P61-P63/P69 resources | **partly measured** | EXP-015 measures exact arithmetic, AMA/FTS5, controller (EchoModel), full NumPy loop and a 300-turn sustained mix: arithmetic p50 <= 0.015 ms, AMA admit p50 1.15 ms, FTS5 0.25 ms, loop ~22 ms, sustained p50 ~1.2 ms / p95 ~1.7 ms, ~1 MB RSS, 0 errors. | Single process, no `tony:7b`, no concurrency, no model reload or restart; routing estimates are unchanged. |
+| P61-P63/P69 resources | **partly measured** | EXP-015 measures exact arithmetic, AMA/FTS5, controller (EchoModel), full NumPy loop, a 300-turn sustained mix and one optional cold-start `tony:7b` mixed load: arithmetic p50 <= 0.015 ms, AMA admit p50 1.35 ms, FTS5 0.29 ms, loop 24.4 ms, sustained p50 1.39 ms / p95 1.78 ms, real-model language p50 5.52 s / p95 8.06 s at 7.4 tokens/s, 0 errors. | Single process, no concurrency, no model reload or restart, and the real-model run is short; routing estimates are unchanged. |
 | F-045 worker durability | **open** | In-process daemon thread, bounded queue, queued cancellation, error capture and drain-on-stop are implemented and tested. | Jobs are lost on process exit; running jobs cannot be force-killed; no durable store, hard timeout, restart test or CLI wiring. |
-| F-046 runtime scope | **open** | EXP-015 records single-process non-language costs and a synthetic sustained mix. | No `tony:7b` mixed load, concurrency, model reload or recovery; do not use as language-turn latency or routing evidence. |
+| F-046 runtime scope | **partly measured** | EXP-015 now records a short cold-start `tony:7b` mixed load (24 general + 8 arithmetic turns, language p50 5.52 s / p95 8.06 s, 7.4 tokens/s, 0 errors) plus the single-process non-language costs and synthetic sustained mix. | No concurrency, model reload, restart recovery or long soak; do not use the short run as production latency or routing evidence. |
 | P70-P72 CI | **fixed and green** | BrainSim installs the missing `psutil`; ASHURA matrix covers Python 3.11-3.13; BrainSim runs on Ubuntu and Windows. Actions run `41938499183` passed all eight jobs on commit `17568c3`. | Keep the matrix green; add real-model integration separately (P74). |
 
 The multi-seed EXP-013 result should be read with care. In seed 3 the stable memory already scored
@@ -144,9 +144,11 @@ Treat B2's missing recurrent advantage as a valid negative result, not a bug to 
 Not addressed by the Phase 3 follow-up:
 
 - **P61-P63:** exact arithmetic, AMA/FTS5 and the NumPy loop now have measured single-process costs
-  (EXP-015), but the language row remains from the Ollama baseline, routing priorities are still
-  heuristic, and sustained CPU/RAM pressure with concurrency has not been measured. Do not swap the
-  routing estimates for EXP-015 numbers without a routing experiment.
+  (EXP-015), including a short cold-start `tony:7b` mixed load (language p50 5.52 s, 7.4 tokens/s).
+  The language row in `config/module_costs.json` remains from the Ollama baseline because the
+  prompt/output lengths differ, routing priorities are still heuristic, and sustained CPU/RAM
+  pressure with concurrency has not been measured. Do not swap the routing estimates for EXP-015
+  numbers without a routing experiment.
 - **P64/P65:** semantic retrieval and the reasoning module are not built; the registry marks them
   unavailable. Do not advertise them.
 - **P67:** `LearningWorker` now provides an opt-in bounded background queue with cancellation and
@@ -154,7 +156,8 @@ Not addressed by the Phase 3 follow-up:
 - **P68:** a failed language backend can still leave general questions unanswered; fallback must
   keep exact computation, retrieved evidence and generated answers distinct.
 - **P69:** EXP-015 provides a 300-turn single-process sustained run (0 errors, ~1 MB RSS, 548 KB
-  DB), but there is still no real-model load, concurrency, model reload or restart-recovery test.
+  DB) and a short cold-start `tony:7b` mixed load (language p50 5.52 s, 7.4 tokens/s, 0 errors),
+  but there is still no concurrency, model reload, restart-recovery or long-duration test.
 - **P70-P74:** CI coverage and clean-install/reproducibility checks are incomplete (including
   Python 3.13 and Windows BrainSim); unit tests are not real-model correctness tests.
 - **P76-P80:** multiple specifications remain; checkpoint/experiment lifecycle, environment
@@ -199,7 +202,7 @@ process/restart level. Item 8 and the larger independent evaluation do not.
 | F-014/F-015/P48 | A better local foundation or an accepted accuracy limit; no new Qwen model. | Hardware/scope decision. |
 | F-016/P55-P60 OCR | A labelled target-document corpus; CER/WER, field accuracy and confidence calibration. | Data. |
 | P30-P44 BrainSim | Harder temporal tasks, hidden task/need labels, partial observations, independent distributions and more seeds. | Separate code + data effort. |
-| P61-P63/P69 resources | EXP-015 measures the main non-language modules and a 300-turn sustained mix; still needed: `tony:7b` mixed load, concurrency, model reload and restart recovery. | Runtime measurements; partly done. |
+| P61-P63/P69 resources | EXP-015 measures the main non-language modules, a 300-turn sustained mix and one short cold-start `tony:7b` mixed load; still needed: concurrency, model reload, restart recovery and a longer soak. | Runtime measurements; partly done. |
 | P64/P65 modules | A semantic-retrieval and reasoning implementation that beats the current baseline before routing to it. | Algorithm + benchmark; do not advertise early. |
 | P67 background worker | In-process worker with queue bounds, cancellation and error capture is done; durable jobs, hard timeout, CLI wiring and restart tests remain. | Code + storage design. |
 | P76-P80 engineering | One canonical spec, checkpoint/experiment manifests, clean-install verification and backup/restore tests. | Code/docs; can be done incrementally. |
@@ -207,8 +210,9 @@ process/restart level. Item 8 and the larger independent evaluation do not.
 
 The previous sequence (green CI -> measured module costs and a sustained-load run -> larger frozen
 benchmark -> background worker) is now implemented as EXP-015, EXP-014 and `learning/worker.py`.
-The next honest steps are: durable/restartable worker jobs and CLI configuration -> mixed
-`tony:7b` sustained load with concurrency -> independently authored benchmark/real usage data.
+A short `tony:7b` mixed load is now measured; the next honest steps are:
+durable/restartable worker jobs and CLI configuration -> sustained `tony:7b` load with
+concurrency/reload/restart checks -> independently authored benchmark/real usage data.
 The AMA, adaptive-memory and BrainSim claims should stay conservative until their data exists.
 
 ## 9. Deliberately not doing now
