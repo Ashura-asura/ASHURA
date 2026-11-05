@@ -119,11 +119,29 @@ suite is tied after adjudication.
 number must not be read as dedicated GPU residency; it is likely shared/iGPU memory or a reporting
 artifact. No GPU-residency claim is made.
 
-## Pending
+## Follow-up: `tony:7b-agentic3` (2026-11-06)
 
-`tony:7b-agentic` is still being merged on another machine. When it is available, run the same
-frozen suite before reconsidering the general default. This report selects between the two
-checkpoints that were actually installed; it does not rank the agentic build.
+The merged tag is `tony:7b-agentic3`, digest `0efe3817d5c1`. It was run alone on the same frozen
+suite; the gpa3/tony:7b rows above were reused for comparison. Data:
+`experiments/foundation/subject_tutor_agentic.json`.
+
+| model | raw answer | adjudicated | format | quality | p50 ms | p95 ms | tok/s |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `tony:7b-gpa3` | 0.929 | **0.976 (41/42)** | 0.976 | 0.000 | 1860 | 4137 | 9.05 |
+| `tony:7b-agentic3` | 0.929 | **0.976 (41/42)** | 0.881 | 0.071 | 2115 | 15052 | 8.36 |
+
+`dev-05` ("reduces the production image size...") and `dbg-01` ("a bad index for a list or
+string") were adjudicated as valid paraphrases; only `cod-03` (`2 ** 3 ** 2`) was wrong. The
+rubric-quality metric remains invalid for decisions.
+
+Agentic3 sometimes placed `Final answer:` after its reasoning instead of on its own line, so
+format compliance fell to 0.881. One 13-token answer (`phy-02`) took 154.7 s; a direct repeat took
+12.3 s cold and 1.35 s warm, so the outlier was transient and the one-run p95 is not a stable
+latency estimate.
+
+**Decision:** agentic3 does not improve subject accuracy, is slower at p50 and less format
+compliant, so it does not replace gpa3 as the general tutor. It remains a candidate for a separate
+agentic/tool-use benchmark; the subject suite cannot measure tool use or multi-step agency.
 
 ## Limitations
 

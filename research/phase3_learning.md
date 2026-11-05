@@ -190,11 +190,12 @@ adapter. Details: `research/EXP-017_persistence.md`.
 ## Still open
 
 - The loop is opt-in. The controller retains the previous trace and can call a `correction_loop`
-  hook, but the CLI does not configure a replay corpus or a stable checkpoint, so a live session
-  still does not learn automatically.
-- The worker is in-process and non-persistent: queued/running jobs are lost if the process exits,
-  and a running job has no forced timeout or kill. A restart test and a durable job store are still
-  missing.
+  hook, and the CLI can build a durable worker from `[learning]`, but the shipped configs leave it
+  disabled and provide no replay corpus or stable checkpoint. A default live session still does not
+  learn automatically.
+- F-045 is fixed for the bounded scope: the worker has a durable SQLite job store, restart
+  recovery, and an optional hard timeout that terminates a spawned child. Residual limits are one
+  worker per store, at-least-once recovery for queued jobs, and no live real-model learning run.
 - Factual corrections cannot be independently verified. Arithmetic coverage now includes
   `+ - * / %`, integer powers and perfect-square roots; irrational roots, non-integer powers and
   arbitrary prose remain `user_provided` (F-042).

@@ -1,12 +1,16 @@
 """F-045: durable jobs, restart recovery and hard timeout for the learning worker."""
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import time
 from pathlib import Path
 
+import pytest
+
 from learning.jobs import SQLiteJobStore
+from learning.runtime import build_learning_worker
 from learning.worker import LearningWorker
 
 
@@ -158,6 +162,51 @@ def test_hard_timeout_returns_stateful_runner_updates_to_the_parent():
         assert worker._run_fn.calls == 2
     finally:
         assert worker.close(timeout=5)
+
+
+def _write_replay(tmp_path: Path) -> Path:
+    path = tmp_path / "replay.jsonl"
+    records = [
+        {"id": f"old-{i}", "key": f"entity{i} old", "value": f"old-{i}",
+         "category": "old", "verified": True}
+        for i in range(4)
+    ] + [{"id": "target-h", "key": "wording", "value": "42",
+          "category": "corrected", "verified": True, "split": "heldout"}]
+    path.write_text("\n".join(json.dumps(record) for record in records), encoding="utf-8")
+    return path
+
+
+def test_learning_runtime_is_disabled_by_default():
+    assert build_learning_worker(None) is None
+    assert build_learning_worker({"enabled": False}) is None
+
+
+def test_learning_runtime_requires_a_replay_corpus():
+    with pytest.raises(ValueError, match="replay_path"):
+        build_learning_worker({"enabled": True})
+
+
+def test_learning_runtime_builds_from_a_minimal_corpus(tmp_path):
+    worker = build_learning_worker({
+        "enabled": True,
+        "replay_path": str(_write_replay(tmp_path)),
+        "jobs_db": str(tmp_path / "jobs.db"),
+        "checkpoint_dir": str(tmp_path / "checkpoints"),
+        "initialization": "fresh",
+        "min_train": 1,
+    })
+    assert worker is not None
+    assert worker.close(timeout=5)
+
+
+def test_learning_runtime_refuses_stable_without_a_checkpoint(tmp_path):
+    with pytest.raises(ValueError, match="no stable checkpoint"):
+        build_learning_worker({
+            "enabled": True,
+            "replay_path": str(_write_replay(tmp_path)),
+            "jobs_db": str(tmp_path / "jobs.db"),
+            "checkpoint_dir": str(tmp_path / "checkpoints"),
+        })
 
 
 def test_store_claims_a_queued_job_only_once(tmp_path):

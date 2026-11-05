@@ -327,3 +327,15 @@ record their own environment. Phase 0 real-model numbers remain scoped to the ma
 - **Does not support:** base-model superiority (user-reported prior result, not re-measured), independent capability, privacy preservation, GPU residency, or language-model learning. ASHURA trains neither checkpoint.
 - **Conclusion:** **supported** for non-inferiority and speed on this frozen suite; **not supported** for a general capability or privacy claim.
 - **Decision:** adopt gpa3 as general default, keep tony:7b as privacy profile (D-056). Full data: `experiments/foundation/subject_tutor.json`; report: `research/EXP-018_subject_tutor.md`.
+
+---
+## EXP-018b - `tony:7b-agentic3` on the same frozen subject suite (F-043/F-045 follow-up, 2026-11-06)
+- **Hypothesis:** the merged agentic fine-tune may replace gpa3 as the general tutor if it is non-inferior on subject accuracy without a material latency or format regression.
+- **Baseline:** the EXP-018 gpa3 and tony:7b rows on the same suite, SHA-256 `efb3c2cb...`; agentic3 digest `0efe3817d5c1`.
+- **Configuration:** same frozen 42-item suite, greedy decoding, temperature 0, seed 0, top_p 0.9, `num_ctx` 4096, `num_predict` 160; one run, 304.19 s.
+- **Accuracy:** raw 39/42 (0.929), tied with gpa3; after the same adjudication standard, 41/42 (0.976), tied with both. Only `cod-03` (`2 ** 3 ** 2`) was wrong. `dev-05` and `dbg-01` were valid paraphrases.
+- **Format and latency:** format 0.881 (several answers put `Final answer:` mid-line, not on its own line); p50 2115 ms, p95 15052 ms, 8.36 tok/s. One 13-token answer took 154.7 s; a direct repeat took 12.3 s cold and 1.35 s warm, so the outlier was transient and the one-run p95 is unstable.
+- **Supports:** agentic3 is accuracy-non-inferior on this subject suite.
+- **Does not support:** replacing gpa3 as the general tutor, or any tool-use/agentic capability claim; the suite has no tool-use items.
+- **Conclusion:** **tied on accuracy, worse on format and p50**; no justification to change the general default.
+- **Decision:** keep gpa3 general tutor and tony:7b privacy; retain agentic3 as a candidate for a separate agentic/tool-use benchmark (D-057). Full data: `experiments/foundation/subject_tutor_agentic.json`; report: `research/EXP-018_subject_tutor.md`.

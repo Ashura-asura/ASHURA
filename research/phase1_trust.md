@@ -77,7 +77,7 @@ eventually supersede a fact is CAGE -> bounded update -> candidate -> NGR, which
 
 ## Test evidence
 
-- ASHURA: **204 passed at the end of Phase 1; 273 passed on the current main** (Windows/Python 3.13, `python -m pytest -q`).
+- ASHURA: **204 passed at the end of Phase 1; 284 passed on the current main** (Windows/Python 3.13, `python -m pytest -q`).
 - BrainSim: **46 passed** (unchanged; ASHURA does not import BrainSim).
 - New Phase 1 tests: 12 in `tests/test_phase1_trust.py`, plus 7 NGR validation tests, 2 DREAM
   arm/vocabulary tests, 1 cold-start test, and 2 CAGE update-consumer tests.

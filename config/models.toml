@@ -4,6 +4,7 @@
 model = [
   { tag = "tony:7b-gpa3", id = "2a86766287cf", size_gb = 4.7, note = "general tutor default: Qwen2 7.6B Q4_K_M fine-tune; 41/42 adjudicated, 1.86 s p50, 9.05 tok/s (EXP-018)" },
   { tag = "tony:7b", id = "0455603ff430", size_gb = 4.7, note = "privacy profile: Qwen2 7.6B Q4_K_M local fine-tune; 41/42 adjudicated, 3.04 s p50 (EXP-018); prior 0.94 strict baseline_v2 (EXP-000d)" },
+  { tag = "tony:7b-agentic3", id = "0efe3817d5c1", size_gb = 4.7, note = "agentic candidate: 41/42 adjudicated, tied accuracy; 2.11 s p50, 0.88 format, 154.7 s outlier (EXP-018b); not selected for general tutoring" },
   { tag = "qwen3.5:2b", id = "0689d44085e0", size_gb = 2.7, note = "alternative: Qwen3.5 1.9B, Q8_0, vision, Apache-2.0; 0.56 strict (EXP-000c/000d)" },
   { tag = "lfm3:latest", id = "b36a103fe2f8", size_gb = 1.1, note = "fast but unstable (0.125-0.56 across runs); not a foundation candidate" },
 ]

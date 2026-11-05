@@ -7,22 +7,23 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 Phase 1 trust repair (P01–P14), Phase 2 memory reliability (P15–P29) and Phase 3 verified-correction
 loop (P07/P75/A01–A03) implemented and tested; local OCR and a HARN arithmetic candidate are
 integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
-subproject. **273 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
+subproject. **284 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
 experimental and out of the response path. BrainSim is not imported by ASHURA. The learning loop is
-**not** complete: it is an opt-in controller hook with an in-process background worker, only exact
+**not** complete: it is an opt-in controller hook with a durable background worker, only exact
 arithmetic corrections are independently verified, and the candidate is the NumPy memory rather
 than the language model. EXP-017 shows that a promoted NumPy candidate survives a process restart
 and retains the old capability. EXP-018 selects `tony:7b-gpa3` as the general tutor and keeps
-`tony:7b` as the privacy profile; ASHURA trains neither model. F-046 is closed only for a bounded
-client/reload/restart test; concurrent inference queues instead of scaling (F-047). See
-`research/evidence_standard.md`, `research/EXP-018_subject_tutor.md` and
+`tony:7b` as the privacy profile; EXP-018b keeps `tony:7b-agentic3` as an agentic-benchmark
+candidate. ASHURA trains none of them. F-045 is fixed for durable jobs and hard timeout; F-046 is
+closed only for a bounded client/reload/restart test; concurrent inference queues instead of
+scaling (F-047). See `research/evidence_standard.md`, `research/EXP-018_subject_tutor.md` and
 `research/completion_audit.md`.
 
 ## Run
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 273 tests
+python -m pytest -q                       # 284 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -153,10 +154,13 @@ The 2026-11-05 Phase 3 pass connects the existing pieces into one explicit chain
   refused with zero fast updates, candidates or stable changes. This is still an author-written
   synthetic set whose held-out wordings share the expression tokens; it is not an independent
   capability estimate.
-- **Background worker (P67).** `learning/worker.py` runs one daemon thread with a bounded queue.
-  `submit()` never raises, queued jobs can be cancelled, running jobs are not force-killed, and
-  `stop()` drains the queue. The controller can use it as the `correction_loop` hook and returns a
-  `job_id`. It is in-process only: jobs are lost on restart and the CLI does not configure it.
+- **Background worker (P67/F-045).** `learning/worker.py` runs one daemon thread with a bounded
+  queue. `submit()` never raises, queued jobs can be cancelled, and `stop()` drains by default.
+  A SQLite job store persists payload, status and result; a restart re-schedules queued jobs and
+  marks previously running jobs interrupted. `hard_timeout_s` runs a job in a spawned child and
+  terminates it at the deadline. The CLI wiring is opt-in via `[learning]` and disabled by default;
+  it requires a JSONL replay corpus and a checkpoint directory. Residual limits: one worker per
+  store and at-least-once recovery for queued jobs.
 - **Measured runtime (EXP-015).** On this Windows 11 / Python 3.13 machine: exact arithmetic p50
   <= 0.015 ms, AMA admission p50 1.35 ms, FTS5 search p50 0.29 ms, a full NumPy loop job p50
   ~24 ms, and a 300-turn EchoModel mix p50 ~1.4 ms / p95 ~1.8 ms with 0 errors, ~1 MB RSS and a
@@ -205,8 +209,13 @@ python -m app.main --config config/ashura.ollama.toml --trace
 The general foundation is pinned to `tony:7b-gpa3` (Q4_K_M, local Qwen2 7.6B fine-tune, digest
 `2a86766287cf`); a digest mismatch is refused. `tony:7b` (digest `0455603ff430`) remains the
 privacy profile via `config/ashura.ollama.private.toml`. EXP-018 tied them at 41/42 adjudicated
-answers; gpa3 was faster (1.86 s vs 3.04 s p50). `qwen3.5:2b` remains the 2.3 GB fallback. No
-external LLM API is used.
+answers; gpa3 was faster (1.86 s vs 3.04 s p50). `tony:7b-agentic3` tied accuracy but was slower
+and less format-compliant, so it remains an agentic-benchmark candidate (EXP-018b). `qwen3.5:2b`
+remains the 2.3 GB fallback. No external LLM API is used.
+
+Durable background learning is opt-in: `[learning].enabled = true` requires a JSONL
+`learning.replay_path` and `learning.checkpoint_dir`; `hard_timeout_s > 0` runs each job in a
+killable child. The shipped configs leave it disabled.
 
 ## Local OCR (optional)
 
@@ -255,7 +264,7 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 | OCR | `skills/perception/ocr.py`, `evaluation/ocr_benchmark.py` | optional local Tesseract, confidence, corrections, CER/WER runner; no target-corpus measurement yet |
 | Adaptive memory | `memory/adaptive_memory.py` | Titans-inspired linear memory; **no advantage over FTS5 yet** |
 | DPF + CAGE | `plasticity/*`, `learning/cage.py` | bounded fast state, candidate checkpoints, NGR-only promotion, trace attribution, gated update consumer (`GatedUpdater`) |
-| Learning loop | `learning/loop.py`, `learning/corrections.py`, `learning/worker.py` | verified correction -> CAGE -> fast update -> DREAM -> NGR; exact arithmetic corrections only; opt-in controller hook and in-process bounded worker; no default live wiring or durable jobs |
+| Learning loop | `learning/loop.py`, `learning/corrections.py`, `learning/worker.py`, `learning/jobs.py` | verified correction -> CAGE -> fast update -> DREAM -> NGR; exact arithmetic corrections only; opt-in durable worker with restart recovery and hard timeout; CLI wiring disabled by default; no live real-model learning run |
 | DREAM / NGR | `learning/dream.py`, `learning/replay.py`, `evaluation/ngr.py` | four consolidation arms (stable/fresh × new/replay, EXP-006), ratio/policy sweep (all arms tie), training-only vocabulary, real cold-start baseline, hardened promotion/rollback gate |
 | Adaptive memory | `memory/adaptive_memory.py` | experimental IDF memory; verified/conflict-gated queue; stress and long-run measurements; not in the response path |
 | BrainSim | `BrainSim/*` | independent B1–B6; 46 tests; not imported by ASHURA |
