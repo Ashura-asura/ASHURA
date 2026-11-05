@@ -1,10 +1,7 @@
 """Frozen subject suite and scoring regression tests (no real model needed)."""
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
-
-import pytest
 
 from evaluation.subject_bench import (
     CATEGORIES,
@@ -79,4 +76,11 @@ def test_compare_reports_a_paired_win():
 
 
 def test_suite_hash_matches_the_committed_file():
-    assert hashlib.sha256(Path(SUITE).read_bytes()).hexdigest() == SUITE_SHA256
+    assert suite_sha256(SUITE) == SUITE_SHA256
+
+
+def test_suite_hash_is_independent_of_checkout_line_endings(tmp_path):
+    canonical = Path(SUITE).read_bytes().replace(b"\r\n", b"\n")
+    crlf = tmp_path / "subject_tutor_v1_crlf.jsonl"
+    crlf.write_bytes(canonical.replace(b"\n", b"\r\n"))
+    assert suite_sha256(str(crlf)) == SUITE_SHA256

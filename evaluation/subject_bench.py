@@ -56,7 +56,13 @@ def load_suite(path: str) -> list[dict]:
 
 
 def suite_sha256(path: str) -> str:
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    """Hash the canonical suite content, independent of checkout line endings.
+
+    Git may check the JSONL out with CRLF on Windows while Linux keeps LF. The suite is the same
+    sequence of JSON records in both cases, so the frozen hash is defined over LF-normalised bytes.
+    """
+    data = Path(path).read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def final_answer(output: str) -> tuple[str, bool]:
