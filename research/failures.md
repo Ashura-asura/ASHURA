@@ -91,6 +91,6 @@
 
 **F-042 - Natural-language corrections remain unverifiable; arithmetic coverage is still bounded (PARTLY FIXED, P47).** `%`, integer powers and perfect-square roots are now independently checked as well. Factual claims, irrational roots, non-integer powers and arbitrary prose stay `user_provided`; the parser refuses to mark an unchecked claim verified.
 
-**F-043 - The loop trains the adaptive memory, not the language model (OPEN by design).** The promoted candidate is a NumPy associative memory. No Qwen fine-tune, adapter or language-model weight change occurs. Do not describe EXP-013 as model self-improvement.
+**F-043 - The loop trains the adaptive memory, not the language model (OPEN by design).** The promoted candidate is a NumPy associative memory. No `tony:7b` fine-tune, adapter or language-model weight change occurs. Do not describe EXP-013 as model self-improvement.
 
 **F-044 - EXP-013 is a five-seed synthetic control-flow test with unstable baselines (PARTLY FIXED).** Across seeds 0-4, verified+replay promoted 4/5, verified+no-replay was rejected 5/5, and the three refused arms were refused 5/5. The single rejected promotion was not a loop bug: the stable memory accidentally scored 1.00 on the corrected held-out items (stable corrected mean 0.40), leaving no target gain. Twenty old facts and two corrected wordings cannot establish general fast adaptation; keep this a gate demonstration.

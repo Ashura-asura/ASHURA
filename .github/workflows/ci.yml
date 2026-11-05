@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: ["3.11", "3.12"]
+        python: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,13 +25,19 @@ jobs:
 
   brainsim:
     # BrainSim is an independent subproject that needs PyTorch (CPU build is enough).
-    runs-on: ubuntu-latest
+    # psutil is imported by the B4/B6 experiment modules at collection time.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python }}
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
-      - run: pip install numpy pytest
+      - run: pip install numpy pytest psutil
       - run: python -m pytest -q
         working-directory: BrainSim

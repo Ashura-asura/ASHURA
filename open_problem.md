@@ -15,6 +15,7 @@ items the latest pass could and could not close.
 | F-039 conflict review | **partly fixed** | `learning/review.py list|resolve`; superseding still requires an independently verified experience. Two tests. | No UI, notification, queue prioritisation or background worker; an open conflict can go unseen. |
 | F-044 multi-seed evidence | **partly fixed** | EXP-013 now runs seeds 0-4. Verified+replay promoted 4/5; no-replay rejected 5/5; refused arms refused 5/5. | The task is still tiny: 20 old facts and 2 corrected held-out wordings. The stable baseline produced accidental correct answers in 3/5 seeds. |
 | F-006 arithmetic verifier | **partly fixed** | Same as F-042. | Same as F-042. |
+| P70-P72 CI | **workflow fixed, awaiting green run** | BrainSim installs the missing `psutil`; ASHURA matrix covers Python 3.11-3.13; BrainSim runs on Ubuntu and Windows. | A successful Actions run on the pushed commit is the evidence. |
 
 The multi-seed EXP-013 result should be read with care. In seed 3 the stable memory already scored
 1.00 on the corrected held-out items (and 0.50 in seeds 1/4), so NGR correctly refused promotion for
@@ -45,15 +46,18 @@ or a verifier that ASHURA does not have, and the project forbids external LLM AP
 radical representation or a rational-exponent policy could extend arithmetic, but it is a design
 change, not a bug fix.
 
-**Do not** treat a user repeating a claim, or a conflict with memory, as independent evidence.
+**Do not** treat a user repeating a claim, or a conflict with memory, as independent evidence. If a
+language model is involved, it must be the pinned local `tony:7b` (D-025/D-046); it cannot verify its
+own claim. A trusted local source or a genuinely independent verifier is still required.
 
 ### 2.3 The candidate is not the language model (F-043, by design)
 
-`FastWeights` and the DREAM candidate are NumPy associative memory. No Qwen weight, adapter or
-LoRA is trained. The target laptop (i7-1165G7, 16 GB RAM, MX350 2 GB) cannot fine-tune the 7.6 GB
+`FastWeights` and the DREAM candidate are NumPy associative memory. No `tony:7b` weight, adapter
+or LoRA is trained. The target laptop (i7-1165G7, 16 GB RAM, MX350 2 GB) cannot fine-tune the 7.6 GB
 Q4_K_M foundation; the 7B model already spills from the 2 GB GPU (F-014), and there is no verified
-instruction-tuning corpus. Local-only fine-tuning would require a much smaller model and a separate
-measured pipeline. Until then, EXP-013 must not be described as model self-improvement.
+instruction-tuning corpus. Local-only fine-tuning would require a smaller model or an offline
+adapter run with a separate measured pipeline. `tony:7b` is the only model under consideration; no
+Qwen replacement is planned. Until then, EXP-013 must not be described as model self-improvement.
 
 ### 2.4 EXP-013 is still a control-flow test (F-044)
 
@@ -162,7 +166,35 @@ At minimum, the register's section 10 tests still need to pass together, includi
 
 Items 1-6 have targeted tests today. Items 7-8 and the larger independent evaluation do not.
 
-## 8. Deliberately not doing now
+## 8. What is needed to close the rest
+
+| Remaining item | What is required | Dependency |
+|---|---|---|
+| P70-P73 CI | Merge the workflow fix and confirm a green Actions run on the exact commit; record the SHA/log. | Code is done; only the CI run is pending. |
+| F-041 production loop | A defined replay source, a bootstrapped stable checkpoint, a background worker with timeout/cancel, and restart tests. | Code + storage design; no new data. |
+| F-042 arithmetic residual | Symbolic radicals or a rational-exponent policy with explicit domain/precision rules. Natural-language facts need a trusted local source. | Code/design for arithmetic; data/verifier for facts. |
+| F-039 reviewer workflow | UI or notification, queue prioritisation and an audit view. | Code; not required for learning safety. |
+| F-044 benchmark | A larger frozen corrected set, independently authored wordings, control probes for accidental stable hits, more seeds and confidence intervals. | Benchmark data; no model training. |
+| F-035 AMA calibration | A realistic stream of useful, useless, repeated and contradictory unverified items. | Real usage data. |
+| F-036 task switches | A continual-learning benchmark with task boundaries and unknown switches, plus a method that actually retains old tasks. | Data + algorithm. |
+| F-037 adaptive advantage | A semantic/partial-cue task where the adaptive memory beats FTS5 under a measured protocol. | Data + a better encoder. |
+| F-038 replay calibration | A larger distribution-shift benchmark where replay ratios are distinguishable. | Data + compute. |
+| F-040 semantic truth | A general local fact verifier or a trusted knowledge source. | Blocked by design/data. |
+| F-043 model learning | A measured adapter/fine-tune of `tony:7b` on feasible hardware with a verified corpus and an NGR-style evaluation. | Hardware + data; not feasible on the current 2 GB GPU. |
+| F-014/F-015/P48 | A better local foundation or an accepted accuracy limit; no new Qwen model. | Hardware/scope decision. |
+| F-016/P55-P60 OCR | A labelled target-document corpus; CER/WER, field accuracy and confidence calibration. | Data. |
+| P30-P44 BrainSim | Harder temporal tasks, hidden task/need labels, partial observations, independent distributions and more seeds. | Separate code + data effort. |
+| P61-P63/P69 resources | Measured cold/warm costs for every module and a sustained-load run on the target laptop. | Runtime measurements; can be done now. |
+| P64/P65 modules | A semantic-retrieval and reasoning implementation that beats the current baseline before routing to it. | Algorithm + benchmark; do not advertise early. |
+| P67 background worker | Controlled asynchronous consolidation with lifecycle and failure handling. | Code. |
+| P76-P80 engineering | One canonical spec, checkpoint/experiment manifests, clean-install verification and backup/restore tests. | Code/docs; can be done incrementally. |
+| A04-A10 | Research programmes (hidden needs, segmentation, causal attribution, curriculum, self-preservation, forgetting). | Research; not a single patch. |
+
+The fastest path to a genuinely stronger prototype is: green CI -> measured module costs and a
+sustained-load run -> larger frozen EXP-013 benchmark -> background learning worker. The AMA,
+adaptive-memory and BrainSim claims should stay conservative until their data exists.
+
+## 9. Deliberately not doing now
 
 - Do not replace FTS5 with a vector store because neural memory sounds advanced.
 - Do not enlarge the model or add external APIs before the local pipeline is reliable.

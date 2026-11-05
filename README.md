@@ -56,9 +56,9 @@ failure modes without changing the measured research claims:
 - **Config/experiments:** unknown `[foundation]` keys are clear errors; the `[retention]` section
   is honoured; all model tags are benchmarked even if one non-reference model fails.
 
-Details are in `research/failures.md` F-020–F-040. The `.github/workflows/ci.yml` workflow is
-added but has not yet been executed on GitHub; the local Windows/Python 3.13 run is the measured
-result.
+Details are in `research/failures.md` F-020–F-040. The `.github/workflows/ci.yml` workflow runs
+ASHURA on Ubuntu/Windows with Python 3.11-3.13 and BrainSim on Ubuntu/Windows; BrainSim now installs
+`psutil`, the missing dependency that failed the earlier runs.
 
 ## Phase 1 trust repair (P01–P14)
 
@@ -135,8 +135,8 @@ The 2026-11-05 Phase 3 pass connects the existing pieces into one explicit chain
   the stable baseline accidentally scored 1.00 on the corrected held-out items. Verified + fresh +
   no replay: old 0.02 mean, rejected 5/5, stable pointer unchanged. Unverified factual, false
   arithmetic and no-trace corrections: refused 5/5 before training.
-- **Not language-model learning.** The candidate is the NumPy adaptive memory; no Qwen fine-tune or
-  adapter is trained (D-009 stands).
+- **Not language-model learning.** The candidate is the NumPy adaptive memory; no `tony:7b`
+  fine-tune or adapter is trained (D-009 stands).
 
 The default CLI does not configure the loop: no live replay corpus or stable checkpoint is defined,
 so sessions do not learn automatically. Arbitrary factual corrections remain unverifiable (F-042).
@@ -277,13 +277,13 @@ Full reports: `BrainSim/research/experiment_log.md`, `BrainSim/research/failures
 
 - AMA/NFD weights and thresholds are uncalibrated defaults.
 - Adaptive memory has no measured advantage over FTS5 and stays behind AMA's reliability gate.
-- DREAM trains a small NumPy memory, never Qwen.
+- DREAM trains a small NumPy memory, never the language model.
 - Exact arithmetic is authoritative; the HARN candidate is linear regression and adds no capability.
 - OCR is implemented but unmeasured on a held-out target corpus.
 - BrainSim tasks are synthetic and author-designed; B2 and B6 do not support a recurrent
   advantage. B4 replay is a bounded mitigation; B5 is supervised imitation; B6's gated 1.000 is
   full-coverage lookup with external task IDs.
-- LoRA on Qwen, PACE capacity mutation and BrainSim integration into the response path are not done.
+- LoRA on `tony:7b`, PACE capacity mutation and BrainSim integration into the response path are not done.
 
 See `research/experiment_log.md`, `research/failures.md` and `research/decisions.md` for the
 measured record and known limits.

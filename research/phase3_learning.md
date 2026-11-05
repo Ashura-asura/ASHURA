@@ -73,8 +73,8 @@ noisier than the single-seed result suggested; do not read 4/5 as a generalisati
 - Factual corrections cannot be independently verified. Arithmetic coverage now includes
   `+ - * / %`, integer powers and perfect-square roots; irrational roots, non-integer powers and
   arbitrary prose remain `user_provided` (F-042).
-- The candidate is the NumPy adaptive memory, not Qwen; no language-model fine-tune or adapter is
-  trained (D-009 stands).
+- The candidate is the NumPy adaptive memory, not `tony:7b`; no language-model fine-tune or
+  adapter is trained (D-009 stands).
 - Five seeds still use a tiny author-written task with two corrected held-out wordings. The stable
   baseline produced accidental correct answers in 3/5 seeds, so this is a gate demonstration, not
   a capability benchmark (F-044).
