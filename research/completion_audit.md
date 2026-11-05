@@ -1,6 +1,6 @@
 # Project completion audit
 
-Status: 2026-11-06, after EXP-016, EXP-017, EXP-018, EXP-018b, EXP-019 and F-045. This file is an
+Status: 2026-11-06, after EXP-016, EXP-017, EXP-018, EXP-018b, EXP-019, EXP-020 and F-045. This file is an
 evidence audit, not a claim that ASHURA is 87.5% intelligent or 87.5% of the way to general
 capability.
 
@@ -82,6 +82,7 @@ NumPy candidate promotion proves that the language foundation learned a new capa
 - `research/EXP-017_persistence.md` — NumPy consolidation persistence, retention and rollback.
 - `research/EXP-018_subject_tutor.md` — frozen subject comparison and the agentic3 follow-up.
 - `research/EXP-019_concurrency.md` — explicit one/two/four-slot concurrency sweep.
+- `research/EXP-020_agentic_tools.md` — native tool-use comparison; agentic3 not promoted.
 - `research/EXP-014` in `research/experiment_log.md` — held-out correction benchmark.
 - `tests/test_worker_durability.py` — durable store, crash recovery, hard timeout and CLI config.
 - `research/evidence_standard.md` — requirements-vs-capabilities and the four learning tests.

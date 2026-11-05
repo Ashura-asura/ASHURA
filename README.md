@@ -13,13 +13,15 @@ experimental and out of the response path. BrainSim is not imported by ASHURA. T
 arithmetic corrections are independently verified, and the candidate is the NumPy memory rather
 than the language model. EXP-017 shows that a promoted NumPy candidate survives a process restart
 and retains the old capability. EXP-018 selects `tony:7b-gpa3` as the general tutor and keeps
-`tony:7b` as the privacy profile; EXP-018b keeps `tony:7b-agentic3` as an agentic-benchmark
-candidate. ASHURA trains none of them. F-045 is fixed for durable jobs and hard timeout; F-046 is
+`tony:7b` as the privacy profile; EXP-018b/EXP-020 leave `tony:7b-agentic3` evaluated but
+unpromoted. ASHURA trains none of them. F-045 is fixed for durable jobs and hard timeout; F-046 is
 closed only for a bounded client/reload/restart test. EXP-019 fixes F-047 for explicit bounded
 concurrency: one server slot is the safe default, two give ~1.45x at two clients, and four are
-rejected because they cut single-client throughput to 3.32 tokens/s. No linear-scaling claim. See
-`research/evidence_standard.md`, `research/EXP-018_subject_tutor.md`,
-`research/EXP-019_concurrency.md` and `research/completion_audit.md`.
+rejected because they cut single-client throughput to 3.32 tokens/s. No linear-scaling claim.
+EXP-020 finds no tool-use advantage for `tony:7b-agentic3` over gpa3 (both 11/12; agentic3 slower),
+so gpa3 stays the general/tool-use model. See `research/evidence_standard.md`,
+`research/EXP-018_subject_tutor.md`, `research/EXP-019_concurrency.md`,
+`research/EXP-020_agentic_tools.md` and `research/completion_audit.md`.
 
 ## Run
 
@@ -212,6 +214,7 @@ gap (F-044). Conflict review is a minimal CLI without notification or a UI (F-03
 ollama serve
 python -m evaluation.ollama_baseline --models tony:7b-gpa3 --reference tony:7b --calibrate tony:7b-gpa3
 python -m evaluation.subject_bench          # EXP-018 frozen 42-item subject comparison
+python -m evaluation.agentic_bench --models tony:7b-agentic3 --reference tony:7b-agentic3  # EXP-020; one model per run
 python -m app.main --config config/ashura.ollama.toml --trace
 ```
 
@@ -219,7 +222,8 @@ The general foundation is pinned to `tony:7b-gpa3` (Q4_K_M, local Qwen2 7.6B fin
 `2a86766287cf`); a digest mismatch is refused. `tony:7b` (digest `0455603ff430`) remains the
 privacy profile via `config/ashura.ollama.private.toml`. EXP-018 tied them at 41/42 adjudicated
 answers; gpa3 was faster (1.86 s vs 3.04 s p50). `tony:7b-agentic3` tied accuracy but was slower
-and less format-compliant, so it remains an agentic-benchmark candidate (EXP-018b). `qwen3.5:2b`
+and less format-compliant, and EXP-020 found no tool-use advantage over gpa3, so it is not promoted
+(EXP-018b/EXP-020). `qwen3.5:2b`
 remains the 2.3 GB fallback. No external LLM API is used.
 
 Durable background learning is opt-in: `[learning].enabled = true` requires a JSONL

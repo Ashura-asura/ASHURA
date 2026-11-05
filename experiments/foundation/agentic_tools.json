@@ -1,0 +1,996 @@
+{
+  "experiment": "AGENTIC-001",
+  "generated_at": "2026-11-06T01:37:46",
+  "suite": "evaluation/benchmarks/agentic_tools_v1.jsonl",
+  "suite_sha256": "ed3a5345db8a94e0d2f2fe3b32a57143dd8212a1e041a22888a54c43334e4980",
+  "options": {
+    "temperature": 0,
+    "seed": 0,
+    "top_p": 0.9,
+    "num_predict": 240,
+    "num_ctx": 4096,
+    "protocol": "ollama /api/chat native tools"
+  },
+  "reference": "tony:7b-gpa3",
+  "environment": {
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.13.14",
+    "host": "http://127.0.0.1:11434"
+  },
+  "runtime_s": 171.03,
+  "results": {
+    "tony:7b-gpa3": {
+      "model": "tony:7b-gpa3",
+      "digest": "2a86766287cf",
+      "load_ms": 5105.4,
+      "server_mem_mb": 4755.4,
+      "server_vram_mb": 4755.4,
+      "n": 12,
+      "answer_accuracy": 0.9167,
+      "tool_accuracy": 1.0,
+      "agentic_success": 0.9167,
+      "clean_rate": 1.0,
+      "recovery_rate": 1.0,
+      "latency_ms_p50_excl_first": 5843.6,
+      "latency_ms_p95_excl_first": 12024.1,
+      "mean_steps": 2.25,
+      "mean_tool_calls": 1.25,
+      "tokens_per_s_median": 9.92,
+      "total_tokens_per_s": 9.73,
+      "mean_gen_tokens": 42.3333,
+      "per_category": {
+        "calc": {
+          "n": 3,
+          "answer": 1.0,
+          "agentic": 1.0
+        },
+        "lookup": {
+          "n": 2,
+          "answer": 0.5,
+          "agentic": 0.5
+        },
+        "text": {
+          "n": 2,
+          "answer": 1.0,
+          "agentic": 1.0
+        },
+        "multi": {
+          "n": 2,
+          "answer": 1.0,
+          "agentic": 1.0
+        },
+        "recovery": {
+          "n": 1,
+          "answer": 1.0,
+          "agentic": 1.0
+        },
+        "direct": {
+          "n": 2,
+          "answer": 1.0,
+          "agentic": 1.0
+        }
+      },
+      "rows": [
+        {
+          "id": "calc-01",
+          "category": "calc",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 13053.3,
+          "gen_tokens": 37,
+          "prompt_tokens": 713,
+          "load_ms": 5105.4,
+          "tokens_per_s": 10.3,
+          "used": [
+            "calc"
+          ],
+          "events": [
+            {
+              "name": "calc",
+              "args": {
+                "expression": "37 * 24 + 19"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"value\": \"907\"}"
+            }
+          ],
+          "final": "The result is 907."
+        },
+        {
+          "id": "calc-02",
+          "category": "calc",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 5746.1,
+          "gen_tokens": 41,
+          "prompt_tokens": 725,
+          "load_ms": 3.2,
+          "tokens_per_s": 10.25,
+          "used": [
+            "calc"
+          ],
+          "events": [
+            {
+              "name": "calc",
+              "args": {
+                "expression": "(144 / 12) ** 2 - 7"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"value\": \"137\"}"
+            }
+          ],
+          "final": "The result is 137."
+        },
+        {
+          "id": "calc-03",
+          "category": "calc",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 6121.9,
+          "gen_tokens": 43,
+          "prompt_tokens": 716,
+          "load_ms": 3.6,
+          "tokens_per_s": 10.07,
+          "used": [
+            "calc"
+          ],
+          "events": [
+            {
+              "name": "calc",
+              "args": {
+                "expression": "2 ** 3 ** 2"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"value\": \"512\"}"
+            }
+          ],
+          "final": "The result of 2 ** 3 ** 2 is 512."
+        },
+        {
+          "id": "lookup-01",
+          "category": "lookup",
+          "answer_correct": false,
+          "tool_correct": true,
+          "agentic_success": false,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 1,
+          "ms": 5843.6,
+          "gen_tokens": 41,
+          "prompt_tokens": 710,
+          "load_ms": 4.0,
+          "tokens_per_s": 9.74,
+          "used": [
+            "lookup"
+          ],
+          "events": [
+            {
+              "name": "lookup",
+              "args": {
+                "key": "project ORION launch code"
+              },
+              "executed": true,
+              "domain_error": true,
+              "result": "{\"error\": \"key not found\", \"key\": \"project ORION launch code\"}"
+            }
+          ],
+          "final": "The key 'project ORION launch code' was not found in the local catalog."
+        },
+        {
+          "id": "lookup-02",
+          "category": "lookup",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 5480.3,
+          "gen_tokens": 38,
+          "prompt_tokens": 695,
+          "load_ms": 3.9,
+          "tokens_per_s": 9.95,
+          "used": [
+            "lookup"
+          ],
+          "events": [
+            {
+              "name": "lookup",
+              "args": {
+                "key": "vega"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"key\": \"vega\", \"value\": \"VEGA-3\"}"
+            }
+          ],
+          "final": "The value stored under the key 'vega' is 'VEGA-3'."
+        },
+        {
+          "id": "text-01",
+          "category": "text",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 5482.7,
+          "gen_tokens": 37,
+          "prompt_tokens": 720,
+          "load_ms": 5.1,
+          "tokens_per_s": 9.89,
+          "used": [
+            "text_stats"
+          ],
+          "events": [
+            {
+              "name": "text_stats",
+              "args": {
+                "text": "local tools help small models"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"words\": 5, \"chars\": 29}"
+            }
+          ],
+          "final": "The sentence has 5 words and 29 characters."
+        },
+        {
+          "id": "text-02",
+          "category": "text",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 5923.5,
+          "gen_tokens": 41,
+          "prompt_tokens": 723,
+          "load_ms": 4.3,
+          "tokens_per_s": 9.82,
+          "used": [
+            "text_stats"
+          ],
+          "events": [
+            {
+              "name": "text_stats",
+              "args": {
+                "text": "ASHURA local agent"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"words\": 3, \"chars\": 18}"
+            }
+          ],
+          "final": "The string 'ASHURA local agent' has 18 characters, including spaces."
+        },
+        {
+          "id": "multi-01",
+          "category": "multi",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 4,
+          "tool_calls": 3,
+          "invalid_calls": 0,
+          "tool_errors": 1,
+          "ms": 12545.2,
+          "gen_tokens": 88,
+          "prompt_tokens": 1666,
+          "load_ms": 4.8,
+          "tokens_per_s": 9.76,
+          "used": [
+            "lookup",
+            "calc",
+            "calc"
+          ],
+          "events": [
+            {
+              "name": "lookup",
+              "args": {
+                "key": "base-count"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"key\": \"base-count\", \"value\": \"48\"}"
+            },
+            {
+              "name": "calc",
+              "args": {
+                "expression": "(lookup('base-count')) * 6 - 13"
+              },
+              "executed": true,
+              "domain_error": true,
+              "result": "{\"error\": \"ArithmeticError_: unsupported syntax: Call\"}"
+            },
+            {
+              "name": "calc",
+              "args": {
+                "expression": "(48) * 6 - 13"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"value\": \"275\"}"
+            }
+          ],
+          "final": "The final number is 275."
+        },
+        {
+          "id": "multi-02",
+          "category": "multi",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 4,
+          "tool_calls": 3,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 11503.0,
+          "gen_tokens": 77,
+          "prompt_tokens": 1703,
+          "load_ms": 6.0,
+          "tokens_per_s": 9.37,
+          "used": [
+            "lookup",
+            "lookup",
+            "text_stats"
+          ],
+          "events": [
+            {
+              "name": "lookup",
+              "args": {
+                "key": "orion"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"key\": \"orion\", \"value\": \"ORION-7\"}"
+            },
+            {
+              "name": "lookup",
+              "args": {
+                "key": "vega"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"key\": \"vega\", \"value\": \"VEGA-3\"}"
+            },
+            {
+              "name": "text_stats",
+              "args": {
+                "text": "ORION-7-VEGA-3"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"words\": 1, \"chars\": 14}"
+            }
+          ],
+          "final": "The result has 14 characters."
+        },
+        {
+          "id": "recover-01",
+          "category": "recovery",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": true,
+          "steps": 3,
+          "tool_calls": 2,
+          "invalid_calls": 0,
+          "tool_errors": 1,
+          "ms": 9185.9,
+          "gen_tokens": 58,
+          "prompt_tokens": 1161,
+          "load_ms": 4.6,
+          "tokens_per_s": 8.87,
+          "used": [
+            "lookup",
+            "lookup"
+          ],
+          "events": [
+            {
+              "name": "lookup",
+              "args": {
+                "key": "missing-key"
+              },
+              "executed": true,
+              "domain_error": true,
+              "result": "{\"error\": \"key not found\", \"key\": \"missing-key\"}"
+            },
+            {
+              "name": "lookup",
+              "args": {
+                "key": "fallback-key"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"key\": \"fallback-key\", \"value\": \"FALLBACK-42\"}"
+            }
+          ],
+          "final": "The fallback key 'fallback-key' has value 'FALLBACK-42'."
+        },
+        {
+          "id": "direct-01",
+          "category": "direct",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 1,
+          "tool_calls": 0,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 1125.5,
+          "gen_tokens": 3,
+          "prompt_tokens": 322,
+          "load_ms": 3.8,
+          "tokens_per_s": 12.79,
+          "used": [],
+          "events": [],
+          "final": "Paris."
+        },
+        {
+          "id": "direct-02",
+          "category": "direct",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 1,
+          "tool_calls": 0,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 1280.0,
+          "gen_tokens": 4,
+          "prompt_tokens": 324,
+          "load_ms": 6.0,
+          "tokens_per_s": 10.85,
+          "used": [],
+          "events": [],
+          "final": "Jupiter."
+        }
+      ]
+    },
+    "tony:7b-agentic3": {
+      "model": "tony:7b-agentic3",
+      "digest": "0efe3817d5c1",
+      "load_ms": 7132.0,
+      "server_mem_mb": 4755.4,
+      "server_vram_mb": 4755.4,
+      "n": 12,
+      "answer_accuracy": 0.9167,
+      "tool_accuracy": 1.0,
+      "agentic_success": 0.9167,
+      "clean_rate": 1.0,
+      "recovery_rate": 1.0,
+      "latency_ms_p50_excl_first": 6333.3,
+      "latency_ms_p95_excl_first": 10422.0,
+      "mean_steps": 2.1667,
+      "mean_tool_calls": 1.1667,
+      "tokens_per_s_median": 9.74,
+      "total_tokens_per_s": 9.56,
+      "mean_gen_tokens": 43.8333,
+      "per_category": {
+        "calc": {
+          "n": 3,
+          "answer": 1.0,
+          "agentic": 1.0
+        },
+        "lookup": {
+          "n": 2,
+          "answer": 0.5,
+          "agentic": 0.5
+        },
+        "text": {
+          "n": 2,
+          "answer": 1.0,
+          "agentic": 1.0
+        },
+        "multi": {
+          "n": 2,
+          "answer": 1.0,
+          "agentic": 1.0
+        },
+        "recovery": {
+          "n": 1,
+          "answer": 1.0,
+          "agentic": 1.0
+        },
+        "direct": {
+          "n": 2,
+          "answer": 1.0,
+          "agentic": 1.0
+        }
+      },
+      "rows": [
+        {
+          "id": "calc-01",
+          "category": "calc",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 16365.7,
+          "gen_tokens": 49,
+          "prompt_tokens": 713,
+          "load_ms": 7132.0,
+          "tokens_per_s": 9.99,
+          "used": [
+            "calc"
+          ],
+          "events": [
+            {
+              "name": "calc",
+              "args": {
+                "expression": "37 * 24 + 19"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"value\": \"907\"}"
+            }
+          ],
+          "final": "The result of 37 * 24 + 19 is 907."
+        },
+        {
+          "id": "calc-02",
+          "category": "calc",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 7615.2,
+          "gen_tokens": 55,
+          "prompt_tokens": 725,
+          "load_ms": 4.7,
+          "tokens_per_s": 9.64,
+          "used": [
+            "calc"
+          ],
+          "events": [
+            {
+              "name": "calc",
+              "args": {
+                "expression": "(144 / 12) ** 2 - 7"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"value\": \"137\"}"
+            }
+          ],
+          "final": "The result of (144 / 12)\u00b2 - 7 is 137."
+        },
+        {
+          "id": "calc-03",
+          "category": "calc",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 6243.0,
+          "gen_tokens": 43,
+          "prompt_tokens": 716,
+          "load_ms": 3.8,
+          "tokens_per_s": 9.73,
+          "used": [
+            "calc"
+          ],
+          "events": [
+            {
+              "name": "calc",
+              "args": {
+                "expression": "2 ** 3 ** 2"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"value\": \"512\"}"
+            }
+          ],
+          "final": "The result of 2 ** 3 ** 2 is 512."
+        },
+        {
+          "id": "lookup-01",
+          "category": "lookup",
+          "answer_correct": false,
+          "tool_correct": true,
+          "agentic_success": false,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 1,
+          "ms": 5829.7,
+          "gen_tokens": 41,
+          "prompt_tokens": 710,
+          "load_ms": 3.8,
+          "tokens_per_s": 9.75,
+          "used": [
+            "lookup"
+          ],
+          "events": [
+            {
+              "name": "lookup",
+              "args": {
+                "key": "project ORION launch code"
+              },
+              "executed": true,
+              "domain_error": true,
+              "result": "{\"error\": \"key not found\", \"key\": \"project ORION launch code\"}"
+            }
+          ],
+          "final": "The key 'project ORION launch code' was not found in the local catalog."
+        },
+        {
+          "id": "lookup-02",
+          "category": "lookup",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 5492.1,
+          "gen_tokens": 38,
+          "prompt_tokens": 695,
+          "load_ms": 4.3,
+          "tokens_per_s": 9.9,
+          "used": [
+            "lookup"
+          ],
+          "events": [
+            {
+              "name": "lookup",
+              "args": {
+                "key": "vega"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"key\": \"vega\", \"value\": \"VEGA-3\"}"
+            }
+          ],
+          "final": "The value stored under the key 'vega' is 'VEGA-3'."
+        },
+        {
+          "id": "text-01",
+          "category": "text",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 6333.3,
+          "gen_tokens": 45,
+          "prompt_tokens": 720,
+          "load_ms": 5.7,
+          "tokens_per_s": 9.79,
+          "used": [
+            "text_stats"
+          ],
+          "events": [
+            {
+              "name": "text_stats",
+              "args": {
+                "text": "local tools help small models"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"words\": 5, \"chars\": 29}"
+            }
+          ],
+          "final": "The sentence 'local tools help small models' consists of 5 words and 29 characters."
+        },
+        {
+          "id": "text-02",
+          "category": "text",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 2,
+          "tool_calls": 1,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 6427.4,
+          "gen_tokens": 41,
+          "prompt_tokens": 723,
+          "load_ms": 8.3,
+          "tokens_per_s": 9.03,
+          "used": [
+            "text_stats"
+          ],
+          "events": [
+            {
+              "name": "text_stats",
+              "args": {
+                "text": "ASHURA local agent"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"words\": 3, \"chars\": 18}"
+            }
+          ],
+          "final": "The string 'ASHURA local agent' has 18 characters, including spaces."
+        },
+        {
+          "id": "multi-01",
+          "category": "multi",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 3,
+          "tool_calls": 2,
+          "invalid_calls": 0,
+          "tool_errors": 1,
+          "ms": 9306.1,
+          "gen_tokens": 62,
+          "prompt_tokens": 1168,
+          "load_ms": 7.2,
+          "tokens_per_s": 9.41,
+          "used": [
+            "lookup",
+            "calc"
+          ],
+          "events": [
+            {
+              "name": "lookup",
+              "args": {
+                "key": "base-count"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"key\": \"base-count\", \"value\": \"48\"}"
+            },
+            {
+              "name": "calc",
+              "args": {
+                "expression": "(lookup('base-count') * 6) - 13"
+              },
+              "executed": true,
+              "domain_error": true,
+              "result": "{\"error\": \"ArithmeticError_: unsupported syntax: Call\"}"
+            }
+          ],
+          "final": "The multiplication and subtraction yield 275."
+        },
+        {
+          "id": "multi-02",
+          "category": "multi",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 4,
+          "tool_calls": 3,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 11538.0,
+          "gen_tokens": 78,
+          "prompt_tokens": 1703,
+          "load_ms": 9.3,
+          "tokens_per_s": 9.38,
+          "used": [
+            "lookup",
+            "lookup",
+            "text_stats"
+          ],
+          "events": [
+            {
+              "name": "lookup",
+              "args": {
+                "key": "orion"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"key\": \"orion\", \"value\": \"ORION-7\"}"
+            },
+            {
+              "name": "lookup",
+              "args": {
+                "key": "vega"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"key\": \"vega\", \"value\": \"VEGA-3\"}"
+            },
+            {
+              "name": "text_stats",
+              "args": {
+                "text": "ORION-7-VEGA-3"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"words\": 1, \"chars\": 14}"
+            }
+          ],
+          "final": "The final string has 14 characters."
+        },
+        {
+          "id": "recover-01",
+          "category": "recovery",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": true,
+          "steps": 3,
+          "tool_calls": 2,
+          "invalid_calls": 0,
+          "tool_errors": 1,
+          "ms": 9070.2,
+          "gen_tokens": 59,
+          "prompt_tokens": 1161,
+          "load_ms": 8.0,
+          "tokens_per_s": 9.04,
+          "used": [
+            "lookup",
+            "lookup"
+          ],
+          "events": [
+            {
+              "name": "lookup",
+              "args": {
+                "key": "missing-key"
+              },
+              "executed": true,
+              "domain_error": true,
+              "result": "{\"error\": \"key not found\", \"key\": \"missing-key\"}"
+            },
+            {
+              "name": "lookup",
+              "args": {
+                "key": "fallback-key"
+              },
+              "executed": true,
+              "domain_error": false,
+              "result": "{\"key\": \"fallback-key\", \"value\": \"FALLBACK-42\"}"
+            }
+          ],
+          "final": "The lookup for 'fallback-key' returns the value `FALLBACK-42`."
+        },
+        {
+          "id": "direct-01",
+          "category": "direct",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 1,
+          "tool_calls": 0,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 1102.0,
+          "gen_tokens": 3,
+          "prompt_tokens": 322,
+          "load_ms": 9.5,
+          "tokens_per_s": 14.27,
+          "used": [],
+          "events": [],
+          "final": "Paris."
+        },
+        {
+          "id": "direct-02",
+          "category": "direct",
+          "answer_correct": true,
+          "tool_correct": true,
+          "agentic_success": true,
+          "clean": true,
+          "recovered": null,
+          "steps": 1,
+          "tool_calls": 0,
+          "invalid_calls": 0,
+          "tool_errors": 0,
+          "ms": 2050.6,
+          "gen_tokens": 12,
+          "prompt_tokens": 324,
+          "load_ms": 5.6,
+          "tokens_per_s": 10.07,
+          "used": [],
+          "events": [],
+          "final": "Jupiter is the largest planet in the solar system."
+        }
+      ]
+    }
+  },
+  "comparison": {
+    "tony:7b-agentic3": {
+      "verdict": "no detectable difference from reference",
+      "agentic": {
+        "wins": 0,
+        "losses": 0,
+        "ties": 12,
+        "p_value": 1.0
+      },
+      "answer": {
+        "wins": 0,
+        "losses": 0,
+        "ties": 12,
+        "p_value": 1.0
+      },
+      "tool": {
+        "wins": 0,
+        "losses": 0,
+        "ties": 12,
+        "p_value": 1.0
+      }
+    }
+  },
+  "decision": {
+    "adopt_agentic3": false,
+    "wins": 0,
+    "losses": 0,
+    "candidate_clean": 1.0,
+    "reference_clean": 1.0,
+    "reason": "does not meet the pre-registered 3-win and clean-rate rule"
+  }
+}

@@ -351,3 +351,16 @@ record their own environment. Phase 0 real-model numbers remain scoped to the ma
 - **Does not support:** linear four-way scaling, production multi-tenant serving, or GPU-parallel claims. The client gate is per process and the server queue is not a cross-process scheduler.
 - **Conclusion:** **F-047 fixed for a bounded scope**; keep the safe default at one slot, document two slots as the concurrent maximum, and reject four.
 - **Decision:** adopt the per-process gate (`max_inflight=1`, `max_queue=8`, `queue_timeout_s=60`) and the one-slot default; document two slots as opt-in only (D-059). Full data: `experiments/runtime/concurrency_sweep.json`; report: `research/EXP-019_concurrency.md`.
+
+---
+## EXP-020 - Native tool-use benchmark: `tony:7b-agentic3` vs `tony:7b-gpa3` (2026-11-06)
+- **Hypothesis:** agentic3 improves native tool selection, multi-step chaining and error recovery over gpa3.
+- **Baseline:** gpa3 on the same frozen 12-item suite, same decoding and tools, one model resident at a time.
+- **Configuration:** Ollama 0.40.14 native `/api/chat` tools (`calc`, `lookup`, `text_stats`); temperature 0, seed 0, top_p 0.9, `num_ctx` 4096, `num_predict` 240; suite sha256 `ed3a5345...`; gpa3 `2a86766287cf`, agentic3 `0efe3817d5c1`; 171.03 s total.
+- **Accuracy:** both 11/12 answer and 11/12 agentic; tool accuracy 1.00, clean 1.00, recovery 1.00. Paired: 0 wins, 0 losses, 12 ties (p=1.000).
+- **Failure:** both failed `lookup-01` by passing "project ORION launch code" instead of the key "orion", then reporting the error without retrying. Both passed `calc-03` (`2 ** 3 ** 2` -> 512) using the calculator.
+- **Latency:** gpa3 p50 5844 ms, p95 12024 ms, 9.92 tok/s, 5.1 s load; agentic3 p50 6333 ms, p95 10422 ms, 9.74 tok/s, 7.1 s load.
+- **Supports:** native tool calling works for both tags; the calculator fixes the known `2 ** 3 ** 2` weakness.
+- **Does not support:** an agentic3 tool-use advantage, or general agentic capability.
+- **Conclusion:** **no measurable difference; agentic3 is slower at p50 and load.** Keep gpa3.
+- **Decision:** do not promote agentic3 for tool use (D-060). Full data: `experiments/foundation/agentic_tools.json`; report: `research/EXP-020_agentic_tools.md`.

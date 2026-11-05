@@ -1,6 +1,6 @@
 # Open problems
 
-Status: 2026-11-06, after EXP-016, EXP-017, EXP-018, EXP-018b, EXP-019 and the F-045 worker work.
+Status: 2026-11-06, after EXP-016, EXP-017, EXP-018, EXP-018b, EXP-019, EXP-020 and the F-045 worker work.
 Test evidence: **291 ASHURA tests** and **46 BrainSim tests** pass on Windows/Python 3.13. Completion audit:
 `research/completion_audit.md` records 87.5% checklist coverage but **0 of 4 language-model learning
 tests** demonstrated. This file records what is still not closed; it is
@@ -18,7 +18,7 @@ items the latest pass could and could not close.
 | F-044 correction benchmark evidence | **partly fixed** | EXP-013 runs seeds 0-4. EXP-014 adds 10 arithmetic forms x 3 held-out wordings x 5 seeds: 50/50 replay promotions, 0/50 no-replay promotions, 150/150 held-out predictions, 25/25 controls refused. | The corpus is still author-written; held-out wordings share expression tokens with the correction key; no independent distribution or independent author. |
 | F-006 arithmetic verifier | **partly fixed** | Same as F-042. | Same as F-042. |
 | A02/A03 consolidation persistence | **measured (NumPy only)** | EXP-017: 20/20 promoted NumPy candidates loaded in a fresh process with matching SHA-256, 60/60 corrected held-out predictions, 400/400 old-capability predictions, 20/20 rollbacks restored the parent; 131 KB artifact, 41.2 MB RSS, 6.25 s total. | This is the NumPy adaptive memory, not `tony:7b`; the corpus is author-written; no power-loss, corrupt-manifest, backup/restore or shared-database durability test. |
-| Model role selection | **measured (bounded)** | EXP-018: gpa3 and tony:7b both 41/42 adjudicated; gpa3 1.86 s p50, tony:7b 3.04 s p50. EXP-018b: `tony:7b-agentic3` also 41/42 but 0.881 format, 2.11 s p50 and a transient 154.7 s outlier. Adopt gpa3 general, tony:7b privacy; agentic3 is an agentic-benchmark candidate. | Author-written subject suite; base-model and privacy claims not re-measured; no tool-use/agentic benchmark; 4.7 GB exceeds the 2 GB dedicated GPU. |
+| Model role selection | **measured (bounded)** | EXP-018: gpa3 and tony:7b both 41/42 adjudicated; gpa3 1.86 s p50, tony:7b 3.04 s p50. EXP-018b: `tony:7b-agentic3` also 41/42 but 0.881 format, 2.11 s p50 and a transient 154.7 s outlier. EXP-020: agentic3 and gpa3 both 11/12 on a frozen 12-item native tool suite (0 wins, 0 losses, 12 ties); agentic3 slower at p50 (6.33 s vs 5.84 s). Adopt gpa3 general/tool use, tony:7b privacy; agentic3 is an evaluated but unpromoted candidate. | Author-written suites; base-model and privacy claims not re-measured; the tool suite uses a synthetic catalog; 4.7 GB exceeds the 2 GB dedicated GPU. |
 | P61-P63/P69 resources | **partly measured** | EXP-015 measures exact arithmetic, AMA/FTS5, controller (EchoModel), full NumPy loop, a 300-turn sustained mix and a cold-start `tony:7b` mixed load: arithmetic p50 <= 0.015 ms, AMA admit p50 1.35 ms, FTS5 0.29 ms, loop 24.4 ms, sustained p50 1.39 ms / p95 1.78 ms, single-client language p50 5.52 s / p95 8.06 s. EXP-016 adds 4 clients, 80 turns, forced reload and restart: 0 failures, general p50 25.80 s / p95 35.23 s, arithmetic p50 4.43 ms. EXP-019 adds an explicit concurrency matrix: one slot serializes; two slots give ~1.45x at two clients; four slots are rejected. | No linear scaling; temperature telemetry unavailable; production endurance and routing estimates remain open. |
 | F-045 worker durability | **fixed (bounded)** | SQLite job store persists payload/status/result; a fresh worker re-schedules queued jobs and marks running jobs interrupted; a killed child process was recovered as interrupted; `hard_timeout_s` terminates a spawned child and returns stateful-runner updates; CLI wiring is opt-in and config-tested. | Single worker per store; queued recovery is at-least-once; hard timeout requires a picklable runner; no live real-model learning run. |
 | F-046 runtime scope | **fixed (bounded)** | EXP-016: 4 concurrent clients, 80 mixed turns, 0 failures; one forced `tony:7b` reload (22.41 s wall / 9.11 s Ollama load); fresh-process restart found both a verified arithmetic record and a user-provided memory record (write PID 1552, verify PID 12164); client RSS max 97 MB; system RAM max 83.9%. | Closed only for client lifecycle, DB persistence, model unload/reload and application restart. Production endurance, thermal telemetry and parallel throughput remain separate; see F-047. |
@@ -231,11 +231,12 @@ The previous sequence (green CI -> measured module costs and a sustained-load ru
 benchmark -> background worker) is now implemented as EXP-015, EXP-014, EXP-016, EXP-017 and
 `learning/worker.py`. EXP-016 closes the bounded F-046 scope; EXP-017 measures NumPy consolidation
 persistence and retention; EXP-018 selects gpa3 as the general tutor and tony:7b as the privacy
-profile; EXP-018b keeps agentic3 as an agentic-benchmark candidate; F-045 is fixed for durable jobs
+profile; EXP-018b/EXP-020 leave agentic3 evaluated but unpromoted; F-045 is fixed for durable jobs
 and hard timeout; EXP-019 fixes F-047 for explicit bounded concurrency without claiming linear
-scaling. The next honest steps are: an agentic/tool-use benchmark for `tony:7b-agentic3` ->
-independently authored benchmark/real usage data (F-044) -> an ASHURA-trained language-model adapter
-experiment (F-043, currently blocked by hardware and corpus).
+scaling; EXP-020 finds no tool-use advantage for `tony:7b-agentic3` over gpa3 and keeps gpa3. The
+next honest steps are: independently authored benchmark/real usage data (F-044) -> an
+ASHURA-trained language-model adapter experiment (F-043, currently blocked by hardware and corpus)
+-> a larger tool-use suite only if real usage exposes a gap.
 The AMA, adaptive-memory and BrainSim claims should stay conservative until their data exists.
 
 ## 9. Deliberately not doing now
