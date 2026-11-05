@@ -16,8 +16,10 @@ from evaluation.ngr import NGRPolicy, evaluate
     {"target": ""},
 ])
 def test_ngr_rejects_invalid_policy_thresholds(kwargs):
+    target = kwargs.get("target", "target")
+    options = {key: value for key, value in kwargs.items() if key != "target"}
     with pytest.raises(ValueError):
-        NGRPolicy("target", **kwargs)
+        NGRPolicy(target, **options)
 
 
 def test_nan_epsilon_cannot_disable_non_regression():
