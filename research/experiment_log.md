@@ -1,7 +1,9 @@
 # Experiment log
 
-**Hardware for ALL entries below:** a sandbox container (1 vCPU, ~4 GB RAM, Linux, Python 3.12, SQLite 3.45.1).
-This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers are only relative; Phase 0 requires re-running on the target machine.
+**Hardware:** early entries below were measured in a sandbox container (1 vCPU, ~4 GB RAM, Linux,
+Python 3.12, SQLite 3.45.1), not the target laptop (i7-1165G7 / 16 GB), so their latency and RAM
+numbers are only relative. EXP-014 and EXP-015 were run on the target Windows laptop and record
+their own environment. Phase 0 real-model numbers remain scoped to the machine named in their entry.
 
 ---
 ## EXP-001 - AMA vs store-everything
@@ -259,3 +261,26 @@ This is **not** the target laptop (i7-1165G7 / 16 GB). Latency and RAM numbers a
 - **Unexpected measurement result:** the stable baseline already scored 1.00 on the corrected held-out items in seed 3 and 0.50 in seeds 1/4 (mean 0.40) through accidental associative recall. Seed 3 was therefore rejected for zero target gain, not regression. The two-item held-out set is too small for a stable estimate.
 - **Supports:** the control flow is connected end to end, the controller can attribute a correction to the previous trace, CAGE refuses unattributable failures, and NGR remains the only promotion path.
 - **Does not support:** language-model fine-tuning, general corrections, or long-term consolidation. Exact arithmetic (`+ - * / %`, integer powers, perfect-square roots) is the only independently verified correction type; the CLI does not configure the loop automatically. Details: `research/phase3_learning.md`, `experiments/learning/loop.json`.
+
+---
+## EXP-014 - Larger frozen verified-correction benchmark (F-044, 2026-11-05)
+- **Setup:** frozen `experiments/learning/corrections_v1.json`; 10 arithmetic correction cases (multiplication, addition, subtraction, division, integer power, modulo, perfect-square root, decimal, parentheses), 3 held-out wordings per case, 20-word old capability with train/held-out split, dim 128, seeds 0-4, two arms and 5 control probes. Each case gets a fresh stable checkpoint trained on the old capability only. `experiments/learning/correction_bench.py`.
+- **Corpus check:** every arithmetic correction is re-evaluated by `skills.arithmetic.exact` before the run; a mismatch would abort the benchmark. This is integrity checking, not independent authorship.
+- **Verified + stable + replay:** 50/50 promoted (95% Wilson CI 0.929-1.000); target score 1.00, old score 1.00, stable target 0.00, 0 accidental stable hits; 150/150 held-out wording predictions correct; fast recall correct 50/50.
+- **Verified + fresh + no replay:** 0/50 promoted; target 1.00, old 0.029 mean; stable pointer unchanged in 50/50.
+- **Controls:** false arithmetic, unverified fact, irrational root, verified-but-no-trace and verified-but-unattributable were refused 25/25 with 0 fast updates, 0 new candidates and 0 stable changes.
+- **Supports:** the refusal gates remain intact over a broader arithmetic set; replay + stable initialization preserves the old capability while the candidate learns each correction; NGR remains the only promotion path.
+- **Does not support:** generalisation to unseen distributions, independent task difficulty, language understanding or language-model learning. The corpus is author-written and the held-out wordings share the expression tokens with the trained key, so 150/150 is an easy paraphrase check, not a natural-language benchmark. The 50/50 promotion result must not be read as a capability estimate.
+- **Decision:** keep as the larger frozen non-regression/control-flow benchmark. F-044 remains partly open because independent authorship and an independent distribution are still missing. Details: `experiments/learning/correction_bench.json`, `research/phase3_learning.md`.
+
+---
+## EXP-015 - Measured module costs and sustained load (P61-P63/P69, 2026-11-05)
+- **Environment:** Windows 11, Python 3.13.14, Intel64 Family 6 Model 140 (i7-1165G7 class), 8 logical CPUs, single process, no concurrent clients. `experiments/runtime/load_bench.py`.
+- **Exact arithmetic:** slowest evaluate p50 0.015 ms; Decimal(60) cross-check p50 0.007-0.012 ms across small/large multiplication, fraction chain, sqrt, modulo, power and decimal cases.
+- **Memory:** 200 synthetic verified records; AMA admission p50 1.15 ms / p95 1.57 ms; FTS5 search p50 0.25 ms; AMA retrieve p50 0.30 ms; 420 KB database; process RSS 41.4 -> 42.8 MB during the memory run.
+- **Controller:** `EchoModel` stub, 40 arithmetic + 20 general turns; arithmetic p50 ~1.1 ms / p95 ~2.0 ms, general p50 ~1.4 ms / p95 ~1.8 ms; 40/40 arithmetic turns exact-verified, 0 errors.
+- **Learning loop and worker:** full NumPy correction job p50 ~22 ms / p95 ~26 ms, 5/5 promoted. Worker submit p50 0.004 ms; 100 no-op jobs drained in ~2 ms. The no-op job measures queue/thread overhead only, not training.
+- **Sustained load:** 300 turns, 240 arithmetic; p50 ~1.2 ms / p95 ~1.7 ms / p99 ~2.5 ms, 0 errors, 240/240 arithmetic steps ok, ~770 turns/s, CPU utilisation 0.56, peak RSS ~93 MB (+~1 MB), DB 548 KB, first/last-quartile p50 ~1.1 / ~1.3 ms.
+- **Supports:** exact arithmetic, FTS5 retrieval, AMA admission and the NumPy loop are milliseconds-scale on this laptop; the sustained synthetic mix showed no error or large memory/database growth.
+- **Does not support:** `tony:7b` latency or sustained load (not loaded), concurrency, restart recovery, model reload, production database growth, or non-language module costs under real traffic. The controller uses a deterministic echo stub; the generic-task path is not a language-model measurement. Full data: `experiments/runtime/results.json`.
+- **Decision:** record these as the first measured non-language costs and keep the language row from `config/module_costs.json` separate. Do not replace routing estimates without a routing experiment.

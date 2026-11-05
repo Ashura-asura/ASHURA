@@ -1,0 +1,134 @@
+{
+  "version": "corrections-v1",
+  "frozen_on": "2026-11-05",
+  "provenance": "Author-written synthetic corrections. Every arithmetic assertion is independently re-checked by skills.arithmetic.exact when the benchmark loads; this is not an independently authored task set.",
+  "verified_cases": [
+    {
+      "id": "mul-6x7",
+      "task": "what is 6*7",
+      "correction": "actually, 6*7 = 42",
+      "key": "6*7",
+      "answer": "42",
+      "wrong_answer": "43",
+      "heldout": ["what is 6*7", "please compute 6*7", "calculate the value of 6*7"]
+    },
+    {
+      "id": "add-9+8",
+      "task": "what is 9+8",
+      "correction": "actually, 9+8 = 17",
+      "key": "9+8",
+      "answer": "17",
+      "wrong_answer": "18",
+      "heldout": ["what is 9+8", "please compute 9+8", "calculate the value of 9+8"]
+    },
+    {
+      "id": "sub-50-8",
+      "task": "what is 50-8",
+      "correction": "actually, 50-8 = 42",
+      "key": "50-8",
+      "answer": "42",
+      "wrong_answer": "41",
+      "heldout": ["what is 50-8", "please compute 50-8", "calculate the value of 50-8"]
+    },
+    {
+      "id": "div-100/8",
+      "task": "what is 100/8",
+      "correction": "actually, 100/8 = 12.5",
+      "key": "100/8",
+      "answer": "25/2",
+      "wrong_answer": "12",
+      "heldout": ["what is 100/8", "please compute 100/8", "calculate the value of 100/8"]
+    },
+    {
+      "id": "pow-2^10",
+      "task": "what is 2^10",
+      "correction": "actually, 2^10 = 1024",
+      "key": "2^10",
+      "answer": "1024",
+      "wrong_answer": "1023",
+      "heldout": ["what is 2^10", "please compute 2^10", "calculate the value of 2^10"]
+    },
+    {
+      "id": "mod-10%3",
+      "task": "what is 10%3",
+      "correction": "actually, 10%3 = 1",
+      "key": "10%3",
+      "answer": "1",
+      "wrong_answer": "3",
+      "heldout": ["what is 10%3", "please compute 10%3", "calculate the value of 10%3"]
+    },
+    {
+      "id": "sqrt-144",
+      "task": "what is sqrt(144)",
+      "correction": "actually, sqrt(144) = 12",
+      "key": "sqrt(144)",
+      "answer": "12",
+      "wrong_answer": "14",
+      "heldout": ["what is sqrt(144)", "please compute sqrt(144)", "calculate the value of sqrt(144)"]
+    },
+    {
+      "id": "decimal-3.5+1.5",
+      "task": "what is 3.5+1.5",
+      "correction": "actually, 3.5+1.5 = 5",
+      "key": "3.5+1.5",
+      "answer": "5",
+      "wrong_answer": "4",
+      "heldout": ["what is 3.5+1.5", "please compute 3.5+1.5", "calculate the value of 3.5+1.5"]
+    },
+    {
+      "id": "mul-7x8",
+      "task": "what is 7*8",
+      "correction": "actually, 7*8 = 56",
+      "key": "7*8",
+      "answer": "56",
+      "wrong_answer": "55",
+      "heldout": ["what is 7*8", "please compute 7*8", "calculate the value of 7*8"]
+    },
+    {
+      "id": "paren-(2+3)*4",
+      "task": "what is (2+3)*4",
+      "correction": "actually, (2+3)*4 = 20",
+      "key": "(2+3)*4",
+      "answer": "20",
+      "wrong_answer": "23",
+      "heldout": ["what is (2+3)*4", "please compute (2+3)*4", "calculate the value of (2+3)*4"]
+    }
+  ],
+  "controls": [
+    {
+      "id": "false-arithmetic",
+      "correction": "actually, 6*7 = 43",
+      "state": "failed",
+      "stage": "refused_unverified",
+      "trace": "normal"
+    },
+    {
+      "id": "unverified-fact",
+      "correction": "actually, the project p12 code is 9999",
+      "state": "unavailable",
+      "stage": "refused_unverified",
+      "trace": "normal"
+    },
+    {
+      "id": "unchecked-irrational",
+      "correction": "actually, sqrt(2) = 1.41421356",
+      "state": "unavailable",
+      "stage": "refused_unverified",
+      "trace": "normal"
+    },
+    {
+      "id": "verified-but-no-trace",
+      "correction": "actually, 6*7 = 42",
+      "state": "verified",
+      "stage": "refused_no_trace",
+      "trace": "none"
+    },
+    {
+      "id": "verified-but-unattributable",
+      "correction": "actually, 6*7 = 42",
+      "state": "verified",
+      "stage": "refused_policy",
+      "trace": "unattributable"
+    }
+  ]
+}

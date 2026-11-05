@@ -1,0 +1,4928 @@
+{
+  "experiment": "EXP-014",
+  "corpus": {
+    "version": "corrections-v1",
+    "frozen_on": "2026-11-05",
+    "provenance": "Author-written synthetic corrections. Every arithmetic assertion is independently re-checked by skills.arithmetic.exact when the benchmark loads; this is not an independently authored task set.",
+    "verified_cases": 10,
+    "control_probes": 5,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "n_old": 20,
+    "dim": 128
+  },
+  "arms": {
+    "verified_replay": {
+      "summary": {
+        "runs": 50,
+        "stages": {
+          "promoted": 50
+        },
+        "promotions": 50,
+        "promotion_rate": 1.0,
+        "promotion_rate_ci95": [
+          0.9286499658256813,
+          1.0
+        ],
+        "fast_recall_correct": 50,
+        "old_mean": 1.0,
+        "target_mean": 1.0,
+        "stable_old_mean": 1.0,
+        "stable_target_mean": 0.0,
+        "accidental_stable_hits": 0,
+        "heldout_correct": 150,
+        "heldout_total": 150,
+        "heldout_accuracy": 1.0,
+        "new_candidates": 50,
+        "stable_changed": 50,
+        "by_case": {
+          "add-9+8": {
+            "runs": 5,
+            "promotions": 5,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "decimal-3.5+1.5": {
+            "runs": 5,
+            "promotions": 5,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "div-100/8": {
+            "runs": 5,
+            "promotions": 5,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "mod-10%3": {
+            "runs": 5,
+            "promotions": 5,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "mul-6x7": {
+            "runs": 5,
+            "promotions": 5,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "mul-7x8": {
+            "runs": 5,
+            "promotions": 5,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "paren-(2+3)*4": {
+            "runs": 5,
+            "promotions": 5,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "pow-2^10": {
+            "runs": 5,
+            "promotions": 5,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "sqrt-144": {
+            "runs": 5,
+            "promotions": 5,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "sub-50-8": {
+            "runs": 5,
+            "promotions": 5,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          }
+        }
+      },
+      "runs": [
+        {
+          "case": "mul-6x7",
+          "seed": 0,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 6*7",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "add-9+8",
+          "seed": 0,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "17",
+          "fast_recall_after": "17",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "please compute 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "calculate the value of 9+8",
+              "expected": "17",
+              "predicted": "17"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "sub-50-8",
+          "seed": 0,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 50-8",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "div-100/8",
+          "seed": 0,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "25/2",
+          "fast_recall_after": "25/2",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "please compute 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "calculate the value of 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "pow-2^10",
+          "seed": 0,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1024",
+          "fast_recall_after": "1024",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "please compute 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "calculate the value of 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mod-10%3",
+          "seed": 0,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1",
+          "fast_recall_after": "1",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "please compute 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "calculate the value of 10%3",
+              "expected": "1",
+              "predicted": "1"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "sqrt-144",
+          "seed": 0,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "12",
+          "fast_recall_after": "12",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "please compute sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "calculate the value of sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "decimal-3.5+1.5",
+          "seed": 0,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "5",
+          "fast_recall_after": "5",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "please compute 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "calculate the value of 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mul-7x8",
+          "seed": 0,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "56",
+          "fast_recall_after": "56",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "please compute 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "calculate the value of 7*8",
+              "expected": "56",
+              "predicted": "56"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "paren-(2+3)*4",
+          "seed": 0,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "20",
+          "fast_recall_after": "20",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "please compute (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "calculate the value of (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mul-6x7",
+          "seed": 1,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 6*7",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "add-9+8",
+          "seed": 1,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "17",
+          "fast_recall_after": "17",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "please compute 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "calculate the value of 9+8",
+              "expected": "17",
+              "predicted": "17"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "sub-50-8",
+          "seed": 1,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 50-8",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "div-100/8",
+          "seed": 1,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "25/2",
+          "fast_recall_after": "25/2",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "please compute 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "calculate the value of 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "pow-2^10",
+          "seed": 1,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1024",
+          "fast_recall_after": "1024",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "please compute 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "calculate the value of 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mod-10%3",
+          "seed": 1,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1",
+          "fast_recall_after": "1",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "please compute 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "calculate the value of 10%3",
+              "expected": "1",
+              "predicted": "1"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "sqrt-144",
+          "seed": 1,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "12",
+          "fast_recall_after": "12",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "please compute sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "calculate the value of sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "decimal-3.5+1.5",
+          "seed": 1,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "5",
+          "fast_recall_after": "5",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "please compute 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "calculate the value of 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mul-7x8",
+          "seed": 1,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "56",
+          "fast_recall_after": "56",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "please compute 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "calculate the value of 7*8",
+              "expected": "56",
+              "predicted": "56"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "paren-(2+3)*4",
+          "seed": 1,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "20",
+          "fast_recall_after": "20",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "please compute (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "calculate the value of (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mul-6x7",
+          "seed": 2,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 6*7",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "add-9+8",
+          "seed": 2,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "17",
+          "fast_recall_after": "17",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "please compute 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "calculate the value of 9+8",
+              "expected": "17",
+              "predicted": "17"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "sub-50-8",
+          "seed": 2,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 50-8",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "div-100/8",
+          "seed": 2,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "25/2",
+          "fast_recall_after": "25/2",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "please compute 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "calculate the value of 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "pow-2^10",
+          "seed": 2,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1024",
+          "fast_recall_after": "1024",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "please compute 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "calculate the value of 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mod-10%3",
+          "seed": 2,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1",
+          "fast_recall_after": "1",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "please compute 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "calculate the value of 10%3",
+              "expected": "1",
+              "predicted": "1"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "sqrt-144",
+          "seed": 2,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "12",
+          "fast_recall_after": "12",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "please compute sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "calculate the value of sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "decimal-3.5+1.5",
+          "seed": 2,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "5",
+          "fast_recall_after": "5",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "please compute 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "calculate the value of 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mul-7x8",
+          "seed": 2,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "56",
+          "fast_recall_after": "56",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "please compute 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "calculate the value of 7*8",
+              "expected": "56",
+              "predicted": "56"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "paren-(2+3)*4",
+          "seed": 2,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "20",
+          "fast_recall_after": "20",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "please compute (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "calculate the value of (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mul-6x7",
+          "seed": 3,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 6*7",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "add-9+8",
+          "seed": 3,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "17",
+          "fast_recall_after": "17",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "please compute 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "calculate the value of 9+8",
+              "expected": "17",
+              "predicted": "17"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "sub-50-8",
+          "seed": 3,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 50-8",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "div-100/8",
+          "seed": 3,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "25/2",
+          "fast_recall_after": "25/2",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "please compute 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "calculate the value of 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "pow-2^10",
+          "seed": 3,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1024",
+          "fast_recall_after": "1024",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "please compute 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "calculate the value of 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mod-10%3",
+          "seed": 3,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1",
+          "fast_recall_after": "1",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "please compute 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "calculate the value of 10%3",
+              "expected": "1",
+              "predicted": "1"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "sqrt-144",
+          "seed": 3,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "12",
+          "fast_recall_after": "12",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "please compute sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "calculate the value of sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "decimal-3.5+1.5",
+          "seed": 3,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "5",
+          "fast_recall_after": "5",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "please compute 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "calculate the value of 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mul-7x8",
+          "seed": 3,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "56",
+          "fast_recall_after": "56",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "please compute 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "calculate the value of 7*8",
+              "expected": "56",
+              "predicted": "56"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "paren-(2+3)*4",
+          "seed": 3,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "20",
+          "fast_recall_after": "20",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "please compute (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "calculate the value of (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mul-6x7",
+          "seed": 4,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 6*7",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "add-9+8",
+          "seed": 4,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "17",
+          "fast_recall_after": "17",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "please compute 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "calculate the value of 9+8",
+              "expected": "17",
+              "predicted": "17"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "sub-50-8",
+          "seed": 4,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 50-8",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "div-100/8",
+          "seed": 4,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "25/2",
+          "fast_recall_after": "25/2",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "please compute 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "calculate the value of 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "pow-2^10",
+          "seed": 4,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1024",
+          "fast_recall_after": "1024",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "please compute 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "calculate the value of 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mod-10%3",
+          "seed": 4,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1",
+          "fast_recall_after": "1",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "please compute 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "calculate the value of 10%3",
+              "expected": "1",
+              "predicted": "1"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "sqrt-144",
+          "seed": 4,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "12",
+          "fast_recall_after": "12",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "please compute sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "calculate the value of sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "decimal-3.5+1.5",
+          "seed": 4,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "5",
+          "fast_recall_after": "5",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "please compute 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "calculate the value of 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "mul-7x8",
+          "seed": 4,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "56",
+          "fast_recall_after": "56",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "please compute 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "calculate the value of 7*8",
+              "expected": "56",
+              "predicted": "56"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        },
+        {
+          "case": "paren-(2+3)*4",
+          "seed": 4,
+          "initialization": "stable",
+          "replay": true,
+          "stage": "promoted",
+          "promoted": true,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "20",
+          "fast_recall_after": "20",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": true,
+          "old": 1.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 2,
+          "heldout_predictions": [
+            {
+              "key": "what is (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "please compute (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "calculate the value of (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "all promotion conditions met"
+          ]
+        }
+      ]
+    },
+    "verified_no_replay": {
+      "summary": {
+        "runs": 50,
+        "stages": {
+          "candidate_rejected": 50
+        },
+        "promotions": 0,
+        "promotion_rate": 0.0,
+        "promotion_rate_ci95": [
+          0.0,
+          0.07135003417431873
+        ],
+        "fast_recall_correct": 50,
+        "old_mean": 0.029,
+        "target_mean": 1.0,
+        "stable_old_mean": 1.0,
+        "stable_target_mean": 0.0,
+        "accidental_stable_hits": 0,
+        "heldout_correct": 150,
+        "heldout_total": 150,
+        "heldout_accuracy": 1.0,
+        "new_candidates": 50,
+        "stable_changed": 0,
+        "by_case": {
+          "add-9+8": {
+            "runs": 5,
+            "promotions": 0,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "decimal-3.5+1.5": {
+            "runs": 5,
+            "promotions": 0,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "div-100/8": {
+            "runs": 5,
+            "promotions": 0,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "mod-10%3": {
+            "runs": 5,
+            "promotions": 0,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "mul-6x7": {
+            "runs": 5,
+            "promotions": 0,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "mul-7x8": {
+            "runs": 5,
+            "promotions": 0,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "paren-(2+3)*4": {
+            "runs": 5,
+            "promotions": 0,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "pow-2^10": {
+            "runs": 5,
+            "promotions": 0,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "sqrt-144": {
+            "runs": 5,
+            "promotions": 0,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          },
+          "sub-50-8": {
+            "runs": 5,
+            "promotions": 0,
+            "target_mean": 1.0,
+            "stable_target_mean": 0.0,
+            "accidental_stable_hits": 0,
+            "heldout_correct": 15,
+            "heldout_total": 15
+          }
+        }
+      },
+      "runs": [
+        {
+          "case": "mul-6x7",
+          "seed": 0,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 6*7",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "add-9+8",
+          "seed": 0,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "17",
+          "fast_recall_after": "17",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "please compute 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "calculate the value of 9+8",
+              "expected": "17",
+              "predicted": "17"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "sub-50-8",
+          "seed": 0,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 50-8",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "div-100/8",
+          "seed": 0,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "25/2",
+          "fast_recall_after": "25/2",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "please compute 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "calculate the value of 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "pow-2^10",
+          "seed": 0,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1024",
+          "fast_recall_after": "1024",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "please compute 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "calculate the value of 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mod-10%3",
+          "seed": 0,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1",
+          "fast_recall_after": "1",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "please compute 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "calculate the value of 10%3",
+              "expected": "1",
+              "predicted": "1"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "sqrt-144",
+          "seed": 0,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "12",
+          "fast_recall_after": "12",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "please compute sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "calculate the value of sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "decimal-3.5+1.5",
+          "seed": 0,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "5",
+          "fast_recall_after": "5",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "please compute 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "calculate the value of 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mul-7x8",
+          "seed": 0,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "56",
+          "fast_recall_after": "56",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "please compute 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "calculate the value of 7*8",
+              "expected": "56",
+              "predicted": "56"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "paren-(2+3)*4",
+          "seed": 0,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "20",
+          "fast_recall_after": "20",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "please compute (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "calculate the value of (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mul-6x7",
+          "seed": 1,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 6*7",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "add-9+8",
+          "seed": 1,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "17",
+          "fast_recall_after": "17",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "please compute 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "calculate the value of 9+8",
+              "expected": "17",
+              "predicted": "17"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "sub-50-8",
+          "seed": 1,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 50-8",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "div-100/8",
+          "seed": 1,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "25/2",
+          "fast_recall_after": "25/2",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "please compute 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "calculate the value of 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "pow-2^10",
+          "seed": 1,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1024",
+          "fast_recall_after": "1024",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "please compute 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "calculate the value of 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mod-10%3",
+          "seed": 1,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1",
+          "fast_recall_after": "1",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "please compute 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "calculate the value of 10%3",
+              "expected": "1",
+              "predicted": "1"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "sqrt-144",
+          "seed": 1,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "12",
+          "fast_recall_after": "12",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "please compute sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "calculate the value of sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "decimal-3.5+1.5",
+          "seed": 1,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "5",
+          "fast_recall_after": "5",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "please compute 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "calculate the value of 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mul-7x8",
+          "seed": 1,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "56",
+          "fast_recall_after": "56",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "please compute 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "calculate the value of 7*8",
+              "expected": "56",
+              "predicted": "56"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "paren-(2+3)*4",
+          "seed": 1,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "20",
+          "fast_recall_after": "20",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "please compute (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "calculate the value of (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mul-6x7",
+          "seed": 2,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 6*7",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "add-9+8",
+          "seed": 2,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "17",
+          "fast_recall_after": "17",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "please compute 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "calculate the value of 9+8",
+              "expected": "17",
+              "predicted": "17"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "sub-50-8",
+          "seed": 2,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 50-8",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "div-100/8",
+          "seed": 2,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "25/2",
+          "fast_recall_after": "25/2",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "please compute 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "calculate the value of 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "pow-2^10",
+          "seed": 2,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1024",
+          "fast_recall_after": "1024",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "please compute 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "calculate the value of 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mod-10%3",
+          "seed": 2,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1",
+          "fast_recall_after": "1",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "please compute 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "calculate the value of 10%3",
+              "expected": "1",
+              "predicted": "1"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "sqrt-144",
+          "seed": 2,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "12",
+          "fast_recall_after": "12",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "please compute sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "calculate the value of sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "decimal-3.5+1.5",
+          "seed": 2,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "5",
+          "fast_recall_after": "5",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "please compute 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "calculate the value of 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mul-7x8",
+          "seed": 2,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "56",
+          "fast_recall_after": "56",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "please compute 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "calculate the value of 7*8",
+              "expected": "56",
+              "predicted": "56"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "paren-(2+3)*4",
+          "seed": 2,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "20",
+          "fast_recall_after": "20",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "please compute (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "calculate the value of (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mul-6x7",
+          "seed": 3,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 6*7",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "add-9+8",
+          "seed": 3,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "17",
+          "fast_recall_after": "17",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "please compute 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "calculate the value of 9+8",
+              "expected": "17",
+              "predicted": "17"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "sub-50-8",
+          "seed": 3,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 50-8",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "div-100/8",
+          "seed": 3,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "25/2",
+          "fast_recall_after": "25/2",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "please compute 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "calculate the value of 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "pow-2^10",
+          "seed": 3,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1024",
+          "fast_recall_after": "1024",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "please compute 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "calculate the value of 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mod-10%3",
+          "seed": 3,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1",
+          "fast_recall_after": "1",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "please compute 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "calculate the value of 10%3",
+              "expected": "1",
+              "predicted": "1"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "sqrt-144",
+          "seed": 3,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "12",
+          "fast_recall_after": "12",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "please compute sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "calculate the value of sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "decimal-3.5+1.5",
+          "seed": 3,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "5",
+          "fast_recall_after": "5",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "please compute 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "calculate the value of 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mul-7x8",
+          "seed": 3,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "56",
+          "fast_recall_after": "56",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "please compute 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "calculate the value of 7*8",
+              "expected": "56",
+              "predicted": "56"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "paren-(2+3)*4",
+          "seed": 3,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "20",
+          "fast_recall_after": "20",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "please compute (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "calculate the value of (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mul-6x7",
+          "seed": 4,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 6*7",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 6*7",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "add-9+8",
+          "seed": 4,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "17",
+          "fast_recall_after": "17",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "please compute 9+8",
+              "expected": "17",
+              "predicted": "17"
+            },
+            {
+              "key": "calculate the value of 9+8",
+              "expected": "17",
+              "predicted": "17"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "sub-50-8",
+          "seed": 4,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "42",
+          "fast_recall_after": "42",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "please compute 50-8",
+              "expected": "42",
+              "predicted": "42"
+            },
+            {
+              "key": "calculate the value of 50-8",
+              "expected": "42",
+              "predicted": "42"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "div-100/8",
+          "seed": 4,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "25/2",
+          "fast_recall_after": "25/2",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "please compute 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            },
+            {
+              "key": "calculate the value of 100/8",
+              "expected": "25/2",
+              "predicted": "25/2"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "pow-2^10",
+          "seed": 4,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1024",
+          "fast_recall_after": "1024",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "please compute 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            },
+            {
+              "key": "calculate the value of 2^10",
+              "expected": "1024",
+              "predicted": "1024"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mod-10%3",
+          "seed": 4,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "1",
+          "fast_recall_after": "1",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "please compute 10%3",
+              "expected": "1",
+              "predicted": "1"
+            },
+            {
+              "key": "calculate the value of 10%3",
+              "expected": "1",
+              "predicted": "1"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "sqrt-144",
+          "seed": 4,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "12",
+          "fast_recall_after": "12",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.0,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "please compute sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            },
+            {
+              "key": "calculate the value of sqrt(144)",
+              "expected": "12",
+              "predicted": "12"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.000 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "decimal-3.5+1.5",
+          "seed": 4,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "5",
+          "fast_recall_after": "5",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "please compute 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            },
+            {
+              "key": "calculate the value of 3.5+1.5",
+              "expected": "5",
+              "predicted": "5"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "mul-7x8",
+          "seed": 4,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "56",
+          "fast_recall_after": "56",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "please compute 7*8",
+              "expected": "56",
+              "predicted": "56"
+            },
+            {
+              "key": "calculate the value of 7*8",
+              "expected": "56",
+              "predicted": "56"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        },
+        {
+          "case": "paren-(2+3)*4",
+          "seed": 4,
+          "initialization": "fresh",
+          "replay": false,
+          "stage": "candidate_rejected",
+          "promoted": false,
+          "correction_state": "verified",
+          "attributed_module": "language",
+          "expected_answer": "20",
+          "fast_recall_after": "20",
+          "fast_delta_norm": 0.6,
+          "new_candidates": 1,
+          "stable_changed": false,
+          "old": 0.05,
+          "corrected": 1.0,
+          "stable_old": 1.0,
+          "stable_corrected": 0.0,
+          "train_n": 1,
+          "heldout_predictions": [
+            {
+              "key": "what is (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "please compute (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            },
+            {
+              "key": "calculate the value of (2+3)*4",
+              "expected": "20",
+              "predicted": "20"
+            }
+          ],
+          "heldout_correct": 3,
+          "heldout_total": 3,
+          "reasons": [
+            "regression on old: 1.000 -> 0.050 (eps 0.02)",
+            "stable checkpoint unchanged; candidate retained for inspection"
+          ]
+        }
+      ]
+    }
+  },
+  "controls": {
+    "summary": {
+      "runs": 25,
+      "matched": 25,
+      "all_refused_without_update": true,
+      "new_candidates": 0,
+      "stable_changes": 0,
+      "fast_updates": 0
+    },
+    "runs": [
+      {
+        "control": "false-arithmetic",
+        "seed": 0,
+        "expected_state": "failed",
+        "expected_stage": "refused_unverified",
+        "correction_state": "failed",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "unverified-fact",
+        "seed": 0,
+        "expected_state": "unavailable",
+        "expected_stage": "refused_unverified",
+        "correction_state": "unavailable",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "unchecked-irrational",
+        "seed": 0,
+        "expected_state": "unavailable",
+        "expected_stage": "refused_unverified",
+        "correction_state": "unavailable",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "verified-but-no-trace",
+        "seed": 0,
+        "expected_state": "verified",
+        "expected_stage": "refused_no_trace",
+        "correction_state": "verified",
+        "stage": "refused_no_trace",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "no execution trace to attribute; a verified fact alone does not identify a failing component"
+        ]
+      },
+      {
+        "control": "verified-but-unattributable",
+        "seed": 0,
+        "expected_state": "verified",
+        "expected_stage": "refused_policy",
+        "correction_state": "verified",
+        "stage": "refused_policy",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "no responsible component was identified"
+        ]
+      },
+      {
+        "control": "false-arithmetic",
+        "seed": 1,
+        "expected_state": "failed",
+        "expected_stage": "refused_unverified",
+        "correction_state": "failed",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "unverified-fact",
+        "seed": 1,
+        "expected_state": "unavailable",
+        "expected_stage": "refused_unverified",
+        "correction_state": "unavailable",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "unchecked-irrational",
+        "seed": 1,
+        "expected_state": "unavailable",
+        "expected_stage": "refused_unverified",
+        "correction_state": "unavailable",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "verified-but-no-trace",
+        "seed": 1,
+        "expected_state": "verified",
+        "expected_stage": "refused_no_trace",
+        "correction_state": "verified",
+        "stage": "refused_no_trace",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "no execution trace to attribute; a verified fact alone does not identify a failing component"
+        ]
+      },
+      {
+        "control": "verified-but-unattributable",
+        "seed": 1,
+        "expected_state": "verified",
+        "expected_stage": "refused_policy",
+        "correction_state": "verified",
+        "stage": "refused_policy",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "no responsible component was identified"
+        ]
+      },
+      {
+        "control": "false-arithmetic",
+        "seed": 2,
+        "expected_state": "failed",
+        "expected_stage": "refused_unverified",
+        "correction_state": "failed",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "unverified-fact",
+        "seed": 2,
+        "expected_state": "unavailable",
+        "expected_stage": "refused_unverified",
+        "correction_state": "unavailable",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "unchecked-irrational",
+        "seed": 2,
+        "expected_state": "unavailable",
+        "expected_stage": "refused_unverified",
+        "correction_state": "unavailable",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "verified-but-no-trace",
+        "seed": 2,
+        "expected_state": "verified",
+        "expected_stage": "refused_no_trace",
+        "correction_state": "verified",
+        "stage": "refused_no_trace",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "no execution trace to attribute; a verified fact alone does not identify a failing component"
+        ]
+      },
+      {
+        "control": "verified-but-unattributable",
+        "seed": 2,
+        "expected_state": "verified",
+        "expected_stage": "refused_policy",
+        "correction_state": "verified",
+        "stage": "refused_policy",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "no responsible component was identified"
+        ]
+      },
+      {
+        "control": "false-arithmetic",
+        "seed": 3,
+        "expected_state": "failed",
+        "expected_stage": "refused_unverified",
+        "correction_state": "failed",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "unverified-fact",
+        "seed": 3,
+        "expected_state": "unavailable",
+        "expected_stage": "refused_unverified",
+        "correction_state": "unavailable",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "unchecked-irrational",
+        "seed": 3,
+        "expected_state": "unavailable",
+        "expected_stage": "refused_unverified",
+        "correction_state": "unavailable",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "verified-but-no-trace",
+        "seed": 3,
+        "expected_state": "verified",
+        "expected_stage": "refused_no_trace",
+        "correction_state": "verified",
+        "stage": "refused_no_trace",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "no execution trace to attribute; a verified fact alone does not identify a failing component"
+        ]
+      },
+      {
+        "control": "verified-but-unattributable",
+        "seed": 3,
+        "expected_state": "verified",
+        "expected_stage": "refused_policy",
+        "correction_state": "verified",
+        "stage": "refused_policy",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "no responsible component was identified"
+        ]
+      },
+      {
+        "control": "false-arithmetic",
+        "seed": 4,
+        "expected_state": "failed",
+        "expected_stage": "refused_unverified",
+        "correction_state": "failed",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "unverified-fact",
+        "seed": 4,
+        "expected_state": "unavailable",
+        "expected_stage": "refused_unverified",
+        "correction_state": "unavailable",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "unchecked-irrational",
+        "seed": 4,
+        "expected_state": "unavailable",
+        "expected_stage": "refused_unverified",
+        "correction_state": "unavailable",
+        "stage": "refused_unverified",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "correction is not independently verified; it is stored as a user assertion and cannot produce a training signal"
+        ]
+      },
+      {
+        "control": "verified-but-no-trace",
+        "seed": 4,
+        "expected_state": "verified",
+        "expected_stage": "refused_no_trace",
+        "correction_state": "verified",
+        "stage": "refused_no_trace",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "no execution trace to attribute; a verified fact alone does not identify a failing component"
+        ]
+      },
+      {
+        "control": "verified-but-unattributable",
+        "seed": 4,
+        "expected_state": "verified",
+        "expected_stage": "refused_policy",
+        "correction_state": "verified",
+        "stage": "refused_policy",
+        "promoted": false,
+        "fast_delta_norm": 0.0,
+        "new_candidates": 0,
+        "stable_changed": false,
+        "matched": true,
+        "reasons": [
+          "no responsible component was identified"
+        ]
+      }
+    ]
+  },
+  "limits": [
+    "author-written synthetic corpus, not an independently authored task set",
+    "exact arithmetic is the only independently verified correction type",
+    "the candidate trains the NumPy adaptive memory, not the language model",
+    "held-out wordings share the expression tokens with the correction key",
+    "a promotion proves only that this polynomial recall passed this frozen suite"
+  ]
+}

@@ -1,6 +1,6 @@
 # Open problems
 
-Status: 2026-11-05, after the Phase 3 follow-up. Test evidence: **256 ASHURA tests** and
+Status: 2026-11-05, after the Phase 3 follow-up. Test evidence: **264 ASHURA tests** and
 **46 BrainSim tests** pass on Windows/Python 3.13. This file records what is still not closed; it is
 not a roadmap promise and not a claim that the learning loop is complete. The canonical issue list
 with remedies remains `research/problem_register.md` (P01-P80, A01-A10); this file explains which
@@ -10,33 +10,38 @@ items the latest pass could and could not close.
 
 | Item | New status | Evidence | Remaining gap |
 |---|---|---|---|
-| F-041 controller trace retention | **fixed at controller level** | `Controller` keeps the last non-correction `ExecutionTrace`; verified corrections can invoke an opt-in `correction_loop` hook. Hook errors are captured in `Response.correction`, never raised. `test_controller_invokes_the_loop_on_the_previous_trace_after_a_correction`, `test_loop_hook_failure_never_breaks_the_reply` | The CLI does not configure the loop: there is no live replay corpus or stable checkpoint bootstrap. |
+| F-041 controller trace retention | **fixed at controller level; worker added** | `Controller` keeps the last non-correction `ExecutionTrace`; verified corrections can invoke an opt-in `correction_loop` hook. Hook errors are captured in `Response.correction`, never raised. `LearningWorker` can run the hook on a daemon thread and return a `job_id`; queue-full, cancellation, error capture and controller integration are tested. | The CLI does not configure the loop: there is no live replay corpus or stable checkpoint bootstrap. Jobs are in-process and lost on restart; no durable queue or hard timeout. |
 | F-042 / P47 arithmetic coverage | **partly fixed** | Decimal(60) now cross-checks `%`, integer `**` and perfect-square `sqrt`; corrections for these can become verified. Negative-modulo semantics are tested. | Irrational roots, non-integer powers, comparisons and all natural-language facts remain unverified. |
-| F-039 conflict review | **partly fixed** | `learning/review.py list|resolve`; superseding still requires an independently verified experience. Two tests. | No UI, notification, queue prioritisation or background worker; an open conflict can go unseen. |
-| F-044 multi-seed evidence | **partly fixed** | EXP-013 now runs seeds 0-4. Verified+replay promoted 4/5; no-replay rejected 5/5; refused arms refused 5/5. | The task is still tiny: 20 old facts and 2 corrected held-out wordings. The stable baseline produced accidental correct answers in 3/5 seeds. |
+| F-039 conflict review | **partly fixed** | `learning/review.py list / resolve`; superseding still requires an independently verified experience. Two tests. | No UI, notification, queue prioritisation or background worker; an open conflict can go unseen. |
+| F-044 correction benchmark evidence | **partly fixed** | EXP-013 runs seeds 0-4. EXP-014 adds 10 arithmetic forms x 3 held-out wordings x 5 seeds: 50/50 replay promotions, 0/50 no-replay promotions, 150/150 held-out predictions, 25/25 controls refused. | The corpus is still author-written; held-out wordings share expression tokens with the correction key; no independent distribution or independent author. |
 | F-006 arithmetic verifier | **partly fixed** | Same as F-042. | Same as F-042. |
+| P61-P63/P69 resources | **partly measured** | EXP-015 measures exact arithmetic, AMA/FTS5, controller (EchoModel), full NumPy loop and a 300-turn sustained mix: arithmetic p50 <= 0.015 ms, AMA admit p50 1.15 ms, FTS5 0.25 ms, loop ~22 ms, sustained p50 ~1.2 ms / p95 ~1.7 ms, ~1 MB RSS, 0 errors. | Single process, no `tony:7b`, no concurrency, no model reload or restart; routing estimates are unchanged. |
+| F-045 worker durability | **open** | In-process daemon thread, bounded queue, queued cancellation, error capture and drain-on-stop are implemented and tested. | Jobs are lost on process exit; running jobs cannot be force-killed; no durable store, hard timeout, restart test or CLI wiring. |
+| F-046 runtime scope | **open** | EXP-015 records single-process non-language costs and a synthetic sustained mix. | No `tony:7b` mixed load, concurrency, model reload or recovery; do not use as language-turn latency or routing evidence. |
 | P70-P72 CI | **fixed and green** | BrainSim installs the missing `psutil`; ASHURA matrix covers Python 3.11-3.13; BrainSim runs on Ubuntu and Windows. Actions run `41938499183` passed all eight jobs on commit `17568c3`. | Keep the matrix green; add real-model integration separately (P74). |
 
 The multi-seed EXP-013 result should be read with care. In seed 3 the stable memory already scored
 1.00 on the corrected held-out items (and 0.50 in seeds 1/4), so NGR correctly refused promotion for
 zero target gain. That is evidence about the noisy NumPy memory and the tiny held-out set, not
-evidence that the loop failed to attribute the correction. Full data:
-`experiments/learning/loop.json`, `research/phase3_learning.md`, EXP-013 in
-`research/experiment_log.md`.
+evidence that the loop failed to attribute the correction. EXP-014 expands the set and removes the
+accidental stable hits on its frozen cases, but it is still author-written. Full data:
+`experiments/learning/loop.json`, `experiments/learning/correction_bench.json`,
+`research/phase3_learning.md`, EXP-013/EXP-014 in `research/experiment_log.md`.
 
 ## 2. Phase 3 learning: still open
 
 ### 2.1 No production learning loop (F-041 residual, P66/P67)
 
-The controller can call a hook, but no shipped command configures one. A live session has no replay
-buffer of old verified material and no bootstrapped stable checkpoint, so there is nothing DREAM can
-safely train or compare against. Training also runs synchronously; a slow candidate build would
-block the answer path. This is not closable by wiring the existing experiment into the CLI without
-defining data retention, checkpoint lifecycle and a background worker.
+The controller can call a hook and `LearningWorker` can run it off the answer path, but no shipped
+command configures either one. A live session has no replay buffer of old verified material and no
+bootstrapped stable checkpoint, so there is nothing DREAM can safely train or compare against. The
+worker is an in-process daemon thread with a bounded queue: it captures job errors and cancels queued
+work, but it does not persist jobs, force-kill a running job, survive a restart or coordinate across
+processes.
 
 **What would close it:** a configured replay source, an initial independently evaluated stable
-checkpoint, a background job with cancellation/timeout, and a restart test showing the stable pointer
-and fast state behave as declared.
+checkpoint, a durable job store with a hard timeout/termination policy, and a restart test showing
+the stable pointer and fast state behave as declared.
 
 ### 2.2 Independent verification is narrow (F-042/P47)
 
@@ -59,15 +64,20 @@ instruction-tuning corpus. Local-only fine-tuning would require a smaller model 
 adapter run with a separate measured pipeline. `tony:7b` is the only model under consideration; no
 Qwen replacement is planned. Until then, EXP-013 must not be described as model self-improvement.
 
-### 2.4 EXP-013 is still a control-flow test (F-044)
+### 2.4 Correction benchmarks are larger but still author-written (F-044)
 
-Five seeds do not turn 20 synthetic facts and two corrected wordings into a capability benchmark.
-The stable baseline's accidental hits show that the evaluation set is too small to estimate whether a
-correction generalises. There are no confidence intervals and no independent task author.
+EXP-013's five seeds did not turn 20 synthetic facts and two corrected wordings into a capability
+benchmark; its stable baseline's accidental hits showed that the evaluation set was too small.
+EXP-014 now runs 10 arithmetic forms, 3 held-out wordings each and 5 seeds, plus five control
+probes. It promoted 50/50 replay runs, rejected 0/50 no-replay runs, predicted 150/150 held-out
+wordings and refused 25/25 controls. That is stronger non-regression evidence, but the corpus is
+still author-written, the held-out wordings share expression tokens with the correction key, and
+there is no independent distribution. The 50/50 promotion rate must not be read as a capability
+estimate.
 
-**What would close it:** a frozen, larger corrected-capability set (many held-out wordings and
-several arithmetic forms), a control probe that measures accidental stable hits, more seeds with
-reported intervals, and a task designed so memorising one key cannot pass.
+**What would close it:** an independently authored frozen set with non-overlapping wordings, a
+control probe that measures accidental stable hits on that set, more seeds with reported intervals,
+and tasks designed so memorising one key cannot pass.
 
 ### 2.5 Reviewer workflow is minimal (F-039/F-040)
 
@@ -133,15 +143,18 @@ Treat B2's missing recurrent advantage as a valid negative result, not a bug to 
 
 Not addressed by the Phase 3 follow-up:
 
-- **P61-P63:** many module costs are estimates; routing priorities are heuristic; sustained
-  CPU/RAM pressure and concurrency are not measured on the target laptop.
+- **P61-P63:** exact arithmetic, AMA/FTS5 and the NumPy loop now have measured single-process costs
+  (EXP-015), but the language row remains from the Ollama baseline, routing priorities are still
+  heuristic, and sustained CPU/RAM pressure with concurrency has not been measured. Do not swap the
+  routing estimates for EXP-015 numbers without a routing experiment.
 - **P64/P65:** semantic retrieval and the reasoning module are not built; the registry marks them
   unavailable. Do not advertise them.
-- **P67:** AMA runs synchronously; consolidation/training has no controlled background worker.
+- **P67:** `LearningWorker` now provides an opt-in bounded background queue with cancellation and
+  error capture, but jobs are in-process only, non-durable and not configured by the CLI.
 - **P68:** a failed language backend can still leave general questions unanswered; fallback must
   keep exact computation, retrieved evidence and generated answers distinct.
-- **P69:** no sustained-workload test for latency, peak RAM, database growth, model reload or
-  recovery.
+- **P69:** EXP-015 provides a 300-turn single-process sustained run (0 errors, ~1 MB RSS, 548 KB
+  DB), but there is still no real-model load, concurrency, model reload or restart-recovery test.
 - **P70-P74:** CI coverage and clean-install/reproducibility checks are incomplete (including
   Python 3.13 and Windows BrainSim); unit tests are not real-model correctness tests.
 - **P76-P80:** multiple specifications remain; checkpoint/experiment lifecycle, environment
@@ -161,20 +174,22 @@ At minimum, the register's section 10 tests still need to pass together, includi
 4. a rejected candidate leaves the stable checkpoint unchanged;
 5. contradictory evidence remains auditable and reaches a reviewer;
 6. restart preserves the declared fast/slow state policy;
-7. the response path survives a background training crash;
+7. the response path survives a background training error; a process-level crash/restart is not
+   covered by the in-process worker;
 8. old-task performance is measured after a real task switch, not just on a frozen replay set.
 
-Items 1-6 have targeted tests today. Items 7-8 and the larger independent evaluation do not.
+Items 1-6 have targeted tests today. Item 7 is covered at the job-error level but not at the
+process/restart level. Item 8 and the larger independent evaluation do not.
 
 ## 8. What is needed to close the rest
 
 | Remaining item | What is required | Dependency |
 |---|---|---|
 | P70-P73 CI | Done: workflow fix plus green Actions run `41938499183` on `17568c3` (8/8 jobs). | Keep it green; P74 (real-model integration) remains separate. |
-| F-041 production loop | A defined replay source, a bootstrapped stable checkpoint, a background worker with timeout/cancel, and restart tests. | Code + storage design; no new data. |
+| F-041 production loop | A defined replay source, a bootstrapped stable checkpoint, a durable background job store with hard timeout/cancel, CLI configuration and restart tests. | Code + storage design; no new data. |
 | F-042 arithmetic residual | Symbolic radicals or a rational-exponent policy with explicit domain/precision rules. Natural-language facts need a trusted local source. | Code/design for arithmetic; data/verifier for facts. |
 | F-039 reviewer workflow | UI or notification, queue prioritisation and an audit view. | Code; not required for learning safety. |
-| F-044 benchmark | A larger frozen corrected set, independently authored wordings, control probes for accidental stable hits, more seeds and confidence intervals. | Benchmark data; no model training. |
+| F-044 benchmark | An independently authored frozen corrected set, non-overlapping wordings, control probes for accidental stable hits, more seeds and confidence intervals. EXP-014 supplies size, controls and intervals but not independent authorship. | Benchmark data; no model training. |
 | F-035 AMA calibration | A realistic stream of useful, useless, repeated and contradictory unverified items. | Real usage data. |
 | F-036 task switches | A continual-learning benchmark with task boundaries and unknown switches, plus a method that actually retains old tasks. | Data + algorithm. |
 | F-037 adaptive advantage | A semantic/partial-cue task where the adaptive memory beats FTS5 under a measured protocol. | Data + a better encoder. |
@@ -184,21 +199,23 @@ Items 1-6 have targeted tests today. Items 7-8 and the larger independent evalua
 | F-014/F-015/P48 | A better local foundation or an accepted accuracy limit; no new Qwen model. | Hardware/scope decision. |
 | F-016/P55-P60 OCR | A labelled target-document corpus; CER/WER, field accuracy and confidence calibration. | Data. |
 | P30-P44 BrainSim | Harder temporal tasks, hidden task/need labels, partial observations, independent distributions and more seeds. | Separate code + data effort. |
-| P61-P63/P69 resources | Measured cold/warm costs for every module and a sustained-load run on the target laptop. | Runtime measurements; can be done now. |
+| P61-P63/P69 resources | EXP-015 measures the main non-language modules and a 300-turn sustained mix; still needed: `tony:7b` mixed load, concurrency, model reload and restart recovery. | Runtime measurements; partly done. |
 | P64/P65 modules | A semantic-retrieval and reasoning implementation that beats the current baseline before routing to it. | Algorithm + benchmark; do not advertise early. |
-| P67 background worker | Controlled asynchronous consolidation with lifecycle and failure handling. | Code. |
+| P67 background worker | In-process worker with queue bounds, cancellation and error capture is done; durable jobs, hard timeout, CLI wiring and restart tests remain. | Code + storage design. |
 | P76-P80 engineering | One canonical spec, checkpoint/experiment manifests, clean-install verification and backup/restore tests. | Code/docs; can be done incrementally. |
 | A04-A10 | Research programmes (hidden needs, segmentation, causal attribution, curriculum, self-preservation, forgetting). | Research; not a single patch. |
 
-The fastest path to a genuinely stronger prototype is: green CI -> measured module costs and a
-sustained-load run -> larger frozen EXP-013 benchmark -> background learning worker. The AMA,
-adaptive-memory and BrainSim claims should stay conservative until their data exists.
+The previous sequence (green CI -> measured module costs and a sustained-load run -> larger frozen
+benchmark -> background worker) is now implemented as EXP-015, EXP-014 and `learning/worker.py`.
+The next honest steps are: durable/restartable worker jobs and CLI configuration -> mixed
+`tony:7b` sustained load with concurrency -> independently authored benchmark/real usage data.
+The AMA, adaptive-memory and BrainSim claims should stay conservative until their data exists.
 
 ## 9. Deliberately not doing now
 
 - Do not replace FTS5 with a vector store because neural memory sounds advanced.
 - Do not enlarge the model or add external APIs before the local pipeline is reliable.
-- Do not tune the EXP-013 held-out set until every seed promotes.
+- Do not tune the EXP-013/EXP-014 held-out sets until every seed promotes.
 - Do not describe the NumPy candidate as language-model learning, continual learning or
   self-improvement.
 - Do not claim consciousness, emotion or self-awareness from routing scores or resource rules.

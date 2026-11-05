@@ -7,16 +7,17 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 Phase 1 trust repair (P01–P14), Phase 2 memory reliability (P15–P29) and Phase 3 verified-correction
 loop (P07/P75/A01–A03) implemented and tested; local OCR and a HARN arithmetic candidate are
 integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
-subproject. **256 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
+subproject. **264 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
 experimental and out of the response path. BrainSim is not imported by ASHURA. The learning loop is
-**not** complete: it is an opt-in controller hook, only exact arithmetic corrections are
-independently verified, and the candidate is the NumPy memory rather than the language model.
+**not** complete: it is an opt-in controller hook with an in-process background worker, only exact
+arithmetic corrections are independently verified, and the candidate is the NumPy memory rather
+than the language model.
 
 ## Run
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 256 tests
+python -m pytest -q                       # 264 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -30,6 +31,8 @@ python -m experiments.adaptive_memory.stress     # EXP-011  adaptive memory unde
 python -m experiments.dream.replay_sweep  # EXP-012  replay ratio/policy sweep
 python -m experiments.memory.retention_bench     # EXP-012  retention/utility
 python -m experiments.learning.loop_e2e   # EXP-013  verified correction -> NGR
+python -m experiments.learning.correction_bench  # EXP-014  larger frozen correction benchmark
+python -m experiments.runtime.load_bench  # EXP-015  module costs + sustained load
 python -m learning.review list --db data/ashura.db          # open conflicts
 python -m learning.review resolve <id> --db data/ashura.db --reason "reviewed"
 python -m evaluation.contradiction_bench  # EXP-010  structured answer comparison
@@ -136,14 +139,30 @@ The 2026-11-05 Phase 3 pass connects the existing pieces into one explicit chain
   the stable baseline accidentally scored 1.00 on the corrected held-out items. Verified + fresh +
   no replay: old 0.02 mean, rejected 5/5, stable pointer unchanged. Unverified factual, false
   arithmetic and no-trace corrections: refused 5/5 before training.
+- **Larger frozen benchmark (EXP-014).** Ten arithmetic forms (including `%`, `**` and `sqrt`),
+  three held-out wordings per form, five seeds and two arms: 50/50 replay runs promoted, 50/50
+  no-replay runs rejected, 150/150 held-out wording predictions correct, and 25/25 control probes
+  refused with zero fast updates, candidates or stable changes. This is still an author-written
+  synthetic set whose held-out wordings share the expression tokens; it is not an independent
+  capability estimate.
+- **Background worker (P67).** `learning/worker.py` runs one daemon thread with a bounded queue.
+  `submit()` never raises, queued jobs can be cancelled, running jobs are not force-killed, and
+  `stop()` drains the queue. The controller can use it as the `correction_loop` hook and returns a
+  `job_id`. It is in-process only: jobs are lost on restart and the CLI does not configure it.
+- **Measured runtime (EXP-015).** On this Windows 11 / Python 3.13 machine: exact arithmetic p50
+  <= 0.015 ms, AMA admission p50 1.15 ms, FTS5 search p50 0.25 ms, a full NumPy loop job p50
+  ~22 ms, and a 300-turn EchoModel mix p50 ~1.2 ms / p95 ~1.7 ms with 0 errors, ~1 MB RSS and a
+  548 KB database. The EchoModel is a plumbing stub, not `tony:7b`; no sustained real-model run was
+  made.
 - **Not language-model learning.** The candidate is the NumPy adaptive memory; no `tony:7b`
   fine-tune or adapter is trained (D-009 stands).
 
 The default CLI does not configure the loop: no live replay corpus or stable checkpoint is defined,
 so sessions do not learn automatically. Arbitrary factual corrections remain unverifiable (F-042).
-EXP-013 is now five-seed but still a tiny synthetic control-flow test, and its stable baseline
-produced accidental hits (F-044). Conflict review is a minimal CLI without notification or a UI
-(F-039). Details: `research/phase3_learning.md`, `experiments/learning/loop.json` and
+EXP-014 improves the evidence but does not close the independent-author/independent-distribution
+gap (F-044). Conflict review is a minimal CLI without notification or a UI (F-039). Details:
+`research/phase3_learning.md`, `experiments/learning/loop.json`,
+`experiments/learning/correction_bench.json`, `experiments/runtime/results.json` and
 `open_problem.md`.
 
 ### Ollama (Windows PowerShell)
@@ -205,7 +224,7 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 | OCR | `skills/perception/ocr.py`, `evaluation/ocr_benchmark.py` | optional local Tesseract, confidence, corrections, CER/WER runner; no target-corpus measurement yet |
 | Adaptive memory | `memory/adaptive_memory.py` | Titans-inspired linear memory; **no advantage over FTS5 yet** |
 | DPF + CAGE | `plasticity/*`, `learning/cage.py` | bounded fast state, candidate checkpoints, NGR-only promotion, trace attribution, gated update consumer (`GatedUpdater`) |
-| Learning loop | `learning/loop.py`, `learning/corrections.py` | verified correction -> CAGE -> fast update -> DREAM -> NGR; exact arithmetic corrections only; opt-in controller hook, no default live wiring |
+| Learning loop | `learning/loop.py`, `learning/corrections.py`, `learning/worker.py` | verified correction -> CAGE -> fast update -> DREAM -> NGR; exact arithmetic corrections only; opt-in controller hook and in-process bounded worker; no default live wiring or durable jobs |
 | DREAM / NGR | `learning/dream.py`, `learning/replay.py`, `evaluation/ngr.py` | four consolidation arms (stable/fresh × new/replay, EXP-006), ratio/policy sweep (all arms tie), training-only vocabulary, real cold-start baseline, hardened promotion/rollback gate |
 | Adaptive memory | `memory/adaptive_memory.py` | experimental IDF memory; verified/conflict-gated queue; stress and long-run measurements; not in the response path |
 | BrainSim | `BrainSim/*` | independent B1–B6; 46 tests; not imported by ASHURA |

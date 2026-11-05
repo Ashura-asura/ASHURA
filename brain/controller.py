@@ -68,10 +68,15 @@ def default_registry(language_available: bool = True, costs_path: str | os.PathL
 
 
 def _loop_summary(result: Any) -> dict:
-    """A small, JSON-safe view of a LoopResult-like object for the response record."""
+    """A small, JSON-safe view of a LoopResult- or QueuedResult-like object."""
     if hasattr(result, "stage"):
-        return {"stage": str(result.stage), "promoted": bool(getattr(result, "promoted", False)),
-                "reasons": [str(r) for r in getattr(result, "reasons", []) or []]}
+        summary = {"stage": str(result.stage),
+                   "promoted": bool(getattr(result, "promoted", False)),
+                   "reasons": [str(r) for r in getattr(result, "reasons", []) or []]}
+        job_id = getattr(result, "job_id", None)
+        if job_id:
+            summary["job_id"] = str(job_id)
+        return summary
     return {"stage": "unknown", "result": repr(result)}
 
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import tempfile
+import threading
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,7 @@ from learning.corrections import parse_correction
 from learning.dream import DreamConfig
 from learning.loop import run_verified_correction
 from learning.replay import ReplayBuffer, ReplayItem
+from learning.worker import LearningWorker
 from memory.database import Database
 from memory.episodic import EpisodicMemory, Experience
 from plasticity.fast_weights import FastWeights
@@ -284,3 +286,114 @@ def test_cage_does_not_authorise_an_unattributed_failure():
     decision = cage.authorise(attr, verified=True)
     assert attr.module is None and not decision.allowed
     assert cage.propose(attr, decision, verified=True, key="6*7", value="42") is None
+
+
+# ---- P67: opt-in background learning worker ----
+def test_learning_worker_runs_a_job_and_records_its_result():
+    calls = []
+
+    def run(correction, trace):
+        calls.append((correction, trace))
+        return {"ok": True}
+
+    with LearningWorker(run, poll_s=0.005) as worker:
+        queued = worker(correction="c", trace="t")
+        assert queued.stage == "queued" and queued.job_id
+        record = worker.wait(queued.job_id, timeout=5)
+    assert record["status"] == "done" and record["result"] == {"ok": True}
+    assert calls == [("c", "t")]
+
+
+def test_learning_worker_captures_a_job_error_without_dying():
+    def run(correction, trace):
+        raise RuntimeError("candidate store offline")
+
+    with LearningWorker(run, poll_s=0.005) as worker:
+        queued = worker.submit("c", "t")
+        record = worker.wait(queued.job_id, timeout=5)
+        assert worker.thread_alive
+    assert record["status"] == "error"
+    assert "RuntimeError: candidate store offline" in record["error"]
+
+
+def test_learning_worker_refuses_new_work_when_its_queue_is_full():
+    started, release = threading.Event(), threading.Event()
+
+    def run(correction, trace):
+        started.set()
+        release.wait(5)
+        return correction
+
+    worker = LearningWorker(run, max_queue=1, poll_s=0.005)
+    try:
+        first = worker.submit("first", "t")
+        assert started.wait(5)
+        queued = worker.submit("second", "t")       # one slot is available while the first runs
+        refused = worker.submit("third", "t")       # queue now full
+        assert queued.stage == "queued" and queued.job_id
+        assert refused.stage == "refused_queue_full" and refused.job_id == ""
+        assert refused.promoted is False
+    finally:
+        release.set()
+        assert worker.wait(first.job_id, timeout=5)["status"] == "done"
+        assert worker.wait(queued.job_id, timeout=5)["status"] == "done"
+        assert worker.stop(timeout=5)
+
+
+def test_learning_worker_refuses_work_after_stop():
+    worker = LearningWorker(lambda correction, trace: correction, poll_s=0.005)
+    assert worker.stop(timeout=5)
+    refused = worker.submit("late", "t")
+    assert refused.stage == "refused_stopped" and refused.job_id == ""
+
+
+def test_learning_worker_cancels_only_queued_jobs_and_wait_does_not_interrupt():
+    calls = []
+    started, release = threading.Event(), threading.Event()
+
+    def run(correction, trace):
+        calls.append(correction)
+        if correction == "block":
+            started.set()
+            release.wait(5)
+        return correction
+
+    worker = LearningWorker(run, poll_s=0.005)
+    try:
+        first = worker.submit("block", "t")
+        assert started.wait(5)
+        second = worker.submit("queued", "t")
+        assert worker.cancel(second.job_id) is True
+        assert worker.cancel(first.job_id) is False          # running jobs are not force-killed
+        assert worker.wait(first.job_id, timeout=0.05)["status"] == "running"
+        assert worker.status(second.job_id)["status"] == "cancelled"
+        release.set()
+        assert worker.wait(first.job_id, timeout=5)["status"] == "done"
+    finally:
+        release.set()
+        assert worker.stop(timeout=5)
+    assert calls == ["block"]                                # the cancelled job never ran
+
+
+def test_controller_hands_a_verified_correction_to_the_background_worker():
+    store, buffer, fast = _store(), _buffer(), FastWeights()
+    worker = LearningWorker(
+        lambda correction, trace: run_verified_correction(
+            correction, trace, cage=CAGE(), updater=GatedUpdater(fast), buffer=buffer, store=store,
+            policy=NGRPolicy("corrected", min_target_gain=0.5),
+            cfg=DreamConfig(target="corrected", dim=DIM, min_train=1, replay=True,
+                            initialization="stable")),
+        poll_s=0.005)
+    c = ctl()
+    c.model = WrongArithmeticModel()
+    c.correction_loop = worker
+    try:
+        assert c.handle("If a rectangle is 6*7, what is its area?").text == "43"
+        r = c.handle(Task("actually, 6*7 = 42", user_correction=True))
+        loop = r.correction["loop"]
+        assert loop["stage"] == "queued" and loop["job_id"]
+        record = worker.wait(loop["job_id"], timeout=5)
+        assert record["status"] == "done" and record["result"].promoted
+        assert store.current().name != "old.npz"
+    finally:
+        assert worker.stop(timeout=5)
