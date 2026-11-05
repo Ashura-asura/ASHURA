@@ -10,6 +10,7 @@ import filecmp
 import json
 import os
 import shutil
+import tempfile
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -46,9 +47,30 @@ class CheckpointStore:
 
     # ---- manifest ---------------------------------------------------------------------------
     def _write(self, data: dict) -> None:
-        tmp = self.manifest.with_suffix(".tmp")
-        tmp.write_text(json.dumps(data, indent=2))
-        tmp.replace(self.manifest)
+        fd, tmp_name = tempfile.mkstemp(prefix=f".{self.manifest.name}.", suffix=".tmp",
+                                       dir=self.manifest.parent)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as stream:
+                json.dump(data, stream, indent=2)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(tmp_name, self.manifest)
+        finally:
+            if os.path.exists(tmp_name):
+                os.unlink(tmp_name)
+
+    @staticmethod
+    def _atomic_copy(source: Path, destination: Path) -> None:
+        """Copy an artifact to a unique same-directory temp file, then atomically publish it."""
+        fd, tmp_name = tempfile.mkstemp(prefix=f".{destination.name}.", suffix=".tmp",
+                                       dir=destination.parent)
+        os.close(fd)
+        try:
+            shutil.copy2(source, tmp_name)
+            os.replace(tmp_name, destination)
+        finally:
+            if os.path.exists(tmp_name):
+                os.unlink(tmp_name)
 
     def _read(self) -> dict:
         try:
@@ -71,7 +93,7 @@ class CheckpointStore:
         if dest.exists():
             raise FileExistsError(f"{dest} already exists; refusing to overwrite")
         dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(artifact, dest)
+        self._atomic_copy(Path(artifact), dest)
         return dest
 
     def promote(self, name: str, ngr: NGRResult) -> Path:
@@ -84,9 +106,7 @@ class CheckpointStore:
         dest = self.root / "stable" / name
         if dest.exists() and not filecmp.cmp(src, dest, shallow=False):
             raise FileExistsError(f"{dest} already exists with different content; refusing to overwrite a stable artifact")
-        tmp = dest.with_name(dest.name + ".tmp")
-        shutil.copy2(src, tmp)
-        os.replace(tmp, dest)                           # a crash can never leave a half-copied stable file
+        self._atomic_copy(src, dest)                    # a crash can never leave a half-copied stable file
         data = self._read()
         prev = data["stable"]
         record = Version(name=name, artifact=f"stable/{name}", promoted_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
