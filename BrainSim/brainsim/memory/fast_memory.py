@@ -40,8 +40,8 @@ class FastMemoryConfig:
     surprise_threshold: float = 0.0   # update only when ||target - M[k]|| exceeds this
 
     def __post_init__(self) -> None:
-        if self.vocab < 2:
-            raise ValueError("vocab must be >= 2")
+        if not isinstance(self.vocab, int) or isinstance(self.vocab, bool) or self.vocab < 2:
+            raise ValueError("vocab must be an integer >= 2")
         if self.key_mode not in ("token", "pair"):
             raise ValueError("key_mode must be 'token' or 'pair'")
         numeric = (self.decay, self.eta, self.blend, self.logit_scale, self.surprise_threshold)
@@ -125,17 +125,20 @@ class FastAssociativeMemory:
         """
         if model_logits.ndim != 2 or model_logits.shape[-1] != self.cfg.vocab:
             raise ValueError("model_logits must be (N, vocab)")
+        if not bool(torch.isfinite(model_logits).all()):
+            raise ValueError("model_logits must contain only finite values")
         ids = self._ids(keys, prev)
         if ids.shape[0] != model_logits.shape[0]:
             raise ValueError("keys and model_logits must share the batch dimension")
         use = self.counts[ids] > 0
         if apply_mask is not None:
-            mask = torch.as_tensor(apply_mask, dtype=torch.bool).flatten()
+            mask = torch.as_tensor(apply_mask, dtype=torch.bool, device=use.device).flatten()
             if mask.shape[0] != ids.shape[0]:
                 raise ValueError("apply_mask must match the batch dimension")
             use = use & mask
         p_model = F.softmax(model_logits, dim=-1)
-        p_mem = F.softmax(self.M[ids] * self.cfg.logit_scale, dim=-1)
+        p_mem = F.softmax(self.M[ids].to(device=model_logits.device) * self.cfg.logit_scale, dim=-1)
+        use = use.to(device=model_logits.device)
         out = p_model.clone()
         if bool(use.any()):
             out[use] = (1.0 - self.cfg.blend) * p_model[use] + self.cfg.blend * p_mem[use]
