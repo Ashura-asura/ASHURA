@@ -6,6 +6,9 @@ untrained until their tasks exist. Training is deterministic for a given seed.
 """
 from __future__ import annotations
 
+import math
+import os
+import tempfile
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -33,6 +36,37 @@ class TrainConfig:
     checkpoint: str | None = None
     verbose: bool = False
 
+    def __post_init__(self) -> None:
+        if self.hidden < 1 or self.layers < 1:
+            raise ValueError("hidden and layers must be positive")
+        if self.epochs < 1 or self.batch_size < 1:
+            raise ValueError("epochs and batch_size must be positive")
+        if not math.isfinite(self.lr) or self.lr <= 0:
+            raise ValueError("lr must be finite and positive")
+        if not math.isfinite(self.weight_decay) or self.weight_decay < 0:
+            raise ValueError("weight_decay must be finite and non-negative")
+        if not math.isfinite(self.grad_clip) or self.grad_clip < 0:
+            raise ValueError("grad_clip must be finite and non-negative")
+        try:
+            torch.device(self.device)
+        except (TypeError, RuntimeError) as e:
+            raise ValueError(f"invalid device {self.device!r}") from e
+
+
+def _validated_tokens(tokens: torch.Tensor, vocab: int, name: str) -> torch.Tensor:
+    raw = torch.as_tensor(tokens)
+    if raw.ndim != 2 or raw.shape[0] < 1 or raw.shape[1] < 2:
+        raise ValueError(f"{name} must have shape (N>=1, L>=2)")
+    if raw.is_floating_point():
+        if not bool(torch.isfinite(raw).all()) or not bool((raw == raw.round()).all()):
+            raise ValueError(f"{name} must contain finite integer token ids")
+    elif raw.dtype == torch.bool:
+        raise ValueError(f"{name} must contain integer token ids")
+    raw = raw.to(dtype=torch.long)
+    if int(raw.min()) < 0 or int(raw.max()) >= vocab:
+        raise ValueError(f"{name} contains token ids outside [0, {vocab})")
+    return raw
+
 
 def build_model(vocab: int, cfg: TrainConfig) -> BrainSim:
     torch.manual_seed(cfg.seed)
@@ -44,6 +78,11 @@ def train_offline(model: BrainSim, tokens: torch.Tensor, cfg: TrainConfig,
                   val_tokens: torch.Tensor | None = None,
                   checkpoint: str | Path | None = None) -> tuple[dict, float]:
     """Train next-token prediction and return (history, seconds)."""
+    if not isinstance(model, BrainSim):
+        raise TypeError("model must be a BrainSim instance")
+    tokens = _validated_tokens(tokens, model.cfg.vocab, "tokens")
+    if val_tokens is not None:
+        val_tokens = _validated_tokens(val_tokens, model.cfg.vocab, "val_tokens")
     torch.manual_seed(cfg.seed)
     device = torch.device(cfg.device)
     model.to(device)
@@ -93,8 +132,16 @@ def save_checkpoint(model: BrainSim, path: str | Path, history: dict | None = No
     train_data = asdict(cfg) if cfg else None
     if train_data and train_data.get("checkpoint") is not None:
         train_data["checkpoint"] = str(train_data["checkpoint"])
-    torch.save({"model": model.state_dict(), "model_config": asdict(model.cfg),
-                "train_config": train_data, "history": history or {}}, path)
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    os.close(fd)
+    try:
+        torch.save({"format_version": 1, "model": model.state_dict(),
+                    "model_config": asdict(model.cfg), "train_config": train_data,
+                    "history": history or {}}, tmp_name)
+        os.replace(tmp_name, path)
+    finally:
+        if os.path.exists(tmp_name):
+            os.unlink(tmp_name)
     return path
 
 
