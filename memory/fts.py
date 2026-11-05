@@ -26,6 +26,8 @@ class FTS5Index(MemoryIndex):
             self.db.conn.commit()
 
     def search(self, query: str, limit: int = 5) -> list[tuple[str, float]]:
+        if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+            raise ValueError("limit must be a positive integer")
         q = to_match_query(query)
         if not q:
             return []
