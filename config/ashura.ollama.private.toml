@@ -61,3 +61,19 @@ critical_epsilon = 0.0
 # Forgetting policy (memory/retention.py). Only unverified, never-reinforced, unrelated records are ever forgotten.
 max_age_days = 30
 max_rows = 0                   # 0 = no cap
+
+[learning]
+# Opt-in durable background learning (F-045). Disabled by default. Use separate paths if this
+# privacy profile is ever enabled, so its corrections do not share the general learning store.
+enabled = false
+jobs_db = "data/learning_jobs.private.db"
+max_queue = 8
+hard_timeout_s = 0             # 0 = in-process (no kill); >0 = spawned child killed at the deadline
+replay_path = ""               # JSONL ReplayItem records; required when enabled
+checkpoint_dir = "checkpoints-private"
+target = "corrected"
+dim = 128
+min_train = 4
+min_target_gain = 0.05
+initialization = "stable"      # "fresh" is valid when no stable checkpoint exists
+# cold_start_checkpoint = ""

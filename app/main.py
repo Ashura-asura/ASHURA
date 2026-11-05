@@ -14,6 +14,7 @@ from brain.working_memory import WorkingMemory
 from foundation.language_model import build_model
 from foundation.model_config import load_config, load_model_config
 from learning.ama import AMA, AMAConfig
+from learning.runtime import build_learning_worker
 from memory.database import Database
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -38,14 +39,22 @@ def build(config_path: str) -> Controller:
     model_cfg = load_model_config(cfg_file)
     mem = cfg.get("memory", {})
     db = Database(mem.get("db_path", "data/ashura.db"))
+    worker = None
     try:
         ama = AMA(db, AMAConfig.from_dict(cfg.get("ama", {})))
         model = build_model(model_cfg)
         nfd = NeedField(default_registry(), NFDConfig.from_dict(cfg.get("nfd", {})))
         wm = WorkingMemory(slots=int(mem.get("working_memory_slots", 8)),      # these two keys were ignored before
                            ttl_s=float(mem.get("working_memory_ttl_s", 600)))
-        return Controller(model, ama=ama, nfd=nfd, wm=wm)
+        controller = Controller(model, ama=ama, nfd=nfd, wm=wm)
+        worker = build_learning_worker(cfg.get("learning", {}))
+        if worker is not None:
+            controller.correction_loop = worker
+            controller.learning_worker = worker
+        return controller
     except Exception:
+        if worker is not None:
+            worker.close(timeout=1)
         db.close()                                                              # don't leak the connection on failure
         raise
 
@@ -107,6 +116,11 @@ def main(argv: list[str] | None = None) -> int:
                           f"total={r.trace.total_ms:.1f}ms verified={r.verified} ama={r.admission}]")
         except EOFError:
             pass
+        finally:
+            worker = getattr(c, "learning_worker", None)
+            if worker is not None and not worker.close(timeout=5):
+                print("warning: a learning job is still running; it will be marked interrupted "
+                      "on the next start", file=sys.stderr)
     return 0
 
 
