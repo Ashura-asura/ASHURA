@@ -17,6 +17,14 @@ digest = "2a86766287cf"        # ID column of `ollama list`; pins the exact weig
 keep_alive = "10m"
 top_p = 0.9                    # pinned; greedy decoding still uses temperature 0 and seed 0
 think = false                  # fast response path; tony:7b-gpa3 has no thinking capability
+# Client-side concurrency policy (F-047). The Ollama server owns the real slots: use
+# OLLAMA_NUM_PARALLEL=1 (safe default) or 2 (opt-in concurrent maximum) before starting
+# `ollama serve`; EXP-019 rejects 4 on this laptop. `max_inflight` caps this one ASHURA process;
+# `max_queue` bounds requests waiting for a slot; a full/timeout queue fails fast instead of
+# growing without limit.
+max_inflight = 1               # per process; keep at 1 unless the server has spare parallel slots
+max_queue = 8
+queue_timeout_s = 60
 
 [memory]
 db_path = "data/ashura.db"

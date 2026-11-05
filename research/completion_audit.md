@@ -1,7 +1,8 @@
 # Project completion audit
 
-Status: 2026-11-06, after EXP-016, EXP-017, EXP-018, EXP-018b and F-045. This file is an evidence
-audit, not a claim that ASHURA is 87.5% intelligent or 87.5% of the way to general capability.
+Status: 2026-11-06, after EXP-016, EXP-017, EXP-018, EXP-018b, EXP-019 and F-045. This file is an
+evidence audit, not a claim that ASHURA is 87.5% intelligent or 87.5% of the way to general
+capability.
 
 ## Method
 
@@ -42,7 +43,7 @@ The total is `(27 + 0.5 x 9) / 36 = 31.5 / 36 = 87.5%`.
 | Learning | Generalisation on unseen examples | EXP-014/EXP-017 use author-written held-out wordings that share expression tokens with the correction key (F-044). |
 | Specialist skills | OCR works locally | Local Tesseract pipeline and smoke test exist; no held-out real-document CER/WER measurement (F-016/P55-P60). |
 | Specialist skills | Specialist outputs can be verified | Exact arithmetic is verified; OCR is unverified and HARN is a non-authoritative linear candidate. |
-| Resource efficiency | System remains usable on target hardware | Single-client works; four clients raised general p50 from 5.52 s to 25.80 s and RAM peaked at 83.9% (F-047). |
+| Resource efficiency | System remains usable on target hardware | Single-client works and 4 clients complete with 0 failures. EXP-019 measured explicit one/two/four-slot settings: one slot serializes, two slots give ~1.45x at two clients, and four slots cut single-client throughput to 3.32 tokens/s and reach 87.7% RAM. Four-client p50 is still 11-15 s, so interactive usability under concurrency is not demonstrated. |
 | Research record | Every algorithm has a hypothesis | Major algorithms are documented; some modules and BrainSim items still lack a full standard record. |
 | Research record | Every algorithm has a baseline | Many do; OCR and several specialist/BrainSim paths still lack an independent baseline. |
 
@@ -67,7 +68,7 @@ mean the central learning objective is 87.5% achieved.
 
 | Next step | Expected change | Main blocker |
 |---|---|---|
-| Explicit concurrent-inference configuration and benchmark (F-047) | One partial becomes full: +1.4 points | Local model queueing |
+| Interactive latency under concurrent clients (F-047 residual) | Could make the resource-efficiency item full | Two slots give only ~1.45x; four-client p50 is 11-15 s on this laptop |
 | Held-out OCR corpus (F-016) | One partial becomes full: +1.4 points | Labelled data |
 | Independently authored correction set (F-044) | One partial becomes full: +1.4 points | Independent authorship |
 | ASHURA-trained adapter/LoRA experiment (F-043) | Moves the core language-learning tests, not just the checklist | 4.7 GB model vs 2 GB GPU; verified corpus |
@@ -80,7 +81,8 @@ NumPy candidate promotion proves that the language foundation learned a new capa
 - `research/EXP-016_real_soak.md` — memory persistence, reload and bounded concurrency.
 - `research/EXP-017_persistence.md` — NumPy consolidation persistence, retention and rollback.
 - `research/EXP-018_subject_tutor.md` — frozen subject comparison and the agentic3 follow-up.
+- `research/EXP-019_concurrency.md` — explicit one/two/four-slot concurrency sweep.
 - `research/EXP-014` in `research/experiment_log.md` — held-out correction benchmark.
 - `tests/test_worker_durability.py` — durable store, crash recovery, hard timeout and CLI config.
 - `research/evidence_standard.md` — requirements-vs-capabilities and the four learning tests.
-- `open_problem.md` — F-043, F-047 and the independent-evaluation gaps.
+- `open_problem.md` — F-043, the F-047 residual and the independent-evaluation gaps.

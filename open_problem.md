@@ -1,7 +1,7 @@
 # Open problems
 
-Status: 2026-11-06, after EXP-016, EXP-017, EXP-018, EXP-018b and the F-045 worker work. Test
-evidence: **284 ASHURA tests** and **46 BrainSim tests** pass on Windows/Python 3.13. Completion audit:
+Status: 2026-11-06, after EXP-016, EXP-017, EXP-018, EXP-018b, EXP-019 and the F-045 worker work.
+Test evidence: **291 ASHURA tests** and **46 BrainSim tests** pass on Windows/Python 3.13. Completion audit:
 `research/completion_audit.md` records 87.5% checklist coverage but **0 of 4 language-model learning
 tests** demonstrated. This file records what is still not closed; it is
 not a roadmap promise and not a claim that the learning loop is complete. The canonical issue list
@@ -19,10 +19,10 @@ items the latest pass could and could not close.
 | F-006 arithmetic verifier | **partly fixed** | Same as F-042. | Same as F-042. |
 | A02/A03 consolidation persistence | **measured (NumPy only)** | EXP-017: 20/20 promoted NumPy candidates loaded in a fresh process with matching SHA-256, 60/60 corrected held-out predictions, 400/400 old-capability predictions, 20/20 rollbacks restored the parent; 131 KB artifact, 41.2 MB RSS, 6.25 s total. | This is the NumPy adaptive memory, not `tony:7b`; the corpus is author-written; no power-loss, corrupt-manifest, backup/restore or shared-database durability test. |
 | Model role selection | **measured (bounded)** | EXP-018: gpa3 and tony:7b both 41/42 adjudicated; gpa3 1.86 s p50, tony:7b 3.04 s p50. EXP-018b: `tony:7b-agentic3` also 41/42 but 0.881 format, 2.11 s p50 and a transient 154.7 s outlier. Adopt gpa3 general, tony:7b privacy; agentic3 is an agentic-benchmark candidate. | Author-written subject suite; base-model and privacy claims not re-measured; no tool-use/agentic benchmark; 4.7 GB exceeds the 2 GB dedicated GPU. |
-| P61-P63/P69 resources | **partly measured** | EXP-015 measures exact arithmetic, AMA/FTS5, controller (EchoModel), full NumPy loop, a 300-turn sustained mix and a cold-start `tony:7b` mixed load: arithmetic p50 <= 0.015 ms, AMA admit p50 1.35 ms, FTS5 0.29 ms, loop 24.4 ms, sustained p50 1.39 ms / p95 1.78 ms, single-client language p50 5.52 s / p95 8.06 s. EXP-016 adds 4 clients, 80 turns, forced reload and restart: 0 failures, general p50 25.80 s / p95 35.23 s, arithmetic p50 4.43 ms. | Concurrent inference queues instead of scaling (F-047); temperature telemetry unavailable; production endurance and routing estimates remain open. |
+| P61-P63/P69 resources | **partly measured** | EXP-015 measures exact arithmetic, AMA/FTS5, controller (EchoModel), full NumPy loop, a 300-turn sustained mix and a cold-start `tony:7b` mixed load: arithmetic p50 <= 0.015 ms, AMA admit p50 1.35 ms, FTS5 0.29 ms, loop 24.4 ms, sustained p50 1.39 ms / p95 1.78 ms, single-client language p50 5.52 s / p95 8.06 s. EXP-016 adds 4 clients, 80 turns, forced reload and restart: 0 failures, general p50 25.80 s / p95 35.23 s, arithmetic p50 4.43 ms. EXP-019 adds an explicit concurrency matrix: one slot serializes; two slots give ~1.45x at two clients; four slots are rejected. | No linear scaling; temperature telemetry unavailable; production endurance and routing estimates remain open. |
 | F-045 worker durability | **fixed (bounded)** | SQLite job store persists payload/status/result; a fresh worker re-schedules queued jobs and marks running jobs interrupted; a killed child process was recovered as interrupted; `hard_timeout_s` terminates a spawned child and returns stateful-runner updates; CLI wiring is opt-in and config-tested. | Single worker per store; queued recovery is at-least-once; hard timeout requires a picklable runner; no live real-model learning run. |
 | F-046 runtime scope | **fixed (bounded)** | EXP-016: 4 concurrent clients, 80 mixed turns, 0 failures; one forced `tony:7b` reload (22.41 s wall / 9.11 s Ollama load); fresh-process restart found both a verified arithmetic record and a user-provided memory record (write PID 1552, verify PID 12164); client RSS max 97 MB; system RAM max 83.9%. | Closed only for client lifecycle, DB persistence, model unload/reload and application restart. Production endurance, thermal telemetry and parallel throughput remain separate; see F-047. |
-| F-047 concurrent inference throughput | **open** | EXP-016 ran 4 concurrent clients: general p50 rose from 5.52 s single-client to 25.80 s (~4.7x), server CPU utilisation ~0.31, 0 failures. The local model appears to queue requests. | No parallel speedup; need explicit Ollama parallel/batching configuration, queueing policy and a concurrency benchmark before claiming concurrent serving. |
+| F-047 concurrent inference throughput | **fixed (bounded)** | EXP-019 ran a private-server sweep on `tony:7b-gpa3` with `OLLAMA_NUM_PARALLEL` 1/2/4, `OLLAMA_MAX_QUEUE=8` and 1/2/4 clients. One slot serialized (4.93 to 5.95 tokens/s, p50 6.57 to 13.53 s); two slots gave 1.45x at two clients but only 1.19x at four; four slots cut single-client throughput to 3.32 tokens/s and reached 87.7% RAM. The client gate (`max_inflight=1`, bounded queue) and shipped config are in place. | No linear four-way scaling; two slots are the opt-in maximum, four are rejected; the gate is per process and there is no cross-process queue. |
 | P70-P72 CI | **fixed and green** | BrainSim installs the missing `psutil`; ASHURA matrix covers Python 3.11-3.13; BrainSim runs on Ubuntu and Windows. Actions run `41938499183` passed all eight jobs on commit `17568c3`. | Keep the matrix green; add real-model integration separately (P74). |
 
 The multi-seed EXP-013 result should be read with care. In seed 3 the stable memory already scored
@@ -157,8 +157,10 @@ Not addressed by the Phase 3 follow-up:
 - **P61-P63:** exact arithmetic, AMA/FTS5 and the NumPy loop now have measured single-process costs
   (EXP-015), plus a 4-client/80-turn bounded run with one reload and one restart (EXP-016). The
   single-client language p50 was 5.52 s; under four concurrent clients it rose to 25.80 s with 0
-  failures, so the clients coexist but the local model queues requests (F-047). The language row in
-  `config/module_costs.json` remains from the Ollama baseline because prompt/output lengths differ;
+  failures, so the clients coexist but the local model queues requests. EXP-019 now measures that
+  queue explicitly: one slot serializes; two slots give ~1.45x at two clients; four slots are
+  rejected on this laptop. The language row in `config/module_costs.json` remains from the Ollama
+  baseline because prompt/output lengths differ;
   routing priorities are still heuristic. Do not swap the routing estimates for these numbers
   without a routing experiment.
 - **P64/P65:** semantic retrieval and the reasoning module are not built; the registry marks them
@@ -171,8 +173,10 @@ Not addressed by the Phase 3 follow-up:
 - **P69:** EXP-015 provides a 300-turn single-process sustained run (0 errors, ~1 MB RSS, 548 KB
   DB) and a cold-start `tony:7b` mixed load. EXP-016 adds 4 concurrent clients, 80 mixed turns, one
   forced reload and one fresh-process persistence check: 0 failures, general p50 25.80 s under
-  concurrency, arithmetic p50 4.43 ms, client RSS max 97 MB. It is still not a production endurance
-  test, thermal telemetry was unavailable, and parallel inference did not scale (F-047).
+  concurrency, arithmetic p50 4.43 ms, client RSS max 97 MB. EXP-019 adds the explicit server sweep:
+  one slot serializes, two slots give ~1.45x at two clients, and four slots cut single-client
+  throughput to 3.32 tokens/s. It is still not a production endurance test, thermal telemetry was
+  unavailable, and there is no linear-scaling claim.
 - **P70-P74:** CI coverage and clean-install/reproducibility checks are incomplete (including
   Python 3.13 and Windows BrainSim); unit tests are not real-model correctness tests.
 - **P76-P80:** multiple specifications remain; checkpoint/experiment lifecycle, environment
@@ -217,9 +221,9 @@ do not.
 | F-014/F-015/P48 | A better local foundation or an accepted accuracy limit; no new Qwen model. | Hardware/scope decision. |
 | F-016/P55-P60 OCR | A labelled target-document corpus; CER/WER, field accuracy and confidence calibration. | Data. |
 | P30-P44 BrainSim | Harder temporal tasks, hidden task/need labels, partial observations, independent distributions and more seeds. | Separate code + data effort. |
-| P61-P63/P69 resources | EXP-015 measures the main non-language modules, a 300-turn sustained mix and a cold-start `tony:7b` mixed load; EXP-016 adds 4-client concurrency, a forced reload and a fresh-process persistence check with 80 turns and 0 failures. Still needed: production endurance, thermal telemetry and parallel inference (F-047). | Runtime measurements; partly done. |
+| P61-P63/P69 resources | EXP-015 measures the main non-language modules, a 300-turn sustained mix and a cold-start `tony:7b` mixed load; EXP-016 adds 4-client concurrency, a forced reload and a fresh-process persistence check with 80 turns and 0 failures; EXP-019 adds the explicit one/two/four-slot concurrency matrix. Still needed: production endurance and thermal telemetry. | Runtime measurements; partly done. |
 | P64/P65 modules | A semantic-retrieval and reasoning implementation that beats the current baseline before routing to it. | Algorithm + benchmark; do not advertise early. |
-| P67 background worker | In-process worker with queue bounds, cancellation and error capture is done; durable jobs, hard timeout, CLI wiring and restart tests remain. | Code + storage design. |
+| P67 background worker | Durable SQLite jobs, restart recovery, hard timeout and opt-in CLI wiring are done and tested (F-045/D-058); no live real-model learning run exists. | A configured replay corpus and stable checkpoint. |
 | P76-P80 engineering | One canonical spec, checkpoint/experiment manifests, clean-install verification and backup/restore tests. | Code/docs; can be done incrementally. |
 | A04-A10 | Research programmes (hidden needs, segmentation, causal attribution, curriculum, self-preservation, forgetting). | Research; not a single patch. |
 
@@ -228,10 +232,10 @@ benchmark -> background worker) is now implemented as EXP-015, EXP-014, EXP-016,
 `learning/worker.py`. EXP-016 closes the bounded F-046 scope; EXP-017 measures NumPy consolidation
 persistence and retention; EXP-018 selects gpa3 as the general tutor and tony:7b as the privacy
 profile; EXP-018b keeps agentic3 as an agentic-benchmark candidate; F-045 is fixed for durable jobs
-and hard timeout. The next honest steps are: concurrent-inference queueing and parallel-throughput
-work (F-047) -> an agentic/tool-use benchmark for `tony:7b-agentic3` -> independently authored
-benchmark/real usage data (F-044) -> an ASHURA-trained language-model adapter experiment (F-043,
-currently blocked by hardware and corpus).
+and hard timeout; EXP-019 fixes F-047 for explicit bounded concurrency without claiming linear
+scaling. The next honest steps are: an agentic/tool-use benchmark for `tony:7b-agentic3` ->
+independently authored benchmark/real usage data (F-044) -> an ASHURA-trained language-model adapter
+experiment (F-043, currently blocked by hardware and corpus).
 The AMA, adaptive-memory and BrainSim claims should stay conservative until their data exists.
 
 ## 9. Deliberately not doing now

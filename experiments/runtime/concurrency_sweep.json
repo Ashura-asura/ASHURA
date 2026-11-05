@@ -1,0 +1,1171 @@
+{
+  "generated_at": "2026-11-06 01:09:58",
+  "machine": "Windows-11-10.0.26300-SP0",
+  "model": "tony:7b-gpa3",
+  "clients": [
+    1,
+    2,
+    4
+  ],
+  "rounds": 3,
+  "warmup_rounds": 1,
+  "max_tokens": 32,
+  "n_ctx": 2048,
+  "configs": [
+    {
+      "num_parallel": 1,
+      "max_queue": 8,
+      "server": {
+        "host": "http://127.0.0.1:11435",
+        "version": "0.40.14",
+        "pid": 18176,
+        "num_parallel": 1,
+        "max_queue": 8,
+        "max_loaded_models": 1,
+        "env": {
+          "OLLAMA_HOST": "127.0.0.1:11435",
+          "OLLAMA_IGPU_ENABLE": "1",
+          "OLLAMA_KEEP_ALIVE": "5m",
+          "OLLAMA_MAX_LOADED_MODELS": "1",
+          "OLLAMA_MAX_QUEUE": "8",
+          "OLLAMA_NUM_PARALLEL": "1"
+        },
+        "models": []
+      },
+      "result": {
+        "started_at": "2026-11-06 01:00:36",
+        "runtime_s": 191.71,
+        "machine": "Windows-11-10.0.26300-SP0",
+        "host": "http://127.0.0.1:11435",
+        "model": "tony:7b-gpa3",
+        "digest": "2a86766287cf",
+        "server": {
+          "host": "http://127.0.0.1:11435",
+          "version": "0.40.14",
+          "pid": 18176,
+          "num_parallel": 1,
+          "max_queue": 8,
+          "max_loaded_models": 1,
+          "env": {
+            "OLLAMA_HOST": "127.0.0.1:11435",
+            "OLLAMA_IGPU_ENABLE": "1",
+            "OLLAMA_KEEP_ALIVE": "5m",
+            "OLLAMA_MAX_LOADED_MODELS": "1",
+            "OLLAMA_MAX_QUEUE": "8",
+            "OLLAMA_NUM_PARALLEL": "1"
+          }
+        },
+        "running_before": [],
+        "running_after": [
+          {
+            "name": "tony:7b-gpa3",
+            "size_mb": 4635.9,
+            "vram_mb": 4635.9
+          }
+        ],
+        "options": {
+          "rounds": 3,
+          "warmup_rounds": 1,
+          "max_tokens": 32,
+          "n_ctx": 2048,
+          "timeout_s": 300.0,
+          "prompt": "Answer directly. Count from 1 to 30, separated by commas."
+        },
+        "resources": {
+          "samples": 371,
+          "cpu_percent_max": 69.3,
+          "ram_percent_max": 80.2,
+          "ollama_rss_mb_max": 5227.5,
+          "client_rss_mb_max": 33.8
+        },
+        "levels": [
+          {
+            "clients": 1,
+            "rounds": 3,
+            "wall_s_each": [
+              6.597,
+              6.319,
+              6.566
+            ],
+            "wall_s_median": 6.566,
+            "wall_s_total": 19.482,
+            "requests": 3,
+            "failures": 0,
+            "failure_examples": [],
+            "latency_ms_p50": 6564.801,
+            "latency_ms_p95": 6592.561,
+            "latency_ms_max": 6595.645,
+            "eval_ms_p50": 5211.116,
+            "prefill_ms_p50": 1292.861,
+            "generated_tokens": 96,
+            "tokens_per_s": 4.928,
+            "requests_per_s": 0.154,
+            "max_load_ms": 15.449,
+            "rows": [
+              {
+                "ok": true,
+                "ms": 6595.645,
+                "eval_count": 32,
+                "eval_ms": 5211.116,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1347.521,
+                "load_ms": 10.264,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 6318.524,
+                "eval_count": 32,
+                "eval_ms": 4989.848,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1292.861,
+                "load_ms": 11.96,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 6564.801,
+                "eval_count": 32,
+                "eval_ms": 5284.087,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1233.71,
+                "load_ms": 15.449,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              }
+            ],
+            "throughput_scale_vs_1": 1.0,
+            "parallel_efficiency": 1.0,
+            "latency_amplification_vs_1": 1.0
+          },
+          {
+            "clients": 2,
+            "rounds": 3,
+            "wall_s_each": [
+              12.115,
+              11.678,
+              11.577
+            ],
+            "wall_s_median": 11.678,
+            "wall_s_total": 35.369,
+            "requests": 6,
+            "failures": 0,
+            "failure_examples": [],
+            "latency_ms_p50": 8827.744,
+            "latency_ms_p95": 12003.849,
+            "latency_ms_max": 12112.981,
+            "eval_ms_p50": 4707.601,
+            "prefill_ms_p50": 1162.637,
+            "generated_tokens": 192,
+            "tokens_per_s": 5.428,
+            "requests_per_s": 0.1696,
+            "max_load_ms": 17.699,
+            "rows": [
+              {
+                "ok": true,
+                "ms": 6080.993,
+                "eval_count": 32,
+                "eval_ms": 4858.277,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1183.371,
+                "load_ms": 10.102,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 12112.981,
+                "eval_count": 32,
+                "eval_ms": 4814.204,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1200.933,
+                "load_ms": 16.178,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 5897.958,
+                "eval_count": 32,
+                "eval_ms": 4692.151,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1155.587,
+                "load_ms": 13.343,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 11676.453,
+                "eval_count": 32,
+                "eval_ms": 4640.154,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1121.265,
+                "load_ms": 17.314,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 11574.494,
+                "eval_count": 32,
+                "eval_ms": 4498.981,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1123.729,
+                "load_ms": 17.699,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 5939.591,
+                "eval_count": 32,
+                "eval_ms": 4723.051,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1169.686,
+                "load_ms": 14.34,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              }
+            ],
+            "throughput_scale_vs_1": 1.101,
+            "parallel_efficiency": 0.55,
+            "latency_amplification_vs_1": 1.345
+          },
+          {
+            "clients": 4,
+            "rounds": 3,
+            "wall_s_each": [
+              22.176,
+              21.429,
+              20.928
+            ],
+            "wall_s_median": 21.429,
+            "wall_s_total": 64.533,
+            "requests": 12,
+            "failures": 0,
+            "failure_examples": [],
+            "latency_ms_p50": 13527.658,
+            "latency_ms_p95": 21762.169,
+            "latency_ms_max": 22172.605,
+            "eval_ms_p50": 4278.004,
+            "prefill_ms_p50": 1068.403,
+            "generated_tokens": 384,
+            "tokens_per_s": 5.95,
+            "requests_per_s": 0.186,
+            "max_load_ms": 26.878,
+            "rows": [
+              {
+                "ok": true,
+                "ms": 22172.605,
+                "eval_count": 32,
+                "eval_ms": 4355.951,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1129.066,
+                "load_ms": 25.009,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 5610.86,
+                "eval_count": 32,
+                "eval_ms": 4435.584,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1134.23,
+                "load_ms": 11.898,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 11251.659,
+                "eval_count": 32,
+                "eval_ms": 4553.278,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1077.901,
+                "load_ms": 14.099,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 16676.973,
+                "eval_count": 32,
+                "eval_ms": 4266.049,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1145.943,
+                "load_ms": 19.012,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 10844.797,
+                "eval_count": 32,
+                "eval_ms": 4337.816,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1048.524,
+                "load_ms": 11.859,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 16261.449,
+                "eval_count": 32,
+                "eval_ms": 4340.568,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1064.958,
+                "load_ms": 17.623,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 21426.357,
+                "eval_count": 32,
+                "eval_ms": 4144.039,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1010.439,
+                "load_ms": 19.827,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 5447.785,
+                "eval_count": 32,
+                "eval_ms": 4289.959,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1121.521,
+                "load_ms": 9.251,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 10662.815,
+                "eval_count": 32,
+                "eval_ms": 4237.655,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1044.897,
+                "load_ms": 18.224,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 15803.658,
+                "eval_count": 32,
+                "eval_ms": 4130.605,
+                "prompt_eval_count": 467,
+                "prefill_ms": 998.782,
+                "load_ms": 21.86,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 5369.706,
+                "eval_count": 32,
+                "eval_ms": 4255.376,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1071.849,
+                "load_ms": 12.67,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 20925.988,
+                "eval_count": 32,
+                "eval_ms": 4118.688,
+                "prompt_eval_count": 467,
+                "prefill_ms": 990.057,
+                "load_ms": 26.878,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              }
+            ],
+            "throughput_scale_vs_1": 1.207,
+            "parallel_efficiency": 0.302,
+            "latency_amplification_vs_1": 2.061
+          }
+        ]
+      }
+    },
+    {
+      "num_parallel": 2,
+      "max_queue": 8,
+      "server": {
+        "host": "http://127.0.0.1:11435",
+        "version": "0.40.14",
+        "pid": 18800,
+        "num_parallel": 2,
+        "max_queue": 8,
+        "max_loaded_models": 1,
+        "env": {
+          "OLLAMA_HOST": "127.0.0.1:11435",
+          "OLLAMA_IGPU_ENABLE": "1",
+          "OLLAMA_KEEP_ALIVE": "5m",
+          "OLLAMA_MAX_LOADED_MODELS": "1",
+          "OLLAMA_MAX_QUEUE": "8",
+          "OLLAMA_NUM_PARALLEL": "2"
+        },
+        "models": []
+      },
+      "result": {
+        "started_at": "2026-11-06 01:03:54",
+        "runtime_s": 141.77,
+        "machine": "Windows-11-10.0.26300-SP0",
+        "host": "http://127.0.0.1:11435",
+        "model": "tony:7b-gpa3",
+        "digest": "2a86766287cf",
+        "server": {
+          "host": "http://127.0.0.1:11435",
+          "version": "0.40.14",
+          "pid": 18800,
+          "num_parallel": 2,
+          "max_queue": 8,
+          "max_loaded_models": 1,
+          "env": {
+            "OLLAMA_HOST": "127.0.0.1:11435",
+            "OLLAMA_IGPU_ENABLE": "1",
+            "OLLAMA_KEEP_ALIVE": "5m",
+            "OLLAMA_MAX_LOADED_MODELS": "1",
+            "OLLAMA_MAX_QUEUE": "8",
+            "OLLAMA_NUM_PARALLEL": "2"
+          }
+        },
+        "running_before": [],
+        "running_after": [
+          {
+            "name": "tony:7b-gpa3",
+            "size_mb": 4753.3,
+            "vram_mb": 4753.3
+          }
+        ],
+        "options": {
+          "rounds": 3,
+          "warmup_rounds": 1,
+          "max_tokens": 32,
+          "n_ctx": 2048,
+          "timeout_s": 300.0,
+          "prompt": "Answer directly. Count from 1 to 30, separated by commas."
+        },
+        "resources": {
+          "samples": 275,
+          "cpu_percent_max": 100.0,
+          "ram_percent_max": 83.6,
+          "ollama_rss_mb_max": 5672.8,
+          "client_rss_mb_max": 37.7
+        },
+        "levels": [
+          {
+            "clients": 1,
+            "rounds": 3,
+            "wall_s_each": [
+              5.011,
+              4.917,
+              5.139
+            ],
+            "wall_s_median": 5.011,
+            "wall_s_total": 15.067,
+            "requests": 3,
+            "failures": 0,
+            "failure_examples": [],
+            "latency_ms_p50": 5010.666,
+            "latency_ms_p95": 5125.206,
+            "latency_ms_max": 5137.933,
+            "eval_ms_p50": 3936.825,
+            "prefill_ms_p50": 997.968,
+            "generated_tokens": 96,
+            "tokens_per_s": 6.372,
+            "requests_per_s": 0.1991,
+            "max_load_ms": 8.607,
+            "rows": [
+              {
+                "ok": true,
+                "ms": 5010.666,
+                "eval_count": 32,
+                "eval_ms": 3936.825,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1049.275,
+                "load_ms": 6.377,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 4915.925,
+                "eval_count": 32,
+                "eval_ms": 3910.987,
+                "prompt_eval_count": 467,
+                "prefill_ms": 974.08,
+                "load_ms": 8.607,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 5137.933,
+                "eval_count": 32,
+                "eval_ms": 4085.277,
+                "prompt_eval_count": 467,
+                "prefill_ms": 997.968,
+                "load_ms": 6.48,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              }
+            ],
+            "throughput_scale_vs_1": 1.0,
+            "parallel_efficiency": 1.0,
+            "latency_amplification_vs_1": 1.0
+          },
+          {
+            "clients": 2,
+            "rounds": 3,
+            "wall_s_each": [
+              6.79,
+              6.857,
+              7.199
+            ],
+            "wall_s_median": 6.857,
+            "wall_s_total": 20.846,
+            "requests": 6,
+            "failures": 0,
+            "failure_examples": [],
+            "latency_ms_p50": 6855.309,
+            "latency_ms_p95": 7196.739,
+            "latency_ms_max": 7196.936,
+            "eval_ms_p50": 5708.886,
+            "prefill_ms_p50": 1032.49,
+            "generated_tokens": 192,
+            "tokens_per_s": 9.211,
+            "requests_per_s": 0.2878,
+            "max_load_ms": 12.468,
+            "rows": [
+              {
+                "ok": true,
+                "ms": 6789.115,
+                "eval_count": 32,
+                "eval_ms": 5496.687,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1126.46,
+                "load_ms": 8.661,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 6789.579,
+                "eval_count": 32,
+                "eval_ms": 5496.662,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1125.841,
+                "load_ms": 5.804,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 6855.049,
+                "eval_count": 32,
+                "eval_ms": 5708.994,
+                "prompt_eval_count": 467,
+                "prefill_ms": 982.055,
+                "load_ms": 6.389,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 6855.569,
+                "eval_count": 32,
+                "eval_ms": 5708.777,
+                "prompt_eval_count": 467,
+                "prefill_ms": 982.935,
+                "load_ms": 8.118,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 7196.936,
+                "eval_count": 32,
+                "eval_ms": 5980.148,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1033.088,
+                "load_ms": 12.468,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 7196.15,
+                "eval_count": 32,
+                "eval_ms": 5980.6,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1031.891,
+                "load_ms": 7.782,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              }
+            ],
+            "throughput_scale_vs_1": 1.446,
+            "parallel_efficiency": 0.723,
+            "latency_amplification_vs_1": 1.368
+          },
+          {
+            "clients": 4,
+            "rounds": 3,
+            "wall_s_each": [
+              13.094,
+              15.353,
+              22.381
+            ],
+            "wall_s_median": 15.353,
+            "wall_s_total": 50.828,
+            "requests": 12,
+            "failures": 0,
+            "failure_examples": [],
+            "latency_ms_p50": 11192.164,
+            "latency_ms_p95": 22376.636,
+            "latency_ms_max": 22377.308,
+            "eval_ms_p50": 6488.11,
+            "prefill_ms_p50": 1013.649,
+            "generated_tokens": 384,
+            "tokens_per_s": 7.555,
+            "requests_per_s": 0.2361,
+            "max_load_ms": 25.637,
+            "rows": [
+              {
+                "ok": true,
+                "ms": 13091.661,
+                "eval_count": 32,
+                "eval_ms": 5492.773,
+                "prompt_eval_count": 467,
+                "prefill_ms": 940.062,
+                "load_ms": 19.102,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 13091.788,
+                "eval_count": 32,
+                "eval_ms": 5492.977,
+                "prompt_eval_count": 467,
+                "prefill_ms": 939.145,
+                "load_ms": 16.724,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 6505.863,
+                "eval_count": 32,
+                "eval_ms": 5408.893,
+                "prompt_eval_count": 467,
+                "prefill_ms": 912.681,
+                "load_ms": 12.787,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 6506.534,
+                "eval_count": 32,
+                "eval_ms": 5409.184,
+                "prompt_eval_count": 467,
+                "prefill_ms": 911.708,
+                "load_ms": 9.581,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 15349.779,
+                "eval_count": 32,
+                "eval_ms": 6569.282,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1024.808,
+                "load_ms": 13.163,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 7581.04,
+                "eval_count": 32,
+                "eval_ms": 6407.075,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1002.49,
+                "load_ms": 10.34,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 15350.264,
+                "eval_count": 32,
+                "eval_ms": 6568.849,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1025.874,
+                "load_ms": 18.224,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 7579.589,
+                "eval_count": 32,
+                "eval_ms": 6407.371,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1001.592,
+                "load_ms": 7.639,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 22377.308,
+                "eval_count": 32,
+                "eval_ms": 11237.06,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1627.953,
+                "load_ms": 20.701,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 9292.668,
+                "eval_count": 32,
+                "eval_ms": 7880.461,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1194.157,
+                "load_ms": 16.771,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 22376.087,
+                "eval_count": 32,
+                "eval_ms": 11238.608,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1625.631,
+                "load_ms": 25.637,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 9292.476,
+                "eval_count": 32,
+                "eval_ms": 7880.884,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1192.99,
+                "load_ms": 11.682,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              }
+            ],
+            "throughput_scale_vs_1": 1.186,
+            "parallel_efficiency": 0.296,
+            "latency_amplification_vs_1": 2.234
+          }
+        ]
+      }
+    },
+    {
+      "num_parallel": 4,
+      "max_queue": 8,
+      "server": {
+        "host": "http://127.0.0.1:11435",
+        "version": "0.40.14",
+        "pid": 20564,
+        "num_parallel": 4,
+        "max_queue": 8,
+        "max_loaded_models": 1,
+        "env": {
+          "OLLAMA_HOST": "127.0.0.1:11435",
+          "OLLAMA_IGPU_ENABLE": "1",
+          "OLLAMA_KEEP_ALIVE": "5m",
+          "OLLAMA_MAX_LOADED_MODELS": "1",
+          "OLLAMA_MAX_QUEUE": "8",
+          "OLLAMA_NUM_PARALLEL": "4"
+        },
+        "models": []
+      },
+      "result": {
+        "started_at": "2026-11-06 01:06:24",
+        "runtime_s": 211.32,
+        "machine": "Windows-11-10.0.26300-SP0",
+        "host": "http://127.0.0.1:11435",
+        "model": "tony:7b-gpa3",
+        "digest": "2a86766287cf",
+        "server": {
+          "host": "http://127.0.0.1:11435",
+          "version": "0.40.14",
+          "pid": 20564,
+          "num_parallel": 4,
+          "max_queue": 8,
+          "max_loaded_models": 1,
+          "env": {
+            "OLLAMA_HOST": "127.0.0.1:11435",
+            "OLLAMA_IGPU_ENABLE": "1",
+            "OLLAMA_KEEP_ALIVE": "5m",
+            "OLLAMA_MAX_LOADED_MODELS": "1",
+            "OLLAMA_MAX_QUEUE": "8",
+            "OLLAMA_NUM_PARALLEL": "4"
+          }
+        },
+        "running_before": [],
+        "running_after": [
+          {
+            "name": "tony:7b-gpa3",
+            "size_mb": 5136.1,
+            "vram_mb": 5136.1
+          }
+        ],
+        "options": {
+          "rounds": 3,
+          "warmup_rounds": 1,
+          "max_tokens": 32,
+          "n_ctx": 2048,
+          "timeout_s": 300.0,
+          "prompt": "Answer directly. Count from 1 to 30, separated by commas."
+        },
+        "resources": {
+          "samples": 406,
+          "cpu_percent_max": 100.0,
+          "ram_percent_max": 87.7,
+          "ollama_rss_mb_max": 6092.6,
+          "client_rss_mb_max": 37.6
+        },
+        "levels": [
+          {
+            "clients": 1,
+            "rounds": 3,
+            "wall_s_each": [
+              9.818,
+              10.047,
+              9.015
+            ],
+            "wall_s_median": 9.818,
+            "wall_s_total": 28.88,
+            "requests": 3,
+            "failures": 0,
+            "failure_examples": [],
+            "latency_ms_p50": 9817.138,
+            "latency_ms_p95": 10022.922,
+            "latency_ms_max": 10045.787,
+            "eval_ms_p50": 8281.162,
+            "prefill_ms_p50": 1461.56,
+            "generated_tokens": 96,
+            "tokens_per_s": 3.324,
+            "requests_per_s": 0.1039,
+            "max_load_ms": 14.645,
+            "rows": [
+              {
+                "ok": true,
+                "ms": 9817.138,
+                "eval_count": 32,
+                "eval_ms": 8281.162,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1461.56,
+                "load_ms": 13.852,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 10045.787,
+                "eval_count": 32,
+                "eval_ms": 8337.498,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1632.814,
+                "load_ms": 14.645,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 9013.756,
+                "eval_count": 32,
+                "eval_ms": 7534.503,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1421.851,
+                "load_ms": 12.994,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              }
+            ],
+            "throughput_scale_vs_1": 1.0,
+            "parallel_efficiency": 1.0,
+            "latency_amplification_vs_1": 1.0
+          },
+          {
+            "clients": 2,
+            "rounds": 3,
+            "wall_s_each": [
+              14.221,
+              13.277,
+              11.784
+            ],
+            "wall_s_median": 13.277,
+            "wall_s_total": 39.282,
+            "requests": 6,
+            "failures": 0,
+            "failure_examples": [],
+            "latency_ms_p50": 13273.713,
+            "latency_ms_p95": 14218.242,
+            "latency_ms_max": 14218.537,
+            "eval_ms_p50": 11318.883,
+            "prefill_ms_p50": 1661.17,
+            "generated_tokens": 192,
+            "tokens_per_s": 4.888,
+            "requests_per_s": 0.1527,
+            "max_load_ms": 22.79,
+            "rows": [
+              {
+                "ok": true,
+                "ms": 14217.355,
+                "eval_count": 32,
+                "eval_ms": 11965.269,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1945.096,
+                "load_ms": 20.189,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 14218.537,
+                "eval_count": 32,
+                "eval_ms": 11965.958,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1943.259,
+                "load_ms": 16.062,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 13272.712,
+                "eval_count": 32,
+                "eval_ms": 11319.084,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1660.521,
+                "load_ms": 19.415,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 13274.715,
+                "eval_count": 32,
+                "eval_ms": 11318.682,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1661.82,
+                "load_ms": 22.79,
+                "chars": 32,
+                "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14"
+              },
+              {
+                "ok": true,
+                "ms": 11781.036,
+                "eval_count": 32,
+                "eval_ms": 9989.92,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1534.485,
+                "load_ms": 12.717,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 11781.259,
+                "eval_count": 32,
+                "eval_ms": 9989.35,
+                "prompt_eval_count": 467,
+                "prefill_ms": 1535.818,
+                "load_ms": 18.715,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              }
+            ],
+            "throughput_scale_vs_1": 1.471,
+            "parallel_efficiency": 0.736,
+            "latency_amplification_vs_1": 1.352
+          },
+          {
+            "clients": 4,
+            "rounds": 3,
+            "wall_s_each": [
+              14.714,
+              14.825,
+              16.977
+            ],
+            "wall_s_median": 14.825,
+            "wall_s_total": 46.515,
+            "requests": 12,
+            "failures": 0,
+            "failure_examples": [],
+            "latency_ms_p50": 14817.494,
+            "latency_ms_p95": 16972.52,
+            "latency_ms_max": 16972.905,
+            "eval_ms_p50": 11802.943,
+            "prefill_ms_p50": 2492.224,
+            "generated_tokens": 384,
+            "tokens_per_s": 8.255,
+            "requests_per_s": 0.258,
+            "max_load_ms": 58.77,
+            "rows": [
+              {
+                "ok": true,
+                "ms": 14705.474,
+                "eval_count": 32,
+                "eval_ms": 11803.12,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2333.603,
+                "load_ms": 11.948,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 14706.747,
+                "eval_count": 32,
+                "eval_ms": 11802.894,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2336.986,
+                "load_ms": 26.131,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 14710.122,
+                "eval_count": 32,
+                "eval_ms": 11802.636,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2338.624,
+                "load_ms": 28.337,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 14711.27,
+                "eval_count": 32,
+                "eval_ms": 11802.991,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2335.295,
+                "load_ms": 16.713,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 14817.17,
+                "eval_count": 32,
+                "eval_ms": 11699.252,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2492.926,
+                "load_ms": 31.972,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 14817.818,
+                "eval_count": 32,
+                "eval_ms": 11699.939,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2491.521,
+                "load_ms": 25.094,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 14820.728,
+                "eval_count": 32,
+                "eval_ms": 11698.707,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2494.325,
+                "load_ms": 41.744,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 14817.135,
+                "eval_count": 32,
+                "eval_ms": 11700.904,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2489.917,
+                "load_ms": 18.831,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 16972.205,
+                "eval_count": 32,
+                "eval_ms": 13599.064,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2752.209,
+                "load_ms": 23.07,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 16972.905,
+                "eval_count": 32,
+                "eval_ms": 13597.198,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2754.739,
+                "load_ms": 58.77,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 16971.776,
+                "eval_count": 32,
+                "eval_ms": 13600.825,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2749.763,
+                "load_ms": 30.194,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              },
+              {
+                "ok": true,
+                "ms": 16971.372,
+                "eval_count": 32,
+                "eval_ms": 13602.816,
+                "prompt_eval_count": 467,
+                "prefill_ms": 2747.15,
+                "load_ms": 19.616,
+                "chars": 32,
+                "text": "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1"
+              }
+            ],
+            "throughput_scale_vs_1": 2.483,
+            "parallel_efficiency": 0.621,
+            "latency_amplification_vs_1": 1.509
+          }
+        ]
+      }
+    }
+  ]
+}

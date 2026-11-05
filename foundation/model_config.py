@@ -28,6 +28,10 @@ class ModelConfig:
     timeout_s: float = 300.0
     top_p: float = 0.9              # pinned explicitly; greedy decoding still uses temperature 0
     think: bool | None = None       # Ollama thinking models: False for the fast response path, None = model default
+    # --- client-side concurrency policy (F-047); the server owns OLLAMA_NUM_PARALLEL ---
+    max_inflight: int = 0           # 0 = unlimited; shipped Ollama profiles use 1
+    max_queue: int = 8              # waiting requests allowed when max_inflight is reached
+    queue_timeout_s: float = 60.0   # reject instead of waiting forever
 
     def __post_init__(self) -> None:
         if self.backend not in {"echo", "llama_cpp", "ollama"}:
@@ -36,6 +40,9 @@ class ModelConfig:
             raise ValueError("foundation.n_ctx, n_threads and timeout_s must be positive")
         if not 0.0 < self.top_p <= 1.0:
             raise ValueError("foundation.top_p must be in (0, 1]")
+        if self.max_inflight < 0 or self.max_queue < 0 or self.queue_timeout_s <= 0:
+            raise ValueError("foundation.max_inflight and max_queue must be >= 0; "
+                             "queue_timeout_s must be positive")
 
     @property
     def is_pinned(self) -> bool:

@@ -18,6 +18,11 @@ digest = "0455603ff430"        # ID column of `ollama list`; pins the exact weig
 keep_alive = "10m"
 top_p = 0.9                    # pinned; greedy decoding still uses temperature 0 and seed 0
 think = false                  # fast response path; tony:7b has no thinking capability
+# Client-side concurrency policy (F-047); keep `max_inflight` aligned with the server's
+# OLLAMA_NUM_PARALLEL (1 safe, 2 opt-in maximum). EXP-019 rejected 4 slots on this laptop.
+max_inflight = 1
+max_queue = 8
+queue_timeout_s = 60
 
 [memory]
 # Use a separate database if you want the privacy profile's session memory isolated:

@@ -150,8 +150,10 @@ while the model is loaded.
 
 **Rejects / negative result:** concurrency did **not** produce parallel throughput. General-turn p50
 rose from 5.52 s in the single-client EXP-015 run to 25.80 s here (~4.7x), and server CPU
-utilisation was only ~0.31. The local model appears to queue concurrent requests; this is recorded
-as F-047, not hidden as a success. Do not claim four-way parallel inference from this run.
+utilisation was only ~0.31. The local model appeared to queue concurrent requests; this was
+recorded as F-047, not hidden as a success. EXP-019 later measured the setting explicitly: one
+server slot serializes, two give ~1.45x at two clients, and four are rejected. Do not claim four-way
+parallel inference from either run.
 
 **Inconclusive / not measured:** thermal throttling (OS telemetry unavailable), production
 endurance, shared-database concurrency (clients used isolated DBs), answer quality, and durable
@@ -159,7 +161,7 @@ worker jobs (F-045). This is a bounded research-prototype closure, not a product
 
 **Decision:** F-046 is fixed for its bounded scope: client lifecycle, database persistence, model
 unload/reload and application restart. The restart check proves memory persistence, not a capability
-change; see `research/evidence_standard.md`. F-045 and F-047 remain open.
+change; see `research/evidence_standard.md`. F-045 and F-047 are fixed for their bounded scopes.
 
 ## Consolidation persistence (EXP-017)
 
@@ -204,8 +206,9 @@ adapter. Details: `research/EXP-017_persistence.md`.
 - EXP-014 is larger but still author-written, with held-out wordings that share expression tokens.
   It is a non-regression and control-flow benchmark, not a capability estimate (F-044).
 - EXP-016 closes F-046 only for a bounded run: four clients, one reload, one restart and 80 turns.
-  Concurrent inference queued instead of scaling (F-047); production endurance, thermal telemetry
-  and durable worker jobs (F-045) remain open.
+  EXP-019 closes F-047 for explicit bounded concurrency but does not demonstrate linear scaling;
+  production endurance, thermal telemetry and a live real-model learning run (F-045 residual)
+  remain open.
 - EXP-017 measures persistence and retention for the NumPy candidate, not `tony:7b`. A language-model
   adapter/fine-tune (F-043) and an independently authored capability set (F-044) remain open.
 - A production loop needs a reviewer UI/queue, durable job storage and CLI configuration

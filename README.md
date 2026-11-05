@@ -7,7 +7,7 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 Phase 1 trust repair (P01–P14), Phase 2 memory reliability (P15–P29) and Phase 3 verified-correction
 loop (P07/P75/A01–A03) implemented and tested; local OCR and a HARN arithmetic candidate are
 integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
-subproject. **284 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
+subproject. **291 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
 experimental and out of the response path. BrainSim is not imported by ASHURA. The learning loop is
 **not** complete: it is an opt-in controller hook with a durable background worker, only exact
 arithmetic corrections are independently verified, and the candidate is the NumPy memory rather
@@ -15,15 +15,17 @@ than the language model. EXP-017 shows that a promoted NumPy candidate survives 
 and retains the old capability. EXP-018 selects `tony:7b-gpa3` as the general tutor and keeps
 `tony:7b` as the privacy profile; EXP-018b keeps `tony:7b-agentic3` as an agentic-benchmark
 candidate. ASHURA trains none of them. F-045 is fixed for durable jobs and hard timeout; F-046 is
-closed only for a bounded client/reload/restart test; concurrent inference queues instead of
-scaling (F-047). See `research/evidence_standard.md`, `research/EXP-018_subject_tutor.md` and
-`research/completion_audit.md`.
+closed only for a bounded client/reload/restart test. EXP-019 fixes F-047 for explicit bounded
+concurrency: one server slot is the safe default, two give ~1.45x at two clients, and four are
+rejected because they cut single-client throughput to 3.32 tokens/s. No linear-scaling claim. See
+`research/evidence_standard.md`, `research/EXP-018_subject_tutor.md`,
+`research/EXP-019_concurrency.md` and `research/completion_audit.md`.
 
 ## Run
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 284 tests
+python -m pytest -q                       # 291 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -173,10 +175,17 @@ The 2026-11-05 Phase 3 pass connects the existing pieces into one explicit chain
   0 failures; one forced unload/reload took 22.41 s wall (9.11 s Ollama load); a fresh ASHURA
   process found both a verified arithmetic record and a user-provided memory record. General p50
   under four clients was 25.80 s / p95 35.23 s, versus 5.52 s single-client, so the local model
-  queues requests rather than scaling (F-047). Arithmetic stayed at p50 4.43 ms. Client RSS max
-  97 MB; system RAM max 83.9%; temperature telemetry was unavailable. This closes F-046 only for
-  client lifecycle, database persistence, model reload and application restart — not production
-  endurance or parallel throughput.
+  queues requests rather than scaling. Arithmetic stayed at p50 4.43 ms. Client RSS max 97 MB;
+  system RAM max 83.9%; temperature telemetry was unavailable. This closes F-046 only for client
+  lifecycle, database persistence, model reload and application restart — not production endurance
+  or parallel throughput.
+- **Concurrency policy (EXP-019/F-047).** A private-server sweep on `tony:7b-gpa3` measured
+  `OLLAMA_NUM_PARALLEL` 1/2/4 with 1/2/4 clients and a fixed 32-token output. One slot serialized
+  (4.93 to 5.95 tokens/s, p50 6.57 to 13.53 s); two slots gave 1.45x at two clients (9.21 tokens/s)
+  but only 1.19x at four; four slots cut single-client throughput to 3.32 tokens/s and raised
+  system RAM to 87.7%. Keep one slot as the default, two as the opt-in maximum, and reject
+  four. The client profiles now set `max_inflight=1`, `max_queue=8`, `queue_timeout_s=60`; these
+  bounds are per process, not a cross-process scheduler.
 - **Consolidation persistence (EXP-017).** A verified correction promoted a NumPy candidate in one
   process; a fresh process loaded the same stable artifact (SHA-256 match 20/20), predicted 60/60
   corrected held-out wordings and 400/400 old-capability wordings, and rolled back to the parent
@@ -256,7 +265,7 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 
 | Area | Files | State |
 |---|---|---|
-| Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; general `tony:7b-gpa3` and privacy `tony:7b` pinned; 41/42 adjudicated each, 1.86/3.04 s p50 (EXP-018, n=42); 4.7 GB shared footprint; llama.cpp untested |
+| Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; general `tony:7b-gpa3` and privacy `tony:7b` pinned; 41/42 adjudicated each, 1.86/3.04 s p50 (EXP-018, n=42); 4.7 GB shared footprint; bounded per-process concurrency gate (EXP-019); llama.cpp untested |
 | Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + verified semantic facts, FTS5, provenance/derivation, conflict index, utility feedback, bounded working memory, deletion integrity, utility-aware retention |
 | AMA | `learning/ama.py`, `learning/compare.py` | duplicate/conflict detection, scoring, continuous surprise, conflict index, feedback-based utility, decision log, reliability-aware retrieval; weights hand-set except the measured threshold sweep |
 | NFD + router | `brain/need_field.py`, `brain/router.py`, `brain/controller.py` | priority scoring, RAM/CPU-aware selection, cheap-skill path, traces, measured costs when calibrated |

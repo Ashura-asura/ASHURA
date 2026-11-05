@@ -14,6 +14,7 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 
+from .concurrency import ConcurrencyGate
 from .language_model import LanguageModel
 from .model_config import ModelConfig
 
@@ -90,8 +91,10 @@ class OllamaModel(LanguageModel):
         if cfg.digest and not self.digest.startswith(cfg.digest):
             raise RuntimeError(f"digest mismatch for {cfg.model}: installed {self.digest[:12]}, "
                                f"pinned {cfg.digest[:12]}; refusing to use a modified model")
+        self.gate = (ConcurrencyGate(cfg.max_inflight, cfg.max_queue, cfg.queue_timeout_s)
+                     if cfg.max_inflight else None)
 
-    def generate(self, prompt: str, max_tokens: int = 128) -> str:
+    def _request(self, prompt: str, max_tokens: int) -> str:
         payload = {
             "model": self.cfg.model, "prompt": prompt, "stream": False, "keep_alive": self.cfg.keep_alive,
             "options": {"temperature": 0, "seed": 0, "top_p": self.cfg.top_p,
@@ -103,3 +106,9 @@ class OllamaModel(LanguageModel):
         self.last_stats = GenStats(r.get("eval_count", 0), r.get("eval_duration", 0), r.get("prompt_eval_count", 0),
                                    r.get("prompt_eval_duration", 0), r.get("load_duration", 0), r.get("total_duration", 0))
         return r.get("response", "").strip()
+
+    def generate(self, prompt: str, max_tokens: int = 128) -> str:
+        if self.gate is None:
+            return self._request(prompt, max_tokens)
+        with self.gate.slot():
+            return self._request(prompt, max_tokens)

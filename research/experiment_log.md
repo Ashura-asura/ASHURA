@@ -339,3 +339,15 @@ record their own environment. Phase 0 real-model numbers remain scoped to the ma
 - **Does not support:** replacing gpa3 as the general tutor, or any tool-use/agentic capability claim; the suite has no tool-use items.
 - **Conclusion:** **tied on accuracy, worse on format and p50**; no justification to change the general default.
 - **Decision:** keep gpa3 general tutor and tony:7b privacy; retain agentic3 as a candidate for a separate agentic/tool-use benchmark (D-057). Full data: `experiments/foundation/subject_tutor_agentic.json`; report: `research/EXP-018_subject_tutor.md`.
+
+---
+## EXP-019 - Concurrent inference configuration and throughput (F-047, 2026-11-06)
+- **Hypothesis:** the default local Ollama server serializes concurrent requests; raising `OLLAMA_NUM_PARALLEL` may buy throughput but may cost latency and memory on the 16 GB / 2 GB-GPU laptop.
+- **Baseline:** EXP-016's four-client queueing result; no explicit server parallel-slot measurement existed.
+- **Configuration:** `tony:7b-gpa3` only, digest `2a86766287cf`; dedicated Ollama server on port 11435; `OLLAMA_NUM_PARALLEL` 1/2/4; `OLLAMA_MAX_QUEUE=8`; clients 1/2/4; 3 measured rounds + 1 warmup; temperature 0, seed 0, top_p 0.9, `num_predict` 32, `num_ctx` 2048; every request generated exactly 32 tokens.
+- **Throughput/latency:** one slot 4.93/5.43/5.95 tok/s and p50 6.57/8.83/13.53 s at 1/2/4 clients; two slots 6.37/9.21/7.55 tok/s and p50 5.01/6.86/11.19 s; four slots 3.32/4.89/8.26 tok/s and p50 9.82/13.27/14.82 s. Two slots gave a repeatable ~1.45x at two clients; four slots cut single-client throughput to 3.32 tok/s.
+- **Resources:** server-tree RSS 5.23/5.67/6.09 GB and system RAM max 80.2/83.6/87.7% for 1/2/4 slots; 0 failures in all 63 measured requests; no request paid a reload (max load 59 ms).
+- **Supports:** explicit bounded concurrency works; two server slots are the maximum useful setting for this laptop; four slots are rejected for interactive use.
+- **Does not support:** linear four-way scaling, production multi-tenant serving, or GPU-parallel claims. The client gate is per process and the server queue is not a cross-process scheduler.
+- **Conclusion:** **F-047 fixed for a bounded scope**; keep the safe default at one slot, document two slots as the concurrent maximum, and reject four.
+- **Decision:** adopt the per-process gate (`max_inflight=1`, `max_queue=8`, `queue_timeout_s=60`) and the one-slot default; document two slots as opt-in only (D-059). Full data: `experiments/runtime/concurrency_sweep.json`; report: `research/EXP-019_concurrency.md`.

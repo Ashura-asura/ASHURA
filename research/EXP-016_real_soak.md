@@ -1,7 +1,7 @@
 # EXP-016 - Bounded concurrency, reload, restart and 80-turn soak
 
-Date: 2026-11-05. Status: **F-046 closed for the bounded scope below; F-047 opened for the
-concurrency-throughput negative result.**
+Date: 2026-11-05. Status: **F-046 closed for the bounded scope below; F-047 opened here and later
+fixed for a bounded scope by EXP-019.**
 
 ## Hypothesis and baseline
 
