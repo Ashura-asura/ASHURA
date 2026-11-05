@@ -45,8 +45,9 @@ class FastMemoryConfig:
         if self.key_mode not in ("token", "pair"):
             raise ValueError("key_mode must be 'token' or 'pair'")
         numeric = (self.decay, self.eta, self.blend, self.logit_scale, self.surprise_threshold)
-        if not all(math.isfinite(float(x)) for x in numeric):
-            raise ValueError("fast-memory numeric parameters must be finite")
+        if not all(isinstance(x, (int, float)) and not isinstance(x, bool)
+                   and math.isfinite(float(x)) for x in numeric):
+            raise ValueError("fast-memory numeric parameters must be finite numbers")
         if not 0.0 <= self.blend <= 1.0:
             raise ValueError("blend must be in [0, 1]")
         if self.logit_scale <= 0.0:
@@ -199,11 +200,11 @@ class FastAssociativeMemory:
 
     def _tokens(self, tokens: torch.Tensor) -> torch.Tensor:
         raw = torch.as_tensor(tokens)
+        if raw.is_complex() or raw.dtype == torch.bool:
+            raise ValueError("token ids must be real integers")
         if raw.is_floating_point():
             if not bool(torch.isfinite(raw).all()) or not bool((raw == raw.round()).all()):
                 raise ValueError("token ids must be finite integers")
-        elif raw.dtype == torch.bool:
-            raise ValueError("boolean values are not token ids")
         tokens = raw.to(device="cpu", dtype=torch.long).flatten()
         if tokens.numel() and (int(tokens.min()) < 0 or int(tokens.max()) >= self.cfg.vocab):
             raise ValueError("token id outside the vocabulary")
