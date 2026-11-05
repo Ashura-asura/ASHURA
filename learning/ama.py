@@ -203,8 +203,10 @@ class AMA:
         returned at all. Anything returned carries a provenance label and conflict flag, so an
         unverified experience can never silently masquerade as an established fact.
         """
+        if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+            raise ValueError("limit must be a positive integer")
         threshold = self.cfg.retrieval_min_reliability if min_reliability is None else min_reliability
-        if not 0.0 <= threshold <= 1.0:
+        if not isinstance(threshold, (int, float)) or isinstance(threshold, bool) or not 0.0 <= threshold <= 1.0:
             raise ValueError("min_reliability must be in [0, 1]")
         hits = self.fts.search(query, limit=max(limit * 5, 15))
         out: list[RetrievalItem] = []

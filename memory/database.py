@@ -11,17 +11,23 @@ SCHEMA = Path(__file__).with_name("schema.sql")
 
 class Database:
     def __init__(self, path: str = ":memory:", busy_timeout_ms: int = 5000):
-        self.path = path
+        if not isinstance(busy_timeout_ms, int) or isinstance(busy_timeout_ms, bool) or busy_timeout_ms < 0:
+            raise ValueError("busy_timeout_ms must be a non-negative integer")
+        self.path = str(path)
         if path != ":memory:":
             Path(path).parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(path)
         self.conn.row_factory = sqlite3.Row
         try:
             # Wait for a competing writer instead of failing immediately with "database is locked".
-            self.conn.execute(f"PRAGMA busy_timeout = {int(busy_timeout_ms)}")
-            if path != ":memory:":
+            self.conn.execute(f"PRAGMA busy_timeout = {busy_timeout_ms}")
+            # Foreign-key enforcement is per connection; do not rely only on schema declarations.
+            self.conn.execute("PRAGMA foreign_keys = ON")
+            if self.conn.execute("PRAGMA foreign_keys").fetchone()[0] != 1:
+                raise RuntimeError("SQLite foreign-key enforcement could not be enabled")
+            if self.path != ":memory:":
                 self.conn.execute("PRAGMA journal_mode = WAL")
-            self.conn.executescript(SCHEMA.read_text())
+            self.conn.executescript(SCHEMA.read_text(encoding="utf-8"))
             self._migrate()
             self.conn.commit()
         except Exception:
