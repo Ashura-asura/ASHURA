@@ -1,0 +1,63 @@
+# ASHURA privacy profile: tony:7b is the user's privacy-preserving tutor. This profile selects the
+# model only; it is not a measured privacy guarantee. Use --config config/ashura.ollama.private.toml.
+
+[foundation]
+backend = "ollama"             # "echo" (test stub) | "llama_cpp" | "ollama"
+family = "qwen2"               # `ollama show tony:7b`
+checkpoint = "tony:7b"
+quantization = "Q4_K_M"        # from `ollama show tony:7b`
+licence = "Local fine-tune of Qwen2 (Apache-2.0 base); user-supplied bio/curriculum data; provenance unverified"
+path = ""                      # local .gguf path (not committed)
+sha256 = ""                    # pinned hash of the stable checkpoint
+n_ctx = 4096                   # EXP-018 used 4096; model supports 32768
+n_threads = 4                  # i7-1165G7: 4 cores / 8 threads
+# --- backend = "ollama" (see config/ashura.ollama.toml for a ready-made example) ---
+model = "tony:7b"              # privacy profile: 41/42 adjudicated, 3.04 s p50 (EXP-018)
+host = "http://127.0.0.1:11434"
+digest = "0455603ff430"        # ID column of `ollama list`; pins the exact weights (mismatch => refuse to run)
+keep_alive = "10m"
+top_p = 0.9                    # pinned; greedy decoding still uses temperature 0 and seed 0
+think = false                  # fast response path; tony:7b has no thinking capability
+
+[memory]
+# Use a separate database if you want the privacy profile's session memory isolated:
+# db_path = "data/ashura.private.db"
+db_path = "data/ashura.db"
+working_memory_slots = 8
+working_memory_ttl_s = 600
+
+[ama]
+# Experimental weights. NOT calibrated yet (see research/hypotheses.md H-AMA).
+w_novelty = 1.0
+w_surprise = 0.5
+w_reliability = 1.0
+w_utility = 0.7
+w_conflict = 0.8
+w_cost = 0.3
+discard_threshold = 0.45
+duplicate_similarity = 0.9
+reliable_fact_threshold = 0.8
+retrieval_min_reliability = 0.5   # below this (unverified model output = 0.2) is not retrieval evidence
+
+[nfd]
+# Experimental weights for P = aE + bU + cR + dI - eK. NOT calibrated yet.
+a_error = 1.0
+b_uncertainty = 0.6
+c_recurrence = 0.5
+d_importance = 1.0
+e_cost = 0.8
+activation_threshold = 0.25
+ram_headroom_mb = 1500
+cpu_busy_percent = 85          # optional heavy modules are deferred above this system-wide CPU load
+heavy_latency_ms = 500
+
+[ngr]
+# Tolerances are fixed BEFORE evaluation (spec section 11.3).
+default_epsilon = 0.02
+min_target_gain = 0.05
+critical_epsilon = 0.0
+
+[retention]
+# Forgetting policy (memory/retention.py). Only unverified, never-reinforced, unrelated records are ever forgotten.
+max_age_days = 30
+max_rows = 0                   # 0 = no cap

@@ -17,8 +17,8 @@ The project must keep these mechanisms distinct:
 | SQLite memory | Stored experiences and facts | Storage and retrieval, including persistence across a process restart (EXP-016) |
 | `FastWeights` | Temporary adaptive state | Short-lived adaptation inside one process; not persistent model learning |
 | DREAM | Candidate consolidation process | A candidate is built and compared; it is not proof that a capability improved |
-| Persistent neural parameters | Actual learned model parameters | The current candidate is the NumPy adaptive memory; EXP-017 shows it persists and retains old capability across a restart. `tony:7b` is not trained. |
-| `tony:7b` weights | The language model's own parameters | Unchanged; no fine-tune or adapter has been trained |
+| Persistent neural parameters | Actual learned model parameters | The current candidate is the NumPy adaptive memory; EXP-017 shows it persists and retains old capability across a restart. Neither language checkpoint is trained by ASHURA. |
+| `tony:7b-gpa3` / `tony:7b` weights | The language models' own parameters | User-supplied and unchanged by ASHURA; EXP-018 selects gpa3 as general tutor and tony:7b as privacy profile, which is model selection, not learning |
 
 Therefore, remembering a correction and retrieving it later is **memory and retrieval**. It is not,
 by itself, learning a new capability. The current verified-correction experiments are evidence about
@@ -62,8 +62,10 @@ feature to hide. Do not tune a held-out set after inspection merely to force a p
   `tony:7b`.
 - EXP-017 measures persistence, retention and rollback of a promoted NumPy candidate across a fresh
   process. It is evidence for the consolidation mechanism, not for language-model capability change.
-- F-042 (independent natural-language verification) and F-043 (language-model fine-tune/adapter)
-  remain blocked or open.
+- EXP-018 compares two user-supplied checkpoints on a frozen subject suite and selects a role split.
+  It is model evaluation, not training and not a language-model capability change.
+- F-042 (independent natural-language verification) and F-043 (an ASHURA-trained language-model
+  adapter) remain blocked or open.
 - F-046 is closed only for the bounded scope recorded in EXP-016: client lifecycle, database
   persistence, model unload/reload and process restart. Production endurance and parallel inference
   throughput remain separate.

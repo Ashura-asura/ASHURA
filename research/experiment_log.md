@@ -313,3 +313,17 @@ record their own environment. Phase 0 real-model numbers remain scoped to the ma
 - **Does not support:** `tony:7b` weight learning, independent generalisation, power-loss durability, corrupt-manifest recovery, shared-database concurrency or production backup/restore. The candidate is the NumPy adaptive memory, not the language model.
 - **Conclusion:** **supported** for NumPy consolidation persistence and retention; **not supported** for language-model capability change.
 - **Decision:** record A02/A03 as measured for the NumPy candidate; keep F-043 open for any `tony:7b` adapter/fine-tune. Full data: `experiments/learning/persistence.json`; report: `research/EXP-017_persistence.md`; completion audit: `research/completion_audit.md`.
+
+---
+## EXP-018 - Frozen subject-tutor comparison: `tony:7b-gpa3` vs `tony:7b` (F-043, 2026-11-05)
+- **Hypothesis:** `tony:7b-gpa3` is the general tutor and `tony:7b` the privacy tutor; gpa3 should be non-inferior on a frozen 42-item subject suite and should not lose more than one item in any subject.
+- **Baseline:** `tony:7b`, digest `0455603ff430`, prior reference; EXP-000d 0.94 strict / 2.35 s p50 on the 16-item `baseline_v2`, which is not a subject-tutor suite. **Implementation:** `evaluation/subject_bench.py`; suite `evaluation/benchmarks/subject_tutor_v1.jsonl`, SHA-256 `efb3c2cb...`.
+- **Dataset and separation:** 42 author-written items, six each in physics, maths, biology, programming, coding, DevOps and debugging; exact-answer accept lists plus three-term explanation rubrics. Frozen before either model ran; no training split. Not independently authored.
+- **Configuration:** Windows 11, Python 3.13.14, Ollama 0.40.14, local only; Qwen2 7.6B Q4_K_M; temperature 0, seed 0, top_p 0.9, `num_predict` 160, `num_ctx` 4096; one run per model.
+- **Accuracy:** raw gpa3 39/42 (0.929) vs tony:7b 37/42 (0.881). After fixing decimal padding and 6-word echo stripping, and adjudicating five valid paraphrases symmetrically, both are **41/42 (0.976)**. Both miss only `cod-03`: Python `2 ** 3 ** 2` answered 256 instead of 512. Per-subject adjudicated: both 6/6 except coding 5/6.
+- **Rubric quality:** gpa3 0.000, tony:7b 0.048; the lexical rubric metric failed to discriminate because both models used formulas and synonyms. It is reported as a diagnostic, not used for the decision.
+- **Latency/resources:** gpa3 p50 1860 ms / p95 4137 ms / 9.05 tok/s; tony:7b p50 3040 ms / p95 10173 ms / 6.45 tok/s. Both: load ~8.2 s, 4755 MB Ollama-reported footprint, 4755 MB reported VRAM (not credible as 2 GB dedicated MX350 residency; treat as shared/unknown). Total run 305.62 s.
+- **Supports:** gpa3 is non-inferior on this suite, faster and more concise; tony:7b is more explanatory. Supports a role split: gpa3 general default, tony:7b privacy profile.
+- **Does not support:** base-model superiority (user-reported prior result, not re-measured), independent capability, privacy preservation, GPU residency, or language-model learning. ASHURA trains neither checkpoint.
+- **Conclusion:** **supported** for non-inferiority and speed on this frozen suite; **not supported** for a general capability or privacy claim.
+- **Decision:** adopt gpa3 as general default, keep tony:7b as privacy profile (D-056). Full data: `experiments/foundation/subject_tutor.json`; report: `research/EXP-018_subject_tutor.md`.

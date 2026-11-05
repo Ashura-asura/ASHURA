@@ -94,7 +94,8 @@ class OllamaModel(LanguageModel):
     def generate(self, prompt: str, max_tokens: int = 128) -> str:
         payload = {
             "model": self.cfg.model, "prompt": prompt, "stream": False, "keep_alive": self.cfg.keep_alive,
-            "options": {"temperature": 0, "seed": 0, "num_predict": max_tokens, "num_ctx": self.cfg.n_ctx},
+            "options": {"temperature": 0, "seed": 0, "top_p": self.cfg.top_p,
+                        "num_predict": max_tokens, "num_ctx": self.cfg.n_ctx},
         }
         if self.cfg.think is not None:
             payload["think"] = self.cfg.think

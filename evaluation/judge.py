@@ -26,6 +26,8 @@ def _norm_token(t: str) -> str:
     t = "".join(c for c in t if not unicodedata.combining(c))
     if re.fullmatch(r"\d{1,3}(,\d{3})+(\.\d+)?", t):      # 1,024 -> 1024
         t = t.replace(",", "")
+    if re.fullmatch(r"-?\d+\.\d+", t):                    # 4.000 -> 4; 0.250 -> 0.25
+        t = t.rstrip("0").rstrip(".")
     return t
 
 

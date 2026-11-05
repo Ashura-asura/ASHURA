@@ -26,6 +26,7 @@ class ModelConfig:
     digest: str = ""                # ID column of `ollama list` (12+ hex chars); pins the exact weights
     keep_alive: str = "10m"
     timeout_s: float = 300.0
+    top_p: float = 0.9              # pinned explicitly; greedy decoding still uses temperature 0
     think: bool | None = None       # Ollama thinking models: False for the fast response path, None = model default
 
     def __post_init__(self) -> None:
@@ -33,6 +34,8 @@ class ModelConfig:
             raise ValueError(f"foundation.backend must be echo, llama_cpp or ollama (got {self.backend!r})")
         if self.n_ctx < 1 or self.n_threads < 1 or self.timeout_s <= 0:
             raise ValueError("foundation.n_ctx, n_threads and timeout_s must be positive")
+        if not 0.0 < self.top_p <= 1.0:
+            raise ValueError("foundation.top_p must be in (0, 1]")
 
     @property
     def is_pinned(self) -> bool:

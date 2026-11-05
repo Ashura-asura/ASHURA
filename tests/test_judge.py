@@ -28,6 +28,12 @@ def test_accents_are_normalised():
     assert judge("Buenos días", ES, strict=True) and judge("buenos dias", ES, strict=True)
 
 
+def test_decimal_padding_is_normalised():
+    assert judge("4.000 m/s^2", {"prompt": "acceleration?", "accept": ["4"]})
+    assert judge("9.000 J", {"prompt": "energy?", "accept": ["9"]})
+    assert not judge("12.500", DIV)
+
+
 def test_strict_requires_answer_in_first_line_and_first_word_for_yes_no():
     assert judge("Yes.", YESNO, strict=True)
     assert not judge("No, although some say yes", YESNO, strict=True)

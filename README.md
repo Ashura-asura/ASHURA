@@ -7,20 +7,22 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 Phase 1 trust repair (P01–P14), Phase 2 memory reliability (P15–P29) and Phase 3 verified-correction
 loop (P07/P75/A01–A03) implemented and tested; local OCR and a HARN arithmetic candidate are
 integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
-subproject. **266 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
+subproject. **273 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
 experimental and out of the response path. BrainSim is not imported by ASHURA. The learning loop is
 **not** complete: it is an opt-in controller hook with an in-process background worker, only exact
 arithmetic corrections are independently verified, and the candidate is the NumPy memory rather
 than the language model. EXP-017 shows that a promoted NumPy candidate survives a process restart
-and retains the old capability; `tony:7b` remains unchanged. F-046 is closed only for a bounded
+and retains the old capability. EXP-018 selects `tony:7b-gpa3` as the general tutor and keeps
+`tony:7b` as the privacy profile; ASHURA trains neither model. F-046 is closed only for a bounded
 client/reload/restart test; concurrent inference queues instead of scaling (F-047). See
-`research/evidence_standard.md` and `research/completion_audit.md`.
+`research/evidence_standard.md`, `research/EXP-018_subject_tutor.md` and
+`research/completion_audit.md`.
 
 ## Run
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 266 tests
+python -m pytest -q                       # 273 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -176,9 +178,10 @@ The 2026-11-05 Phase 3 pass connects the existing pieces into one explicit chain
   corrected held-out wordings and 400/400 old-capability wordings, and rolled back to the parent
   20/20. Artifact max 131 KB; write/verify p50 48.219/33.241 ms; RSS max 41.2 MB; 6.25 s total.
   This is persistence and retention for the NumPy candidate, not a language-model capability change.
-- **Not language-model learning.** The candidate is the NumPy adaptive memory; no `tony:7b`
-  fine-tune or adapter is trained (D-009 stands). The completion audit scores the engineering
-  checklist separately from this central language-learning claim.
+- **Not language-model learning.** The candidate is the NumPy adaptive memory; ASHURA does not
+  train `tony:7b-gpa3` or `tony:7b` (D-009 stands). Both are user-supplied fine-tunes; EXP-018
+  evaluates them but does not turn them into a learned ASHURA capability. The completion audit
+  scores the engineering checklist separately from this central language-learning claim.
 
 The default CLI does not configure the loop: no live replay corpus or stable checkpoint is defined,
 so sessions do not learn automatically. Arbitrary factual corrections remain unverifiable (F-042).
@@ -194,13 +197,16 @@ gap (F-044). Conflict review is a minimal CLI without notification or a UI (F-03
 
 ```powershell
 ollama serve
-python -m evaluation.ollama_baseline --models tony:7b --reference tony:7b --calibrate tony:7b
+python -m evaluation.ollama_baseline --models tony:7b-gpa3 --reference tony:7b --calibrate tony:7b-gpa3
+python -m evaluation.subject_bench          # EXP-018 frozen 42-item subject comparison
 python -m app.main --config config/ashura.ollama.toml --trace
 ```
 
-The foundation is pinned to `tony:7b` (Q4_K_M, local Qwen2 7.6B fine-tune, digest `0455603ff430`);
-a digest mismatch is refused. `qwen3.5:2b` remains the 2.3 GB fallback. No external LLM API is
-used.
+The general foundation is pinned to `tony:7b-gpa3` (Q4_K_M, local Qwen2 7.6B fine-tune, digest
+`2a86766287cf`); a digest mismatch is refused. `tony:7b` (digest `0455603ff430`) remains the
+privacy profile via `config/ashura.ollama.private.toml`. EXP-018 tied them at 41/42 adjudicated
+answers; gpa3 was faster (1.86 s vs 3.04 s p50). `qwen3.5:2b` remains the 2.3 GB fallback. No
+external LLM API is used.
 
 ## Local OCR (optional)
 
@@ -241,7 +247,7 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 
 | Area | Files | State |
 |---|---|---|
-| Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; `tony:7b` pinned; Phase 0 0.94 strict / 2.35 s p50 (EXP-000d, n=16); 4.6 GB shared footprint; llama.cpp untested |
+| Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; general `tony:7b-gpa3` and privacy `tony:7b` pinned; 41/42 adjudicated each, 1.86/3.04 s p50 (EXP-018, n=42); 4.7 GB shared footprint; llama.cpp untested |
 | Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + verified semantic facts, FTS5, provenance/derivation, conflict index, utility feedback, bounded working memory, deletion integrity, utility-aware retention |
 | AMA | `learning/ama.py`, `learning/compare.py` | duplicate/conflict detection, scoring, continuous surprise, conflict index, feedback-based utility, decision log, reliability-aware retrieval; weights hand-set except the measured threshold sweep |
 | NFD + router | `brain/need_field.py`, `brain/router.py`, `brain/controller.py` | priority scoring, RAM/CPU-aware selection, cheap-skill path, traces, measured costs when calibrated |

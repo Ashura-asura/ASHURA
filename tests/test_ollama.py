@@ -58,7 +58,8 @@ def test_generate_is_greedy_and_records_stats(host):
     m = OllamaModel(ModelConfig(backend="ollama", model="ref-base:7b", host=host, digest="130777f43a36", n_ctx=4096))
     assert m.generate("Question: 17*23", max_tokens=32) == "391"
     opts = Fake.calls[-1]["options"]
-    assert opts["temperature"] == 0 and opts["seed"] == 0 and opts["num_predict"] == 32 and opts["num_ctx"] == 4096
+    assert (opts["temperature"] == 0 and opts["seed"] == 0 and opts["top_p"] == 0.9
+            and opts["num_predict"] == 32 and opts["num_ctx"] == 4096)
     assert Fake.calls[-1]["stream"] is False
     assert m.last_stats.eval_count == 10 and m.last_stats.tokens_per_s == pytest.approx(20.0)
 

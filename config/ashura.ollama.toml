@@ -2,20 +2,21 @@
 
 [foundation]
 backend = "ollama"             # "echo" (test stub) | "llama_cpp" | "ollama"
-family = "qwen2"               # `ollama show tony:7b`
-checkpoint = "tony:7b"
-quantization = "Q4_K_M"        # from `ollama show tony:7b`
-licence = "Local fine-tune of Qwen2 (Apache-2.0 base)"
+family = "qwen2"               # `ollama show tony:7b-gpa3`
+checkpoint = "tony:7b-gpa3"
+quantization = "Q4_K_M"        # from `ollama show tony:7b-gpa3`
+licence = "Local fine-tune of Qwen2 (Apache-2.0 base); user-supplied bio/curriculum data; provenance unverified"
 path = ""                      # local .gguf path (not committed)
 sha256 = ""                    # pinned hash of the stable checkpoint
-n_ctx = 2048
+n_ctx = 4096                   # EXP-018 used 4096; model supports 32768
 n_threads = 4                  # i7-1165G7: 4 cores / 8 threads
 # --- backend = "ollama" (see config/ashura.ollama.toml for a ready-made example) ---
-model = "tony:7b"              # selected foundation: 0.94 strict, 2.35 s p50 (EXP-000d)
+model = "tony:7b-gpa3"         # general tutor: 41/42 adjudicated, 1.86 s p50 (EXP-018)
 host = "http://127.0.0.1:11434"
-digest = "0455603ff430"        # ID column of `ollama list`; pins the exact weights (mismatch => refuse to run)
+digest = "2a86766287cf"        # ID column of `ollama list`; pins the exact weights (mismatch => refuse to run)
 keep_alive = "10m"
-think = false                  # fast response path; tony:7b has no thinking capability
+top_p = 0.9                    # pinned; greedy decoding still uses temperature 0 and seed 0
+think = false                  # fast response path; tony:7b-gpa3 has no thinking capability
 
 [memory]
 db_path = "data/ashura.db"

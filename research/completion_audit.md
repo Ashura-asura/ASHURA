@@ -1,6 +1,6 @@
 # Project completion audit
 
-Status: 2026-11-05, after EXP-016 and EXP-017. This file is an evidence audit, not a claim that
+Status: 2026-11-05, after EXP-016, EXP-017 and EXP-018. This file is an evidence audit, not a claim that
 ASHURA is 86% intelligent or 86% of the way to general capability.
 
 ## Method
@@ -36,9 +36,9 @@ The total is `(26 + 0.5 x 10) / 36 = 31 / 36 = 86.1%`.
 
 | Area | Partial item | What is missing |
 |---|---|---|
-| Foundation | Documented, reproducible language checkpoint | `tony:7b` digest and config are pinned, but the Ollama backend version and all inference settings are not fully locked (P51/P52). |
+| Foundation | Documented, reproducible language checkpoint | `tony:7b-gpa3` (general) and `tony:7b` (privacy) are pinned by digest; temperature, seed, top_p, context and token limit are pinned for EXP-018, and Ollama 0.40.14 is recorded there. The backend version is not locked in config, and licence/dataset provenance remains user-supplied and unverified (P51/P52). |
 | Learning | Fast adaptive memory works | It works in isolation and can be reset, but has no measured advantage over FTS5 and is not in the response path (F-037). |
-| Learning | Slow consolidation works | EXP-017 persists a promoted **NumPy** candidate; no `tony:7b` adapter or fine-tune exists (F-043). |
+| Learning | Slow consolidation works | EXP-017 persists a promoted **NumPy** candidate; EXP-018 evaluates the user-supplied gpa3/tony checkpoints but ASHURA trains no adapter or fine-tune (F-043). |
 | Learning | Generalisation on unseen examples | EXP-014/EXP-017 use author-written held-out wordings that share expression tokens with the correction key (F-044). |
 | Specialist skills | OCR works locally | Local Tesseract pipeline and smoke test exist; no held-out real-document CER/WER measurement (F-016/P55-P60). |
 | Specialist skills | Specialist outputs can be verified | Exact arithmetic is verified; OCR is unverified and HARN is a non-authoritative linear candidate. |
@@ -53,7 +53,7 @@ The central research claim is not "the modules exist". It is: **verified experie
 measurable, persistent capability improvement in the language foundation while previous
 capabilities are retained.** That claim is not captured by the 86.1% checklist score.
 
-| Learning test | ASHURA memory / NumPy candidate | `tony:7b` language foundation |
+| Learning test | ASHURA memory / NumPy candidate | `tony:7b-gpa3` / `tony:7b` language foundation |
 |---|---|---|
 | Remembering | **Yes** — SQLite storage and retrieval survive a process restart (EXP-016) | **No** — no language-model memory change |
 | Generalising | **Partial** — 150/150 held-out wordings in EXP-014; author-written and token-overlapping | **No** |
@@ -72,7 +72,7 @@ mean the central learning objective is 86% achieved.
 | Explicit concurrent-inference configuration and benchmark (F-047) | One partial becomes full: +1.4 points | Local model queueing |
 | Held-out OCR corpus (F-016) | One partial becomes full: +1.4 points | Labelled data |
 | Independently authored correction set (F-044) | One partial becomes full: +1.4 points | Independent authorship |
-| `tony:7b` adapter/LoRA experiment (F-043) | Moves the core language-learning tests, not just the checklist | 4.6 GB model vs 2 GB GPU; verified corpus |
+| ASHURA-trained adapter/LoRA experiment (F-043) | Moves the core language-learning tests, not just the checklist | 4.7 GB model vs 2 GB GPU; verified corpus |
 
 The largest remaining risk is not a missing module. It is claiming that memory persistence or a
 NumPy candidate promotion proves that the language foundation learned a new capability. It does not.

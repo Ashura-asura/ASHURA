@@ -1,0 +1,42 @@
+{"id": "phy-01", "category": "physics", "prompt": "A 2 kg block experiences a net force that gives it an acceleration of 3 m/s^2. What is the net force?", "accept": ["6", "6 n", "6n"], "rubric": ["newton", "second law", "product"]}
+{"id": "phy-02", "category": "physics", "prompt": "A car speeds up uniformly from rest to 20 m/s in 5 s. What is its acceleration?", "accept": ["4", "4 m/s^2", "4 m/s2"], "rubric": ["velocity", "time", "change"]}
+{"id": "phy-03", "category": "physics", "prompt": "What is the kinetic energy of a 2 kg object moving at 3 m/s?", "accept": ["9", "9 j", "9j"], "rubric": ["half", "mass", "velocity"]}
+{"id": "phy-04", "category": "physics", "prompt": "A 12 V battery is connected across a 4 ohm resistor. What current flows?", "accept": ["3", "3 a", "3a"], "rubric": ["voltage", "resistance", "divide"]}
+{"id": "phy-05", "category": "physics", "prompt": "A wave has frequency 50 Hz and wavelength 2 m. What is its speed?", "accept": ["100", "100 m/s", "100m/s"], "rubric": ["product", "hertz", "metre"]}
+{"id": "phy-06", "category": "physics", "prompt": "Which SI unit measures power? Answer with the unit name.", "accept": ["watt", "watts", "w"], "rubric": ["joule", "second", "rate"]}
+{"id": "mat-01", "category": "maths", "prompt": "Differentiate f(x) = x^3 with respect to x.", "accept": ["3x^2", "3x2", "3*x^2", "3 x^2"], "rubric": ["power", "multiply", "exponent"]}
+{"id": "mat-02", "category": "maths", "prompt": "Evaluate the indefinite integral of 2x with respect to x.", "accept": ["x^2+c", "x2+c", "x^2 + c", "x2 + c"], "rubric": ["constant", "integration", "power"]}
+{"id": "mat-03", "category": "maths", "prompt": "Solve 2x + 5 = 17 for x.", "accept": ["6", "x=6", "x = 6"], "rubric": ["subtract", "divide", "inverse"]}
+{"id": "mat-04", "category": "maths", "prompt": "A fair coin is flipped twice. What is the probability of two heads?", "accept": ["1/4", "0.25", "25%", "one quarter"], "rubric": ["independent", "multiply", "half"]}
+{"id": "mat-05", "category": "maths", "prompt": "Find the greatest common divisor of 84 and 30.", "accept": ["6"], "rubric": ["factor", "euclid", "remainder"]}
+{"id": "mat-06", "category": "maths", "prompt": "Evaluate log base 2 of 32.", "accept": ["5"], "rubric": ["exponent", "power", "five"]}
+{"id": "bio-01", "category": "biology", "prompt": "Which organelle produces most of the ATP in a eukaryotic cell?", "accept": ["mitochondria", "mitochondrion"], "rubric": ["respiration", "membrane", "cristae"]}
+{"id": "bio-02", "category": "biology", "prompt": "In DNA, which base pairs with adenine?", "accept": ["thymine", "t"], "rubric": ["hydrogen", "bond", "pyrimidine"]}
+{"id": "bio-03", "category": "biology", "prompt": "Which gas is released by photosynthesis?", "accept": ["oxygen", "o2"], "rubric": ["water", "light", "chloroplast"]}
+{"id": "bio-04", "category": "biology", "prompt": "How many chromosomes are in a normal human diploid somatic cell?", "accept": ["46", "forty six"], "rubric": ["23", "pair", "haploid"]}
+{"id": "bio-05", "category": "biology", "prompt": "Which enzyme unwinds the DNA double helix during replication?", "accept": ["helicase"], "rubric": ["hydrogen", "bond", "strand"]}
+{"id": "bio-06", "category": "biology", "prompt": "Which blood cells transport oxygen from the lungs to tissues?", "accept": ["red blood cells", "erythrocytes", "rbc", "red blood cell"], "rubric": ["hemoglobin", "iron", "carrier"]}
+{"id": "prg-01", "category": "programming", "prompt": "In Python, what is the key difference between a list and a tuple?", "accept": ["immutable", "tuple is immutable", "tuples are immutable", "cannot change"], "rubric": ["mutable", "sequence", "parentheses"]}
+{"id": "prg-02", "category": "programming", "prompt": "What is the time complexity of binary search on a sorted array of n elements?", "accept": ["o(log n)", "log n", "logn", "o(logn)"], "rubric": ["halve", "logarithmic", "midpoint"]}
+{"id": "prg-03", "category": "programming", "prompt": "Which SQL join returns only rows with matching keys in both tables?", "accept": ["inner join", "inner"], "rubric": ["intersection", "foreign", "equality"]}
+{"id": "prg-04", "category": "programming", "prompt": "Which Git command creates a new branch and switches to it?", "accept": ["git checkout -b", "git switch -c"], "rubric": ["head", "checkout", "pointer"]}
+{"id": "prg-05", "category": "programming", "prompt": "What does HTTP status code 404 mean?", "accept": ["not found", "404 not found"], "rubric": ["resource", "missing", "client"]}
+{"id": "prg-06", "category": "programming", "prompt": "Why does a recursive function need a base case?", "accept": ["base case", "stopping condition", "termination", "prevent infinite recursion"], "rubric": ["terminate", "stack", "infinite"]}
+{"id": "cod-01", "category": "coding", "prompt": "What is the output of this Python code?\nprint(len([1, 2, 3]))", "accept": ["3"], "rubric": ["list", "length", "three"]}
+{"id": "cod-02", "category": "coding", "prompt": "What is the output of this JavaScript code?\nconsole.log(typeof null)", "accept": ["object"], "rubric": ["primitive", "legacy", "object"]}
+{"id": "cod-03", "category": "coding", "prompt": "What is the output of this Python code?\nprint(2 ** 3 ** 2)", "accept": ["512"], "rubric": ["right", "associative", "exponent"]}
+{"id": "cod-04", "category": "coding", "prompt": "What is the output of this Python code?\nprint([x for x in range(5) if x % 2 == 0])", "accept": ["[0, 2, 4]", "0, 2, 4", "0,2,4"], "rubric": ["even", "filter", "zero"]}
+{"id": "cod-05", "category": "coding", "prompt": "What is the output of this Bash code?\necho $((7 / 2))", "accept": ["3"], "rubric": ["integer", "division", "truncate"]}
+{"id": "cod-06", "category": "coding", "prompt": "What is the output of this Python code?\nd = {'a': 1}\nd['b'] = 2\nprint(len(d))", "accept": ["2"], "rubric": ["dictionary", "keys", "length"]}
+{"id": "dev-01", "category": "devops", "prompt": "Which Dockerfile instruction sets the base image?", "accept": ["from"], "rubric": ["layer", "parent", "reproducible"]}
+{"id": "dev-02", "category": "devops", "prompt": "Which Kubernetes object is the smallest deployable unit that can run one or more containers?", "accept": ["pod"], "rubric": ["scheduler", "node", "namespace"]}
+{"id": "dev-03", "category": "devops", "prompt": "What does CI stand for in CI/CD?", "accept": ["continuous integration"], "rubric": ["merge", "build", "test"]}
+{"id": "dev-04", "category": "devops", "prompt": "What is the purpose of the command kubectl get pods?", "accept": ["list pods", "lists pods", "show pods", "get pods"], "rubric": ["namespace", "status", "kubernetes"]}
+{"id": "dev-05", "category": "devops", "prompt": "What problem does a Docker multi-stage build solve?", "accept": ["smaller image", "reduce image size", "separate build and runtime", "smaller final image"], "rubric": ["runtime", "artifact", "size"]}
+{"id": "dev-06", "category": "devops", "prompt": "Which Linux command shows disk space usage by filesystem in human-readable form?", "accept": ["df -h", "df"], "rubric": ["blocks", "mount", "capacity"]}
+{"id": "dbg-01", "category": "debugging", "prompt": "A Python program raises IndexError. What is the most likely cause?", "accept": ["index out of range", "out of range", "list index out of range"], "rubric": ["list", "range", "position"]}
+{"id": "dbg-02", "category": "debugging", "prompt": "A Python program raises KeyError. What is the most likely cause?", "accept": ["missing key", "key not found", "key does not exist", "absent key"], "rubric": ["dictionary", "key", "lookup"]}
+{"id": "dbg-03", "category": "debugging", "prompt": "What is a null pointer dereference?", "accept": ["accessing a null pointer", "dereferencing null", "using a null pointer", "null pointer"], "rubric": ["memory", "invalid", "crash"]}
+{"id": "dbg-04", "category": "debugging", "prompt": "A loop is intended to process 10 items but skips the last one. What class of bug is this?", "accept": ["off-by-one", "off by one", "boundary"], "rubric": ["index", "boundary", "inclusive"]}
+{"id": "dbg-05", "category": "debugging", "prompt": "What is a race condition?", "accept": ["unsynchronized access", "concurrent access", "timing dependent", "race condition"], "rubric": ["thread", "shared", "order"]}
+{"id": "dbg-06", "category": "debugging", "prompt": "What is the N+1 query problem?", "accept": ["one query per row", "many queries", "n+1", "extra queries"], "rubric": ["database", "loop", "performance"]}
