@@ -10,9 +10,11 @@ Measures, on the machine that runs the test:
   * a 300-turn sustained mix with RSS, CPU, database growth and first/last-quartile drift.
 
 The language-model figures in ``config/module_costs.json`` are copied in for reference and are NOT
-re-measured here; they come from the Ollama baseline run. This experiment does not load tony:7b.
+re-measured by the default run; they come from the Ollama baseline run. The optional
+``--real-model`` path loads pinned tony:7b for a short mixed measurement.
 
     python -m experiments.runtime.load_bench
+    python -m experiments.runtime.load_bench --real-model --real-cold
 """
 from __future__ import annotations
 

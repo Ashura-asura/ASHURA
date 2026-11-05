@@ -1,0 +1,3124 @@
+{
+  "experiment": "EXP-016",
+  "generated_at": "2026-11-05T20:33:09",
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "cpu_count": 8,
+    "clients": 4
+  },
+  "config": "config/ashura.ollama.toml",
+  "model": "tony:7b",
+  "digest": "0455603ff430",
+  "cold_load": {
+    "label": "cold_load",
+    "unloaded": true,
+    "wall_ms": 13317.77,
+    "ollama_load_ms": 7046.03,
+    "eval_count": 8,
+    "chars": 22,
+    "server_before": [],
+    "server_after": [
+      {
+        "name": "tony:7b",
+        "size_mb": 4635.9,
+        "vram_mb": 4635.9
+      }
+    ]
+  },
+  "phase1": {
+    "phase": 1,
+    "wall_s": 131.35,
+    "clients": [
+      {
+        "client_id": 0,
+        "phase": 1,
+        "pid": 8276,
+        "wall_s": 126.03,
+        "cpu_s": 0.03,
+        "rss_start_mb": 95.2,
+        "rss_end_mb": 95.6
+      },
+      {
+        "client_id": 1,
+        "phase": 1,
+        "pid": 2080,
+        "wall_s": 97.82,
+        "cpu_s": 0.02,
+        "rss_start_mb": 95.4,
+        "rss_end_mb": 95.7
+      },
+      {
+        "client_id": 2,
+        "phase": 1,
+        "pid": 15616,
+        "wall_s": 109.27,
+        "cpu_s": 0.06,
+        "rss_start_mb": 95.3,
+        "rss_end_mb": 95.7
+      },
+      {
+        "client_id": 3,
+        "phase": 1,
+        "pid": 15092,
+        "wall_s": 116.69,
+        "cpu_s": 0.05,
+        "rss_start_mb": 95.5,
+        "rss_end_mb": 95.8
+      }
+    ],
+    "samples": [
+      {
+        "kind": "general",
+        "ms": 18985.515,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 135,
+        "eval_count": 29,
+        "prompt_eval_count": 468,
+        "load_ms": 8.63,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 19766.384,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 162,
+        "eval_count": 37,
+        "prompt_eval_count": 468,
+        "load_ms": 5.056,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 18394.188,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 117,
+        "eval_count": 29,
+        "prompt_eval_count": 468,
+        "load_ms": 4.021,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 32138.935,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 126,
+        "eval_count": 26,
+        "prompt_eval_count": 468,
+        "load_ms": 4.423,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 36728.707,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 172,
+        "eval_count": 35,
+        "prompt_eval_count": 468,
+        "load_ms": 15.073,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 5.101,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 4.997,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 3617.638,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 119,
+        "eval_count": 26,
+        "prompt_eval_count": 468,
+        "load_ms": 4.874,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 20013.69,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 166,
+        "eval_count": 33,
+        "prompt_eval_count": 468,
+        "load_ms": 5.239,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 20639.738,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 189,
+        "eval_count": 39,
+        "prompt_eval_count": 468,
+        "load_ms": 4.236,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 18362.386,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 159,
+        "eval_count": 38,
+        "prompt_eval_count": 468,
+        "load_ms": 4.575,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 35168.143,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 115,
+        "eval_count": 27,
+        "prompt_eval_count": 468,
+        "load_ms": 3.905,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 5.472,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 4.412,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 10182.747,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 201,
+        "eval_count": 53,
+        "prompt_eval_count": 468,
+        "load_ms": 5.923,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 18628.916,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 171,
+        "eval_count": 35,
+        "prompt_eval_count": 468,
+        "load_ms": 3.428,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 19995.181,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 140,
+        "eval_count": 31,
+        "prompt_eval_count": 468,
+        "load_ms": 4.36,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 20493.712,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 154,
+        "eval_count": 36,
+        "prompt_eval_count": 468,
+        "load_ms": 5.411,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 39948.735,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 168,
+        "eval_count": 38,
+        "prompt_eval_count": 468,
+        "load_ms": 10.934,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 7.081,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 6.652,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 14891.936,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 179,
+        "eval_count": 35,
+        "prompt_eval_count": 468,
+        "load_ms": 7.561,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 18551.875,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 140,
+        "eval_count": 31,
+        "prompt_eval_count": 468,
+        "load_ms": 5.484,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 19411.788,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 93,
+        "eval_count": 26,
+        "prompt_eval_count": 468,
+        "load_ms": 3.398,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 27370.747,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 189,
+        "eval_count": 42,
+        "prompt_eval_count": 468,
+        "load_ms": 3.566,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 36442.983,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 126,
+        "eval_count": 26,
+        "prompt_eval_count": 468,
+        "load_ms": 14.264,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 6.313,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 5.652,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      }
+    ],
+    "summary": {
+      "turns": 28,
+      "general": {
+        "n": 20,
+        "p50_ms": 19880.783,
+        "p95_ms": 36889.708,
+        "p99_ms": 39336.93,
+        "mean_ms": 22486.697,
+        "max_ms": 39948.735
+      },
+      "arithmetic": {
+        "n": 8,
+        "p50_ms": 5.562,
+        "p95_ms": 6.931,
+        "p99_ms": 7.051,
+        "mean_ms": 5.71,
+        "max_ms": 7.081
+      },
+      "failures": 0,
+      "failure_examples": [],
+      "empty_responses": 0,
+      "language_steps": 20,
+      "generated_tokens": 672,
+      "prompt_tokens": 9360,
+      "throughput_turns_per_s": 0.213,
+      "client_cpu_s": 0.16,
+      "server_cpu_s": 40.3,
+      "server_cpu_utilisation": 0.307,
+      "rss_start_mb": 95.2,
+      "rss_end_mb": 95.8,
+      "inference_process_rss_mb": 5265.4,
+      "model_footprint_mb": 4635.9
+    }
+  },
+  "forced_reload": {
+    "label": "forced_reload",
+    "unloaded": true,
+    "wall_ms": 22408.7,
+    "ollama_load_ms": 9106.4,
+    "eval_count": 8,
+    "chars": 22,
+    "server_before": [],
+    "server_after": [
+      {
+        "name": "tony:7b",
+        "size_mb": 4635.9,
+        "vram_mb": 4635.9
+      }
+    ]
+  },
+  "phase2": {
+    "phase": 2,
+    "wall_s": 283.87,
+    "clients": [
+      {
+        "client_id": 0,
+        "phase": 2,
+        "pid": 14188,
+        "wall_s": 278.64,
+        "cpu_s": 0.09,
+        "rss_start_mb": 95.3,
+        "rss_end_mb": 95.6
+      },
+      {
+        "client_id": 1,
+        "phase": 2,
+        "pid": 17388,
+        "wall_s": 267.63,
+        "cpu_s": 0.08,
+        "rss_start_mb": 95.3,
+        "rss_end_mb": 95.6
+      },
+      {
+        "client_id": 2,
+        "phase": 2,
+        "pid": 5788,
+        "wall_s": 272.89,
+        "cpu_s": 0.11,
+        "rss_start_mb": 95.2,
+        "rss_end_mb": 95.7
+      },
+      {
+        "client_id": 3,
+        "phase": 2,
+        "pid": 16788,
+        "wall_s": 260.89,
+        "cpu_s": 0.05,
+        "rss_start_mb": 95.3,
+        "rss_end_mb": 95.6
+      }
+    ],
+    "samples": [
+      {
+        "kind": "general",
+        "ms": 33507.15,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 136,
+        "eval_count": 31,
+        "prompt_eval_count": 468,
+        "load_ms": 12.171,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 28955.843,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 145,
+        "eval_count": 36,
+        "prompt_eval_count": 468,
+        "load_ms": 17.465,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 30840.992,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 119,
+        "eval_count": 32,
+        "prompt_eval_count": 468,
+        "load_ms": 14.498,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 24780.027,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 114,
+        "eval_count": 26,
+        "prompt_eval_count": 468,
+        "load_ms": 9.551,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 35151.111,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 171,
+        "eval_count": 35,
+        "prompt_eval_count": 468,
+        "load_ms": 11.255,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 28548.493,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 138,
+        "eval_count": 31,
+        "prompt_eval_count": 468,
+        "load_ms": 7.91,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 24474.768,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 152,
+        "eval_count": 37,
+        "prompt_eval_count": 468,
+        "load_ms": 10.272,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 26721.437,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 144,
+        "eval_count": 34,
+        "prompt_eval_count": 468,
+        "load_ms": 10.091,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 24055.295,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 139,
+        "eval_count": 34,
+        "prompt_eval_count": 468,
+        "load_ms": 6.448,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 21585.831,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 143,
+        "eval_count": 36,
+        "prompt_eval_count": 468,
+        "load_ms": 12.825,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 4.681,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 3.888,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 3.595,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 17894.493,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 114,
+        "eval_count": 26,
+        "prompt_eval_count": 468,
+        "load_ms": 6.77,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 29585.332,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 113,
+        "eval_count": 26,
+        "prompt_eval_count": 468,
+        "load_ms": 11.273,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 30356.045,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 120,
+        "eval_count": 27,
+        "prompt_eval_count": 468,
+        "load_ms": 13.872,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 27293.831,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 119,
+        "eval_count": 31,
+        "prompt_eval_count": 468,
+        "load_ms": 12.995,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 31954.481,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 175,
+        "eval_count": 41,
+        "prompt_eval_count": 468,
+        "load_ms": 9.69,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 29723.633,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 139,
+        "eval_count": 34,
+        "prompt_eval_count": 468,
+        "load_ms": 26.331,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 25592.497,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 144,
+        "eval_count": 34,
+        "prompt_eval_count": 468,
+        "load_ms": 11.168,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 27689.374,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 145,
+        "eval_count": 38,
+        "prompt_eval_count": 468,
+        "load_ms": 8.738,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 23872.9,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 161,
+        "eval_count": 42,
+        "prompt_eval_count": 468,
+        "load_ms": 14.975,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 23647.971,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 185,
+        "eval_count": 39,
+        "prompt_eval_count": 468,
+        "load_ms": 11.166,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 3.49,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 3.288,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 3.615,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 24696.431,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 114,
+        "eval_count": 26,
+        "prompt_eval_count": 468,
+        "load_ms": 17.043,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 29033.3,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 106,
+        "eval_count": 26,
+        "prompt_eval_count": 468,
+        "load_ms": 11.039,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 32457.005,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 158,
+        "eval_count": 39,
+        "prompt_eval_count": 468,
+        "load_ms": 10.703,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 25814.831,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 134,
+        "eval_count": 34,
+        "prompt_eval_count": 468,
+        "load_ms": 19.115,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 34318.492,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 178,
+        "eval_count": 41,
+        "prompt_eval_count": 468,
+        "load_ms": 13.015,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 30020.923,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 211,
+        "eval_count": 49,
+        "prompt_eval_count": 468,
+        "load_ms": 11.825,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 23699.384,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 202,
+        "eval_count": 43,
+        "prompt_eval_count": 468,
+        "load_ms": 8.47,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 27168.32,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 177,
+        "eval_count": 41,
+        "prompt_eval_count": 468,
+        "load_ms": 10.639,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 24201.742,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 182,
+        "eval_count": 45,
+        "prompt_eval_count": 468,
+        "load_ms": 11.312,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 21464.062,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 82,
+        "eval_count": 34,
+        "prompt_eval_count": 468,
+        "load_ms": 9.626,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 4.448,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 3.597,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 3.721,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 9895.153,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 174,
+        "eval_count": 37,
+        "prompt_eval_count": 468,
+        "load_ms": 5.028,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 30270.853,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 120,
+        "eval_count": 27,
+        "prompt_eval_count": 468,
+        "load_ms": 14.282,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 31257.74,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 140,
+        "eval_count": 41,
+        "prompt_eval_count": 468,
+        "load_ms": 14.803,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 26615.088,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 72,
+        "eval_count": 22,
+        "prompt_eval_count": 468,
+        "load_ms": 22.204,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 29983.764,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 154,
+        "eval_count": 51,
+        "prompt_eval_count": 468,
+        "load_ms": 11.364,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 32677.088,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 150,
+        "eval_count": 39,
+        "prompt_eval_count": 468,
+        "load_ms": 16.812,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 25776.091,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 72,
+        "eval_count": 22,
+        "prompt_eval_count": 468,
+        "load_ms": 12.01,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 27460.215,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 123,
+        "eval_count": 44,
+        "prompt_eval_count": 468,
+        "load_ms": 8.344,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 22951.577,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 72,
+        "eval_count": 22,
+        "prompt_eval_count": 468,
+        "load_ms": 8.771,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "general",
+        "ms": 23984.446,
+        "ok": true,
+        "language": true,
+        "empty": false,
+        "chars": 72,
+        "eval_count": 22,
+        "prompt_eval_count": 469,
+        "load_ms": 7.574,
+        "routing": [
+          "arithmetic",
+          "verification",
+          "language"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 4.249,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 4.736,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      },
+      {
+        "kind": "arithmetic",
+        "ms": 3.52,
+        "ok": true,
+        "language": false,
+        "empty": false,
+        "chars": 4,
+        "eval_count": 0,
+        "prompt_eval_count": 0,
+        "load_ms": 0.0,
+        "routing": [
+          "arithmetic",
+          "verification"
+        ]
+      }
+    ],
+    "summary": {
+      "turns": 52,
+      "general": {
+        "n": 40,
+        "p50_ms": 27231.075,
+        "p95_ms": 33547.717,
+        "p99_ms": 34826.39,
+        "mean_ms": 26999.45,
+        "max_ms": 35151.111
+      },
+      "arithmetic": {
+        "n": 12,
+        "p50_ms": 3.668,
+        "p95_ms": 4.706,
+        "p99_ms": 4.73,
+        "mean_ms": 3.902,
+        "max_ms": 4.736
+      },
+      "failures": 0,
+      "failure_examples": [],
+      "empty_responses": 0,
+      "language_steps": 40,
+      "generated_tokens": 1375,
+      "prompt_tokens": 18721,
+      "throughput_turns_per_s": 0.183,
+      "client_cpu_s": 0.33,
+      "server_cpu_s": 89.18,
+      "server_cpu_utilisation": 0.314,
+      "rss_start_mb": 95.2,
+      "rss_end_mb": 95.7,
+      "inference_process_rss_mb": 5266.1,
+      "model_footprint_mb": 4635.9
+    }
+  },
+  "restart": {
+    "question": "what is 8642097531+1357902468",
+    "written": {
+      "pid": 1552,
+      "verified": true,
+      "text": "9999999999",
+      "admission": "ADMITTED",
+      "memory_admission": "ADMITTED"
+    },
+    "child": {
+      "pid": 12164,
+      "parent_pid": 1552,
+      "found": true,
+      "arithmetic_found": true,
+      "memory_found": true,
+      "retrieval_count": 2,
+      "retrieved_inputs": [
+        "what is 8642097531+1357902468",
+        "Remember that the launch marker is BLUE-FALCON-42."
+      ],
+      "memory_retrieval_count": 2,
+      "memory_retrieved_inputs": [
+        "Remember that the launch marker is BLUE-FALCON-42.",
+        "what is 8642097531+1357902468"
+      ],
+      "memory_controller_retrieval": "2 hits",
+      "routing": {
+        "selected": [
+          "exact_retrieval",
+          "language"
+        ],
+        "skipped": {
+          "arithmetic": "not needed",
+          "verification": "not needed",
+          "learning": "not needed",
+          "semantic_retrieval": "not needed",
+          "ocr": "not needed",
+          "reasoning": "not needed"
+        },
+        "priorities": {
+          "language": 0.648,
+          "exact_retrieval": 0.896,
+          "semantic_retrieval": -0.072,
+          "arithmetic": -0.0,
+          "ocr": -0.18,
+          "reasoning": -0.56,
+          "verification": -0.001,
+          "learning": -0.003
+        }
+      },
+      "steps": [
+        {
+          "module": "exact_retrieval",
+          "ok": true,
+          "note": "reliability-filtered"
+        },
+        {
+          "module": "language",
+          "ok": true,
+          "note": ""
+        }
+      ],
+      "response_text": "[echo] What did I tell you to remember about the launch marker?",
+      "verified": null,
+      "db_kb": 204.3
+    },
+    "returncode": 0,
+    "stderr_tail": "",
+    "db_kb": 120.0
+  },
+  "summary": {
+    "planned_turns": 80,
+    "completed_turns": 80,
+    "turns": 80,
+    "general": {
+      "n": 60,
+      "p50_ms": 25795.461,
+      "p95_ms": 35231.885,
+      "p99_ms": 38048.918,
+      "mean_ms": 25495.199,
+      "max_ms": 39948.735
+    },
+    "arithmetic": {
+      "n": 20,
+      "p50_ms": 4.43,
+      "p95_ms": 6.673,
+      "p99_ms": 6.999,
+      "mean_ms": 4.625,
+      "max_ms": 7.081
+    },
+    "failures": 0,
+    "failure_examples": [],
+    "empty_responses": 0,
+    "language_steps": 60,
+    "generated_tokens": 2047,
+    "prompt_tokens": 28081,
+    "stopped_early": false
+  },
+  "resources": {
+    "samples": [
+      {
+        "t_s": 1.23,
+        "cpu_percent": 47.6,
+        "ram_percent": 49.9,
+        "ashura_rss_mb": 47.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 3.24,
+        "cpu_percent": 17.5,
+        "ram_percent": 50.7,
+        "ashura_rss_mb": 95.8,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 5.25,
+        "cpu_percent": 22.9,
+        "ram_percent": 78.2,
+        "ashura_rss_mb": 95.8,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 7.26,
+        "cpu_percent": 26.3,
+        "ram_percent": 78.7,
+        "ashura_rss_mb": 95.8,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 9.27,
+        "cpu_percent": 16.2,
+        "ram_percent": 80.1,
+        "ashura_rss_mb": 95.8,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 12.5,
+        "cpu_percent": 15.2,
+        "ram_percent": 80.0,
+        "ashura_rss_mb": 95.8,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 14.51,
+        "cpu_percent": 11.8,
+        "ram_percent": 80.1,
+        "ashura_rss_mb": 95.8,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 16.51,
+        "cpu_percent": 35.7,
+        "ram_percent": 81.6,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 18.52,
+        "cpu_percent": 5.4,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 20.52,
+        "cpu_percent": 7.0,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 23.95,
+        "cpu_percent": 23.6,
+        "ram_percent": 81.3,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 25.96,
+        "cpu_percent": 9.1,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 27.97,
+        "cpu_percent": 9.7,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 29.99,
+        "cpu_percent": 10.7,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 32.0,
+        "cpu_percent": 12.8,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 35.39,
+        "cpu_percent": 21.4,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 37.39,
+        "cpu_percent": 9.3,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 39.39,
+        "cpu_percent": 14.1,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 41.4,
+        "cpu_percent": 11.0,
+        "ram_percent": 81.5,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 43.4,
+        "cpu_percent": 14.2,
+        "ram_percent": 81.8,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 47.08,
+        "cpu_percent": 31.0,
+        "ram_percent": 82.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 49.09,
+        "cpu_percent": 29.8,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 51.11,
+        "cpu_percent": 8.4,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 53.11,
+        "cpu_percent": 11.0,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 55.12,
+        "cpu_percent": 10.0,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 58.63,
+        "cpu_percent": 20.1,
+        "ram_percent": 82.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 60.63,
+        "cpu_percent": 11.7,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 62.64,
+        "cpu_percent": 11.0,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 64.64,
+        "cpu_percent": 10.1,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 66.64,
+        "cpu_percent": 10.1,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 70.0,
+        "cpu_percent": 19.8,
+        "ram_percent": 82.1,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 72.0,
+        "cpu_percent": 10.2,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 74.01,
+        "cpu_percent": 11.9,
+        "ram_percent": 81.8,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 76.02,
+        "cpu_percent": 9.3,
+        "ram_percent": 81.8,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 78.03,
+        "cpu_percent": 14.1,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 81.52,
+        "cpu_percent": 22.0,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 83.51,
+        "cpu_percent": 11.0,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 85.52,
+        "cpu_percent": 10.4,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 87.54,
+        "cpu_percent": 28.5,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 89.54,
+        "cpu_percent": 17.6,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 96.12,
+        "cpu_percent": 37.5,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 98.11,
+        "cpu_percent": 17.3,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 100.12,
+        "cpu_percent": 16.8,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 102.13,
+        "cpu_percent": 14.5,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 104.14,
+        "cpu_percent": 20.1,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 110.44,
+        "cpu_percent": 36.9,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 112.44,
+        "cpu_percent": 17.3,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 114.45,
+        "cpu_percent": 19.9,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 116.46,
+        "cpu_percent": 16.4,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 118.47,
+        "cpu_percent": 16.0,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 125.04,
+        "cpu_percent": 37.4,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 127.05,
+        "cpu_percent": 13.9,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 129.06,
+        "cpu_percent": 15.5,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 131.07,
+        "cpu_percent": 15.7,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 133.07,
+        "cpu_percent": 17.3,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 139.19,
+        "cpu_percent": 37.4,
+        "ram_percent": 80.9,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 141.19,
+        "cpu_percent": 15.9,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 143.2,
+        "cpu_percent": 13.0,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 145.21,
+        "cpu_percent": 19.1,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 147.21,
+        "cpu_percent": 33.7,
+        "ram_percent": 55.6,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 150.89,
+        "cpu_percent": 31.3,
+        "ram_percent": 50.4,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 152.9,
+        "cpu_percent": 28.6,
+        "ram_percent": 77.2,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 154.9,
+        "cpu_percent": 34.5,
+        "ram_percent": 77.7,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 156.92,
+        "cpu_percent": 30.1,
+        "ram_percent": 79.8,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 158.93,
+        "cpu_percent": 12.9,
+        "ram_percent": 79.3,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 165.4,
+        "cpu_percent": 34.3,
+        "ram_percent": 79.3,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 167.41,
+        "cpu_percent": 15.1,
+        "ram_percent": 79.5,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 169.42,
+        "cpu_percent": 22.6,
+        "ram_percent": 79.5,
+        "ashura_rss_mb": 96.4,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 171.42,
+        "cpu_percent": 35.3,
+        "ram_percent": 79.9,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 173.43,
+        "cpu_percent": 53.5,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 178.01,
+        "cpu_percent": 25.5,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 180.02,
+        "cpu_percent": 15.0,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 182.02,
+        "cpu_percent": 16.0,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 184.04,
+        "cpu_percent": 15.4,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 186.04,
+        "cpu_percent": 23.9,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 192.61,
+        "cpu_percent": 34.7,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 194.61,
+        "cpu_percent": 17.5,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 196.62,
+        "cpu_percent": 16.6,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 198.64,
+        "cpu_percent": 17.0,
+        "ram_percent": 80.9,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 200.64,
+        "cpu_percent": 18.6,
+        "ram_percent": 80.9,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 207.16,
+        "cpu_percent": 36.5,
+        "ram_percent": 80.9,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 209.16,
+        "cpu_percent": 19.4,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 211.17,
+        "cpu_percent": 16.2,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 213.18,
+        "cpu_percent": 16.3,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 215.18,
+        "cpu_percent": 19.6,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 221.52,
+        "cpu_percent": 34.7,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 223.53,
+        "cpu_percent": 17.0,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 225.53,
+        "cpu_percent": 16.9,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 227.55,
+        "cpu_percent": 16.9,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 229.55,
+        "cpu_percent": 19.6,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 235.87,
+        "cpu_percent": 36.0,
+        "ram_percent": 80.9,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 237.88,
+        "cpu_percent": 15.7,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 239.88,
+        "cpu_percent": 14.5,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 241.9,
+        "cpu_percent": 16.6,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 243.91,
+        "cpu_percent": 16.2,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 250.01,
+        "cpu_percent": 36.1,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 252.03,
+        "cpu_percent": 14.7,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 254.04,
+        "cpu_percent": 15.8,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 256.05,
+        "cpu_percent": 14.4,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 258.06,
+        "cpu_percent": 14.5,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 264.04,
+        "cpu_percent": 32.1,
+        "ram_percent": 80.9,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 266.04,
+        "cpu_percent": 18.3,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 268.05,
+        "cpu_percent": 13.2,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 270.05,
+        "cpu_percent": 15.7,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 272.07,
+        "cpu_percent": 11.8,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 278.04,
+        "cpu_percent": 37.6,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 280.04,
+        "cpu_percent": 16.0,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 282.04,
+        "cpu_percent": 15.4,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 284.06,
+        "cpu_percent": 16.9,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 286.06,
+        "cpu_percent": 13.8,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 291.14,
+        "cpu_percent": 32.1,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 293.14,
+        "cpu_percent": 16.8,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 295.15,
+        "cpu_percent": 15.4,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 297.16,
+        "cpu_percent": 19.6,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 299.17,
+        "cpu_percent": 14.7,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.5,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 304.98,
+        "cpu_percent": 35.4,
+        "ram_percent": 81.0,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 306.98,
+        "cpu_percent": 42.4,
+        "ram_percent": 82.0,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 308.99,
+        "cpu_percent": 58.2,
+        "ram_percent": 82.8,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 311.0,
+        "cpu_percent": 49.2,
+        "ram_percent": 82.9,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 313.07,
+        "cpu_percent": 39.9,
+        "ram_percent": 82.9,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 320.12,
+        "cpu_percent": 65.0,
+        "ram_percent": 83.8,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 322.13,
+        "cpu_percent": 34.0,
+        "ram_percent": 83.8,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 324.14,
+        "cpu_percent": 18.9,
+        "ram_percent": 83.9,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 326.15,
+        "cpu_percent": 14.6,
+        "ram_percent": 83.9,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 328.16,
+        "cpu_percent": 17.2,
+        "ram_percent": 83.8,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 333.7,
+        "cpu_percent": 32.3,
+        "ram_percent": 83.3,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 335.71,
+        "cpu_percent": 14.1,
+        "ram_percent": 83.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 337.72,
+        "cpu_percent": 18.2,
+        "ram_percent": 83.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 339.72,
+        "cpu_percent": 16.9,
+        "ram_percent": 83.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 341.73,
+        "cpu_percent": 14.1,
+        "ram_percent": 83.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 347.55,
+        "cpu_percent": 49.6,
+        "ram_percent": 82.7,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 349.56,
+        "cpu_percent": 29.8,
+        "ram_percent": 82.4,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 351.57,
+        "cpu_percent": 12.3,
+        "ram_percent": 82.4,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 353.58,
+        "cpu_percent": 12.0,
+        "ram_percent": 82.4,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 355.6,
+        "cpu_percent": 14.7,
+        "ram_percent": 82.1,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 360.75,
+        "cpu_percent": 32.2,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 362.75,
+        "cpu_percent": 13.9,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 364.75,
+        "cpu_percent": 13.4,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 366.76,
+        "cpu_percent": 12.7,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 368.77,
+        "cpu_percent": 16.2,
+        "ram_percent": 82.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 374.83,
+        "cpu_percent": 37.7,
+        "ram_percent": 81.6,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 376.83,
+        "cpu_percent": 17.6,
+        "ram_percent": 81.3,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 378.84,
+        "cpu_percent": 19.2,
+        "ram_percent": 81.3,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 380.85,
+        "cpu_percent": 14.4,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 382.86,
+        "cpu_percent": 13.2,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 388.52,
+        "cpu_percent": 32.5,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 390.53,
+        "cpu_percent": 14.2,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.8,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 392.54,
+        "cpu_percent": 11.3,
+        "ram_percent": 81.3,
+        "ashura_rss_mb": 96.8,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 394.55,
+        "cpu_percent": 13.2,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.8,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 396.56,
+        "cpu_percent": 15.3,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.8,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 402.3,
+        "cpu_percent": 34.4,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 404.3,
+        "cpu_percent": 15.7,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 406.31,
+        "cpu_percent": 8.8,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 408.32,
+        "cpu_percent": 12.2,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 410.33,
+        "cpu_percent": 11.0,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 414.65,
+        "cpu_percent": 27.4,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 416.67,
+        "cpu_percent": 11.0,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 418.68,
+        "cpu_percent": 11.8,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 420.69,
+        "cpu_percent": 13.1,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 422.69,
+        "cpu_percent": 15.3,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 427.72,
+        "cpu_percent": 29.4,
+        "ram_percent": 81.1,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 429.72,
+        "cpu_percent": 12.5,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 431.73,
+        "cpu_percent": 15.6,
+        "ram_percent": 81.2,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 433.73,
+        "cpu_percent": 32.5,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 435.74,
+        "cpu_percent": 11.4,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 441.7,
+        "cpu_percent": 44.7,
+        "ram_percent": 81.3,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 443.7,
+        "cpu_percent": 16.4,
+        "ram_percent": 81.3,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 445.71,
+        "cpu_percent": 11.8,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 447.72,
+        "cpu_percent": 14.5,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 449.73,
+        "cpu_percent": 10.8,
+        "ram_percent": 81.4,
+        "ashura_rss_mb": 96.7,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      },
+      {
+        "t_s": 454.93,
+        "cpu_percent": 37.3,
+        "ram_percent": 80.1,
+        "ashura_rss_mb": 97.0,
+        "cpu_freq_mhz": 1690.0,
+        "temperature_c": null,
+        "temperature_source": "unavailable"
+      }
+    ],
+    "sample_count": 171,
+    "cpu_percent_max": 65.0,
+    "ram_percent_max": 83.9,
+    "ashura_rss_max_mb": 97.0,
+    "temperature_c_max": null,
+    "temperature_source": "unavailable",
+    "cpu_freq_mhz_min": 1690.0,
+    "cpu_freq_mhz_max": 1690.0,
+    "overheated": false
+  },
+  "server_after": [
+    {
+      "name": "tony:7b",
+      "size_mb": 4635.9,
+      "vram_mb": 4635.9
+    }
+  ],
+  "limits": [
+    "bounded local run, not production endurance testing",
+    "four concurrent client processes with isolated SQLite databases; the shared contended resource is the local Ollama server",
+    "one forced unload/reload and one fresh-process persistence check",
+    "worker durability, crash recovery and durable job queues remain F-045",
+    "temperature is reported only where the OS exposes it; a null value is not a cooling claim"
+  ]
+}

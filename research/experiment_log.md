@@ -2,8 +2,8 @@
 
 **Hardware:** early entries below were measured in a sandbox container (1 vCPU, ~4 GB RAM, Linux,
 Python 3.12, SQLite 3.45.1), not the target laptop (i7-1165G7 / 16 GB), so their latency and RAM
-numbers are only relative. EXP-014 and EXP-015 were run on the target Windows laptop and record
-their own environment. Phase 0 real-model numbers remain scoped to the machine named in their entry.
+numbers are only relative. EXP-014, EXP-015 and EXP-016 were run on the target Windows laptop and
+record their own environment. Phase 0 real-model numbers remain scoped to the machine named in their entry.
 
 ---
 ## EXP-001 - AMA vs store-everything
@@ -284,4 +284,19 @@ their own environment. Phase 0 real-model numbers remain scoped to the machine n
 - **Real model (optional cold start):** `--real-model --real-cold` loads pinned `tony:7b` (digest `0455603ff430`), runs 24 free-form general turns and 8 exact arithmetic turns. Language p50 5.52 s / p95 8.06 s / p99 11.54 s; 7.4 generated tokens/s; 954 generated and 11,030 prompt tokens; median answer 182 characters; 24/24 language steps, 0 empty answers, 0 errors. Arithmetic p50 2.42 ms (bypasses the model). Ollama load 6.81 s, first turn 12.74 s; client RSS 97.0 -> 97.5 MB; client CPU utilisation 0.001 because inference runs in the server. Ollama reported 4,635.9 MB model footprint. A warm rerun measured language p50 4.76 s / p95 6.62 s.
 - **Supports:** exact arithmetic, FTS5 retrieval, AMA admission and the NumPy loop are milliseconds-scale on this laptop; the sustained synthetic mix showed no error or large memory/database growth; a short cold-start `tony:7b` mixed load completes without client errors and arithmetic stays on the fast exact path while the model is loaded.
 - **Does not support:** production-sustained `tony:7b` latency, concurrency, restart recovery, model reload, production database growth, answer quality, GPU residency or routing. The real-model run is 24 general turns, single process, and the free-form answers are longer than the short-answer EXP-000d baseline; the p50 values are not directly comparable. The controller's default path still uses a deterministic echo stub. Full data: `experiments/runtime/results.json`.
-- **Decision:** record these as measured non-language costs plus one short real-model mixed load; keep the language row from `config/module_costs.json` separate. Do not replace routing estimates without a routing experiment. F-046 remains open for concurrency, reload, restart and a longer soak.
+- **Decision:** record these as measured non-language costs plus one short real-model mixed load; keep the language row from `config/module_costs.json` separate. Do not replace routing estimates without a routing experiment. F-046 remained open at this point and was later closed for a bounded scope by EXP-016.
+
+---
+## EXP-016 - Bounded concurrency, reload, restart and 80-turn soak (F-046, 2026-11-05)
+- **Hypothesis:** four concurrent ASHURA clients can complete 80 mixed turns without failures; one forced `tony:7b` unload/reload works; a record written by one ASHURA process survives a fresh process.
+- **Baseline:** EXP-015 single-client cold-start language p50 5.52 s (24 general turns). **Implementation:** `experiments/runtime/real_soak.py`; four client processes with isolated SQLite databases, shared local Ollama server; pinned digest `0455603ff430`.
+- **Dataset and separation:** 60 synthetic free-form general prompts and 20 exact arithmetic prompts. No gold labels, no held-out capability set and no train/test capability claim. This is a runtime and persistence test, not an accuracy benchmark.
+- **Configuration:** Windows 11, Python 3.13.14, i7-1165G7 class, 8 logical CPUs, 16 GB RAM; 4 clients; phase 1 = 28 turns, phase 2 = 52 turns; one forced reload between phases; one fresh-process restart check.
+- **Latency:** cold load 13.32 s wall / 7.05 s Ollama load; forced reload 22.41 s wall / 9.11 s Ollama load. Phase 1 general p50 19.88 s / p95 36.89 s, arithmetic p50 5.56 ms. Phase 2 general p50 27.23 s / p95 33.55 s, arithmetic p50 3.67 ms. All 80 turns: general p50 25.80 s / p95 35.23 s / p99 38.05 s; arithmetic p50 4.43 ms / p95 6.67 ms.
+- **Resources and failures:** 0 failures, 0 empty answers, 60/60 language steps; 2,047 generated and 28,081 prompt tokens. Client RSS max 97.0 MB; inference process RSS ~5.27 GB; model footprint 4,635.9 MB; system CPU max 65%; RAM max 83.9%; ~455 s total. Temperature was unavailable from the OS; CPU frequency stayed at 1690 MHz, so throttling is not established.
+- **Restart/persistence:** write PID 1552, verify PID 12164. A verified arithmetic record and a user-provided memory record were both found by the fresh process; controller retrieval returned "2 hits"; DB 120/204 KB. This proves SQLite/ASHURA memory persistence across a process restart, not a capability change.
+- **Supports:** four concurrent clients coexist and complete 80 turns without client failures; forced model reload works; a fresh ASHURA process reads prior records; exact arithmetic stays milliseconds-scale while the model is loaded.
+- **Rejects / negative result:** concurrency did not produce parallel throughput. General p50 rose from 5.52 s single-client to 25.80 s with four clients (~4.7x), and server CPU utilisation was ~0.31. The local model appears to queue requests; recorded as F-047, not counted as a success.
+- **Does not support:** production endurance, thermal throttling measurements, shared-database concurrency (clients used isolated DBs), answer quality, language-model capability learning or durable worker jobs (F-045).
+- **Conclusion:** **supported** for the bounded F-046 scope (client lifecycle, database persistence, model unload/reload, application restart); **rejected** for parallel inference throughput (F-047); **inconclusive** for thermal behaviour and production endurance.
+- **Decision:** close F-046 as bounded; keep F-045 and F-047 open. Full data: `experiments/runtime/real_soak.json`; report: `research/EXP-016_real_soak.md`; evidence standard: `research/evidence_standard.md`.

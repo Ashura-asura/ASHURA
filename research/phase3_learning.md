@@ -5,7 +5,8 @@ background worker** (2026-11-05). Source register: `research/problem_register.md
 missing connector between CAGE and DREAM/NGR and lets the controller attribute a correction to the
 preceding execution, but it is **not** a claim that ASHURA learns from arbitrary conversation. The
 loop trains the small NumPy adaptive memory, not the language model, and only exact arithmetic
-corrections are independently verifiable.
+corrections are independently verifiable. Claim discipline and the memory-vs-capability distinction
+are defined in `research/evidence_standard.md`.
 
 ## What changed
 
@@ -120,6 +121,46 @@ not establish sustained production latency, concurrency safety, model reload, re
 production database growth, and it must not replace the routing estimates. Full data:
 `experiments/runtime/results.json`.
 
+## Bounded real-model closure (EXP-016)
+
+**Hypothesis:** four concurrent ASHURA client processes can complete 80 mixed turns without
+failures, one forced `tony:7b` unload/reload works, and a record written by one ASHURA process is
+readable by a fresh process. **Baseline:** EXP-015 single-client cold-start language p50 5.52 s
+(24 general turns). **Dataset:** 60 synthetic free-form prompts and 20 exact arithmetic turns; no
+gold answers and no capability evaluation. **Configuration:** four client processes with isolated
+SQLite databases; the shared resource is the local Ollama server; model digest `0455603ff430`.
+
+| measurement | result |
+|---|---|
+| cold load | 13.32 s wall, 7.05 s Ollama load |
+| forced unload/reload | 22.41 s wall, 9.11 s Ollama load |
+| phase 1 (28 turns) | general p50 19.88 s / p95 36.89 s; arithmetic p50 5.56 ms; 0 failures |
+| phase 2 (52 turns) | general p50 27.23 s / p95 33.55 s; arithmetic p50 3.67 ms; 0 failures |
+| all 80 turns | general p50 25.80 s / p95 35.23 s; arithmetic p50 4.43 ms / p95 6.67 ms |
+| correctness/availability | 0 failures, 0 empty answers, 60/60 language steps |
+| resources | client RSS max 97.0 MB; inference process RSS ~5.27 GB; model footprint 4,635.9 MB; system CPU max 65%; RAM max 83.9% |
+| temperature/throttling | temperature unavailable from the OS; CPU frequency reported a constant 1690 MHz, so throttling is not established |
+| process restart | write PID 1552, verify PID 12164; verified arithmetic record found; user-provided memory record found; controller retrieval "2 hits"; DB 120/204 KB |
+| wall time | ~455 s including load/reload probes and restart check |
+
+**Supports:** four concurrent clients can coexist and complete 80 turns with zero client failures;
+forced model reload works; a fresh ASHURA process reads both a verified arithmetic record and a
+user-provided memory record from the previous process. Exact arithmetic remains milliseconds-scale
+while the model is loaded.
+
+**Rejects / negative result:** concurrency did **not** produce parallel throughput. General-turn p50
+rose from 5.52 s in the single-client EXP-015 run to 25.80 s here (~4.7x), and server CPU
+utilisation was only ~0.31. The local model appears to queue concurrent requests; this is recorded
+as F-047, not hidden as a success. Do not claim four-way parallel inference from this run.
+
+**Inconclusive / not measured:** thermal throttling (OS telemetry unavailable), production
+endurance, shared-database concurrency (clients used isolated DBs), answer quality, and durable
+worker jobs (F-045). This is a bounded research-prototype closure, not a product soak.
+
+**Decision:** F-046 is fixed for its bounded scope: client lifecycle, database persistence, model
+unload/reload and application restart. The restart check proves memory persistence, not a capability
+change; see `research/evidence_standard.md`. F-045 and F-047 remain open.
+
 ## Still open
 
 - The loop is opt-in. The controller retains the previous trace and can call a `correction_loop`
@@ -135,7 +176,8 @@ production database growth, and it must not replace the routing estimates. Full 
   adapter is trained (D-009 stands).
 - EXP-014 is larger but still author-written, with held-out wordings that share expression tokens.
   It is a non-regression and control-flow benchmark, not a capability estimate (F-044).
-- The real-model measurement is one short single-process mixed load. Concurrency, forced model
-  reload, restart recovery and a longer soak are still unmeasured (F-046).
+- EXP-016 closes F-046 only for a bounded run: four clients, one reload, one restart and 80 turns.
+  Concurrent inference queued instead of scaling (F-047); production endurance, thermal telemetry
+  and durable worker jobs (F-045) remain open.
 - A production loop needs a reviewer UI/queue, durable job storage and CLI configuration
   (F-039/P67/P75). The CLI in `learning/review.py` only lists and resolves conflicts.

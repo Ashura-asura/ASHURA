@@ -7,17 +7,18 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 Phase 1 trust repair (P01–P14), Phase 2 memory reliability (P15–P29) and Phase 3 verified-correction
 loop (P07/P75/A01–A03) implemented and tested; local OCR and a HARN arithmetic candidate are
 integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
-subproject. **264 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
+subproject. **265 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
 experimental and out of the response path. BrainSim is not imported by ASHURA. The learning loop is
 **not** complete: it is an opt-in controller hook with an in-process background worker, only exact
 arithmetic corrections are independently verified, and the candidate is the NumPy memory rather
-than the language model.
+than the language model. F-046 is closed only for a bounded client/reload/restart test; concurrent
+inference queues instead of scaling (F-047). See `research/evidence_standard.md`.
 
 ## Run
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 264 tests
+python -m pytest -q                       # 265 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -34,6 +35,7 @@ python -m experiments.learning.loop_e2e   # EXP-013  verified correction -> NGR
 python -m experiments.learning.correction_bench  # EXP-014  larger frozen correction benchmark
 python -m experiments.runtime.load_bench  # EXP-015  module costs + sustained load
 python -m experiments.runtime.load_bench --real-model --real-cold  # optional local tony:7b mixed load
+python -m experiments.runtime.real_soak  # EXP-016  4-client/reload/restart bounded soak
 python -m learning.review list --db data/ashura.db          # open conflicts
 python -m learning.review resolve <id> --db data/ashura.db --reason "reviewed"
 python -m evaluation.contradiction_bench  # EXP-010  structured answer comparison
@@ -156,9 +158,16 @@ The 2026-11-05 Phase 3 pass connects the existing pieces into one explicit chain
   548 KB database. An optional cold-start `tony:7b` mixed load (24 free-form general turns + 8
   exact arithmetic turns) measured language p50 5.5 s / p95 8.1 s, 7.4 generated tokens/s and 0
   errors; the arithmetic turns stayed at p50 2.4 ms because they bypass the model. Ollama reported
-  a 4.64 GB model footprint and the ASHURA client stayed at ~97 MB RSS. This is a short
-  single-process run, not a production soak, concurrency test or routing estimate. The EchoModel
-  numbers remain the non-language baseline.
+  a 4.64 GB model footprint and the ASHURA client stayed at ~97 MB RSS. The EchoModel numbers
+  remain the non-language baseline.
+- **Bounded real-model closure (EXP-016).** Four concurrent clients completed 80 mixed turns with
+  0 failures; one forced unload/reload took 22.41 s wall (9.11 s Ollama load); a fresh ASHURA
+  process found both a verified arithmetic record and a user-provided memory record. General p50
+  under four clients was 25.80 s / p95 35.23 s, versus 5.52 s single-client, so the local model
+  queues requests rather than scaling (F-047). Arithmetic stayed at p50 4.43 ms. Client RSS max
+  97 MB; system RAM max 83.9%; temperature telemetry was unavailable. This closes F-046 only for
+  client lifecycle, database persistence, model reload and application restart — not production
+  endurance or parallel throughput.
 - **Not language-model learning.** The candidate is the NumPy adaptive memory; no `tony:7b`
   fine-tune or adapter is trained (D-009 stands).
 
@@ -167,8 +176,9 @@ so sessions do not learn automatically. Arbitrary factual corrections remain unv
 EXP-014 improves the evidence but does not close the independent-author/independent-distribution
 gap (F-044). Conflict review is a minimal CLI without notification or a UI (F-039). Details:
 `research/phase3_learning.md`, `experiments/learning/loop.json`,
-`experiments/learning/correction_bench.json`, `experiments/runtime/results.json` and
-`open_problem.md`.
+`experiments/learning/correction_bench.json`, `experiments/runtime/results.json`,
+`experiments/runtime/real_soak.json`, `research/EXP-016_real_soak.md`,
+`research/evidence_standard.md` and `open_problem.md`.
 
 ### Ollama (Windows PowerShell)
 
