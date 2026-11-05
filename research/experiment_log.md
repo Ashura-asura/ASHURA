@@ -300,3 +300,16 @@ record their own environment. Phase 0 real-model numbers remain scoped to the ma
 - **Does not support:** production endurance, thermal throttling measurements, shared-database concurrency (clients used isolated DBs), answer quality, language-model capability learning or durable worker jobs (F-045).
 - **Conclusion:** **supported** for the bounded F-046 scope (client lifecycle, database persistence, model unload/reload, application restart); **rejected** for parallel inference throughput (F-047); **inconclusive** for thermal behaviour and production endurance.
 - **Decision:** close F-046 as bounded; keep F-045 and F-047 open. Full data: `experiments/runtime/real_soak.json`; report: `research/EXP-016_real_soak.md`; evidence standard: `research/evidence_standard.md`.
+
+---
+## EXP-017 - Consolidation persistence and retention across a process restart (A02/A03, 2026-11-05)
+- **Hypothesis:** a promoted NumPy candidate can be loaded by a fresh process, still solve the corrected held-out wordings, retain the old capability and roll back to its parent.
+- **Baseline:** EXP-014 measured 50/50 replay promotions and 150/150 held-out predictions in one process. **Implementation:** `experiments/learning/persistence_bench.py`; `CheckpointStore` stable pointer and immutable artifact; one `--verify` child process per promoted candidate.
+- **Dataset and separation:** `experiments/learning/corrections_v1.json`, 10 author-written arithmetic cases x 2 seeds; 3 held-out wordings per case and 20 old-capability held-out items per case. The held-out wordings share expression tokens with the key; this is not an independent capability set.
+- **Configuration:** Windows 11, Python 3.13.14, CPU only; NumPy `AdaptiveMemory` dim 128; stable initialization; replay; `NGRPolicy("corrected", min_target_gain=0.5)`.
+- **Accuracy:** 20/20 promotions; 20/20 fresh-process checks; 20/20 stable artifact name and SHA-256 matches; 60/60 corrected held-out predictions; 400/400 old-capability predictions; 20/20 rollbacks restored the parent. After rollback the parent scored old 20/20 and corrected 0/3 per run.
+- **Resources:** stable artifact max 131.1 KB; write p50 48.219 ms; fresh-process verify p50 33.241 ms; ASHURA RSS max 41.2 MB; total wall 6.25 s.
+- **Supports:** a promoted NumPy candidate persists across a process restart, retains the old capability on this set and can be rolled back by pointer change.
+- **Does not support:** `tony:7b` weight learning, independent generalisation, power-loss durability, corrupt-manifest recovery, shared-database concurrency or production backup/restore. The candidate is the NumPy adaptive memory, not the language model.
+- **Conclusion:** **supported** for NumPy consolidation persistence and retention; **not supported** for language-model capability change.
+- **Decision:** record A02/A03 as measured for the NumPy candidate; keep F-043 open for any `tony:7b` adapter/fine-tune. Full data: `experiments/learning/persistence.json`; report: `research/EXP-017_persistence.md`; completion audit: `research/completion_audit.md`.

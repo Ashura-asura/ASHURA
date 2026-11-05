@@ -1,7 +1,9 @@
 # Open problems
 
-Status: 2026-11-05, after the Phase 3 follow-up and EXP-016. Test evidence: **265 ASHURA tests** and
-**46 BrainSim tests** pass on Windows/Python 3.13. This file records what is still not closed; it is
+Status: 2026-11-05, after the Phase 3 follow-up, EXP-016 and EXP-017. Test evidence: **266 ASHURA
+tests** and **46 BrainSim tests** pass on Windows/Python 3.13. Completion audit:
+`research/completion_audit.md` records 86.1% checklist coverage but **0 of 4 language-model learning
+tests** demonstrated. This file records what is still not closed; it is
 not a roadmap promise and not a claim that the learning loop is complete. The canonical issue list
 with remedies remains `research/problem_register.md` (P01-P80, A01-A10); this file explains which
 items the latest pass could and could not close.
@@ -15,6 +17,7 @@ items the latest pass could and could not close.
 | F-039 conflict review | **partly fixed** | `learning/review.py list / resolve`; superseding still requires an independently verified experience. Two tests. | No UI, notification, queue prioritisation or background worker; an open conflict can go unseen. |
 | F-044 correction benchmark evidence | **partly fixed** | EXP-013 runs seeds 0-4. EXP-014 adds 10 arithmetic forms x 3 held-out wordings x 5 seeds: 50/50 replay promotions, 0/50 no-replay promotions, 150/150 held-out predictions, 25/25 controls refused. | The corpus is still author-written; held-out wordings share expression tokens with the correction key; no independent distribution or independent author. |
 | F-006 arithmetic verifier | **partly fixed** | Same as F-042. | Same as F-042. |
+| A02/A03 consolidation persistence | **measured (NumPy only)** | EXP-017: 20/20 promoted NumPy candidates loaded in a fresh process with matching SHA-256, 60/60 corrected held-out predictions, 400/400 old-capability predictions, 20/20 rollbacks restored the parent; 131 KB artifact, 41.2 MB RSS, 6.25 s total. | This is the NumPy adaptive memory, not `tony:7b`; the corpus is author-written; no power-loss, corrupt-manifest, backup/restore or shared-database durability test. |
 | P61-P63/P69 resources | **partly measured** | EXP-015 measures exact arithmetic, AMA/FTS5, controller (EchoModel), full NumPy loop, a 300-turn sustained mix and a cold-start `tony:7b` mixed load: arithmetic p50 <= 0.015 ms, AMA admit p50 1.35 ms, FTS5 0.29 ms, loop 24.4 ms, sustained p50 1.39 ms / p95 1.78 ms, single-client language p50 5.52 s / p95 8.06 s. EXP-016 adds 4 clients, 80 turns, forced reload and restart: 0 failures, general p50 25.80 s / p95 35.23 s, arithmetic p50 4.43 ms. | Concurrent inference queues instead of scaling (F-047); temperature telemetry unavailable; production endurance and routing estimates remain open. |
 | F-045 worker durability | **open** | In-process daemon thread, bounded queue, queued cancellation, error capture and drain-on-stop are implemented and tested. | Jobs are lost on process exit; running jobs cannot be force-killed; no durable store, hard timeout, restart test or CLI wiring. |
 | F-046 runtime scope | **fixed (bounded)** | EXP-016: 4 concurrent clients, 80 mixed turns, 0 failures; one forced `tony:7b` reload (22.41 s wall / 9.11 s Ollama load); fresh-process restart found both a verified arithmetic record and a user-provided memory record (write PID 1552, verify PID 12164); client RSS max 97 MB; system RAM max 83.9%. | Closed only for client lifecycle, DB persistence, model unload/reload and application restart. Production endurance, thermal telemetry and parallel throughput remain separate; see F-047. |
@@ -42,7 +45,9 @@ processes.
 
 **What would close it:** a configured replay source, an initial independently evaluated stable
 checkpoint, a durable job store with a hard timeout/termination policy, and a restart test showing
-the stable pointer and fast state behave as declared.
+the stable pointer and fast state behave as declared. EXP-017 now shows that a promoted NumPy
+candidate survives a fresh process and can be rolled back; that covers the NumPy checkpoint path,
+not durable worker jobs or a language-model adapter.
 
 ### 2.2 Independent verification is narrow (F-042/P47)
 
@@ -63,7 +68,9 @@ or LoRA is trained. The target laptop (i7-1165G7, 16 GB RAM, MX350 2 GB) cannot 
 Q4_K_M foundation; the 7B model already spills from the 2 GB GPU (F-014), and there is no verified
 instruction-tuning corpus. Local-only fine-tuning would require a smaller model or an offline
 adapter run with a separate measured pipeline. `tony:7b` is the only model under consideration; no
-Qwen replacement is planned. Until then, EXP-013 must not be described as model self-improvement.
+Qwen replacement is planned. EXP-017 now shows that the NumPy candidate persists across a process
+restart and retains old capability, but that does not change the language model. Until a real
+adapter experiment exists, EXP-013/EXP-017 must not be described as model self-improvement.
 
 ### 2.4 Correction benchmarks are larger but still author-written (F-044)
 
@@ -213,10 +220,12 @@ process/restart level. Item 8 and the larger independent evaluation do not.
 | A04-A10 | Research programmes (hidden needs, segmentation, causal attribution, curriculum, self-preservation, forgetting). | Research; not a single patch. |
 
 The previous sequence (green CI -> measured module costs and a sustained-load run -> larger frozen
-benchmark -> background worker) is now implemented as EXP-015, EXP-014, EXP-016 and `learning/worker.py`.
-EXP-016 closes the bounded F-046 scope; the next honest steps are:
-durable/restartable worker jobs and CLI configuration (F-045) -> concurrent-inference queueing and
-parallel-throughput work (F-047) -> independently authored benchmark/real usage data.
+benchmark -> background worker) is now implemented as EXP-015, EXP-014, EXP-016, EXP-017 and
+`learning/worker.py`. EXP-016 closes the bounded F-046 scope; EXP-017 measures NumPy consolidation
+persistence and retention. The next honest steps are: durable/restartable worker jobs and CLI
+configuration (F-045) -> concurrent-inference queueing and parallel-throughput work (F-047) ->
+independently authored benchmark/real usage data (F-044) -> a language-model adapter experiment
+(F-043, currently blocked by hardware and corpus).
 The AMA, adaptive-memory and BrainSim claims should stay conservative until their data exists.
 
 ## 9. Deliberately not doing now

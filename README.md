@@ -7,18 +7,20 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 Phase 1 trust repair (P01–P14), Phase 2 memory reliability (P15–P29) and Phase 3 verified-correction
 loop (P07/P75/A01–A03) implemented and tested; local OCR and a HARN arithmetic candidate are
 integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
-subproject. **265 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
+subproject. **266 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
 experimental and out of the response path. BrainSim is not imported by ASHURA. The learning loop is
 **not** complete: it is an opt-in controller hook with an in-process background worker, only exact
 arithmetic corrections are independently verified, and the candidate is the NumPy memory rather
-than the language model. F-046 is closed only for a bounded client/reload/restart test; concurrent
-inference queues instead of scaling (F-047). See `research/evidence_standard.md`.
+than the language model. EXP-017 shows that a promoted NumPy candidate survives a process restart
+and retains the old capability; `tony:7b` remains unchanged. F-046 is closed only for a bounded
+client/reload/restart test; concurrent inference queues instead of scaling (F-047). See
+`research/evidence_standard.md` and `research/completion_audit.md`.
 
 ## Run
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 265 tests
+python -m pytest -q                       # 266 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -33,6 +35,7 @@ python -m experiments.dream.replay_sweep  # EXP-012  replay ratio/policy sweep
 python -m experiments.memory.retention_bench     # EXP-012  retention/utility
 python -m experiments.learning.loop_e2e   # EXP-013  verified correction -> NGR
 python -m experiments.learning.correction_bench  # EXP-014  larger frozen correction benchmark
+python -m experiments.learning.persistence_bench # EXP-017  restart persistence/retention/rollback
 python -m experiments.runtime.load_bench  # EXP-015  module costs + sustained load
 python -m experiments.runtime.load_bench --real-model --real-cold  # optional local tony:7b mixed load
 python -m experiments.runtime.real_soak  # EXP-016  4-client/reload/restart bounded soak
@@ -168,17 +171,24 @@ The 2026-11-05 Phase 3 pass connects the existing pieces into one explicit chain
   97 MB; system RAM max 83.9%; temperature telemetry was unavailable. This closes F-046 only for
   client lifecycle, database persistence, model reload and application restart — not production
   endurance or parallel throughput.
+- **Consolidation persistence (EXP-017).** A verified correction promoted a NumPy candidate in one
+  process; a fresh process loaded the same stable artifact (SHA-256 match 20/20), predicted 60/60
+  corrected held-out wordings and 400/400 old-capability wordings, and rolled back to the parent
+  20/20. Artifact max 131 KB; write/verify p50 48.219/33.241 ms; RSS max 41.2 MB; 6.25 s total.
+  This is persistence and retention for the NumPy candidate, not a language-model capability change.
 - **Not language-model learning.** The candidate is the NumPy adaptive memory; no `tony:7b`
-  fine-tune or adapter is trained (D-009 stands).
+  fine-tune or adapter is trained (D-009 stands). The completion audit scores the engineering
+  checklist separately from this central language-learning claim.
 
 The default CLI does not configure the loop: no live replay corpus or stable checkpoint is defined,
 so sessions do not learn automatically. Arbitrary factual corrections remain unverifiable (F-042).
 EXP-014 improves the evidence but does not close the independent-author/independent-distribution
 gap (F-044). Conflict review is a minimal CLI without notification or a UI (F-039). Details:
 `research/phase3_learning.md`, `experiments/learning/loop.json`,
-`experiments/learning/correction_bench.json`, `experiments/runtime/results.json`,
-`experiments/runtime/real_soak.json`, `research/EXP-016_real_soak.md`,
-`research/evidence_standard.md` and `open_problem.md`.
+`experiments/learning/correction_bench.json`, `experiments/learning/persistence.json`,
+`experiments/runtime/results.json`, `experiments/runtime/real_soak.json`,
+`research/EXP-016_real_soak.md`, `research/EXP-017_persistence.md`,
+`research/evidence_standard.md`, `research/completion_audit.md` and `open_problem.md`.
 
 ### Ollama (Windows PowerShell)
 
@@ -294,6 +304,7 @@ Full reports: `BrainSim/research/experiment_log.md`, `BrainSim/research/failures
 ## Remaining work
 
 - **LoRA/QLoRA on the pinned local model:** not started. No adapter, training run or evaluation.
+  EXP-017 covers the NumPy candidate only; it is not a substitute for a language-model experiment.
 - **OCR accuracy:** the runner exists; no labelled held-out target corpus has been measured. The
   synthetic smoke test is not a document-accuracy result.
 - **Real nonlinear HARN:** the current addition candidate is linear least squares. No deep or
@@ -312,7 +323,8 @@ Full reports: `BrainSim/research/experiment_log.md`, `BrainSim/research/failures
 
 - AMA/NFD weights and thresholds are uncalibrated defaults.
 - Adaptive memory has no measured advantage over FTS5 and stays behind AMA's reliability gate.
-- DREAM trains a small NumPy memory, never the language model.
+- DREAM trains a small NumPy memory, never the language model. EXP-017's restart persistence and
+  retention result applies to that NumPy candidate, not to `tony:7b`.
 - Exact arithmetic is authoritative; the HARN candidate is linear regression and adds no capability.
 - OCR is implemented but unmeasured on a held-out target corpus.
 - BrainSim tasks are synthetic and author-designed; B2 and B6 do not support a recurrent

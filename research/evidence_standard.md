@@ -17,7 +17,7 @@ The project must keep these mechanisms distinct:
 | SQLite memory | Stored experiences and facts | Storage and retrieval, including persistence across a process restart (EXP-016) |
 | `FastWeights` | Temporary adaptive state | Short-lived adaptation inside one process; not persistent model learning |
 | DREAM | Candidate consolidation process | A candidate is built and compared; it is not proof that a capability improved |
-| Persistent neural parameters | Actual learned model parameters | The current candidate is the NumPy adaptive memory, not `tony:7b` |
+| Persistent neural parameters | Actual learned model parameters | The current candidate is the NumPy adaptive memory; EXP-017 shows it persists and retains old capability across a restart. `tony:7b` is not trained. |
 | `tony:7b` weights | The language model's own parameters | Unchanged; no fine-tune or adapter has been trained |
 
 Therefore, remembering a correction and retrieving it later is **memory and retrieval**. It is not,
@@ -60,6 +60,8 @@ feature to hide. Do not tune a held-out set after inspection merely to force a p
 - EXP-015/EXP-016 measure runtime behaviour; they do not establish learning.
 - EXP-013/EXP-014 measure the verified-correction loop and its NumPy candidate; they do not train
   `tony:7b`.
+- EXP-017 measures persistence, retention and rollback of a promoted NumPy candidate across a fresh
+  process. It is evidence for the consolidation mechanism, not for language-model capability change.
 - F-042 (independent natural-language verification) and F-043 (language-model fine-tune/adapter)
   remain blocked or open.
 - F-046 is closed only for the bounded scope recorded in EXP-016: client lifecycle, database

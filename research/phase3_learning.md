@@ -161,6 +161,32 @@ worker jobs (F-045). This is a bounded research-prototype closure, not a product
 unload/reload and application restart. The restart check proves memory persistence, not a capability
 change; see `research/evidence_standard.md`. F-045 and F-047 remain open.
 
+## Consolidation persistence (EXP-017)
+
+**Hypothesis:** a promoted NumPy candidate can be loaded by a fresh process, still solve the
+corrected held-out wordings, retain the old capability and roll back to its parent. **Baseline:**
+EXP-014 measured 50/50 replay promotions and 150/150 held-out predictions inside one process.
+**Implementation:** `experiments/learning/persistence_bench.py`; 10 author-written arithmetic cases
+x 2 seeds; one fresh `--verify` child per promoted candidate.
+
+| measurement | result |
+|---|---|
+| promotions / fresh-process checks | 20/20 / 20/20 |
+| stable artifact name and SHA-256 match | 20/20 |
+| corrected held-out predictions after restart | 60/60 (1.00) |
+| old-capability predictions after restart | 400/400 (1.00) |
+| rollback restored parent `old_memory.npz` | 20/20 |
+| parent after rollback | old 20/20, corrected 0/3 per run |
+| stable artifact size / RSS | max 131.1 KB / 41.2 MB |
+| write / verify p50 | 48.219 ms / 33.241 ms |
+| total wall time | 6.25 s |
+
+**Supports:** the promoted NumPy candidate persists across a process restart, retains the old
+capability on this set, and can be rolled back by pointer change. **Does not support:** `tony:7b`
+weight learning, independent generalisation, power-loss durability or shared-database concurrency.
+**Decision:** A02/A03 are measured for the NumPy candidate; F-043 remains open for any language-model
+adapter. Details: `research/EXP-017_persistence.md`.
+
 ## Still open
 
 - The loop is opt-in. The controller retains the previous trace and can call a `correction_loop`
@@ -179,5 +205,7 @@ change; see `research/evidence_standard.md`. F-045 and F-047 remain open.
 - EXP-016 closes F-046 only for a bounded run: four clients, one reload, one restart and 80 turns.
   Concurrent inference queued instead of scaling (F-047); production endurance, thermal telemetry
   and durable worker jobs (F-045) remain open.
+- EXP-017 measures persistence and retention for the NumPy candidate, not `tony:7b`. A language-model
+  adapter/fine-tune (F-043) and an independently authored capability set (F-044) remain open.
 - A production loop needs a reviewer UI/queue, durable job storage and CLI configuration
   (F-039/P67/P75). The CLI in `learning/review.py` only lists and resolves conflicts.
