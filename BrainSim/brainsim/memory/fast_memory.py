@@ -20,7 +20,10 @@ task-scoping and gate experiments in the learning controller, not hidden inside 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import math
+import os
 from pathlib import Path
+import tempfile
 
 import torch
 import torch.nn.functional as F
@@ -41,12 +44,19 @@ class FastMemoryConfig:
             raise ValueError("vocab must be >= 2")
         if self.key_mode not in ("token", "pair"):
             raise ValueError("key_mode must be 'token' or 'pair'")
+        numeric = (self.decay, self.eta, self.blend, self.logit_scale, self.surprise_threshold)
+        if not all(math.isfinite(float(x)) for x in numeric):
+            raise ValueError("fast-memory numeric parameters must be finite")
         if not 0.0 <= self.blend <= 1.0:
             raise ValueError("blend must be in [0, 1]")
         if self.logit_scale <= 0.0:
             raise ValueError("logit_scale must be > 0")
-        if self.decay < 0.0 or self.eta <= 0.0:
-            raise ValueError("decay must be >= 0 and eta must be > 0")
+        if not 0.0 <= self.decay <= 1.0:
+            raise ValueError("decay must be in [0, 1]")
+        if not 0.0 < self.eta <= 1.0:
+            raise ValueError("eta must be in (0, 1]")
+        if self.surprise_threshold < 0.0:
+            raise ValueError("surprise_threshold must be >= 0")
 
     @property
     def n_rows(self) -> int:
@@ -138,21 +148,39 @@ class FastAssociativeMemory:
         self.counts.zero_()
 
     def save(self, path: str | Path) -> Path:
+        """Atomically persist the state so interruption cannot leave a partial checkpoint."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save({"M": self.M, "counts": self.counts, "config": asdict(self.cfg)}, path)
+        fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+        os.close(fd)
+        try:
+            torch.save({"format_version": 1, "M": self.M, "counts": self.counts,
+                        "config": asdict(self.cfg)}, tmp_name)
+            os.replace(tmp_name, path)
+        finally:
+            if os.path.exists(tmp_name):
+                os.unlink(tmp_name)
         return path
 
     @classmethod
     def load(cls, path: str | Path, cfg: FastMemoryConfig | None = None) -> "FastAssociativeMemory":
         data = torch.load(path, map_location="cpu", weights_only=True)
-        cfg = cfg or FastMemoryConfig(**data["config"])
+        if not isinstance(data, dict) or data.get("format_version", 1) != 1:
+            raise ValueError("unsupported or invalid fast-memory checkpoint")
+        saved_cfg = FastMemoryConfig(**data["config"])
+        cfg = cfg or saved_cfg
+        if asdict(cfg) != asdict(saved_cfg):
+            raise ValueError("saved fast-memory config does not match the requested configuration")
         mem = cls(cfg)
         m, counts = data["M"], data["counts"]
         if m.shape != mem.M.shape or counts.shape != mem.counts.shape:
             raise ValueError("saved memory shape does not match the requested configuration")
-        mem.M.copy_(m)
-        mem.counts.copy_(counts)
+        if m.dtype not in (torch.float16, torch.float32, torch.float64) or counts.dtype not in (torch.int32, torch.int64):
+            raise ValueError("saved memory tensors have invalid dtypes")
+        if not bool(torch.isfinite(m).all()) or bool((counts < 0).any()):
+            raise ValueError("saved memory contains non-finite values or negative counts")
+        mem.M.copy_(m.to(dtype=mem.M.dtype, device=mem.M.device))
+        mem.counts.copy_(counts.to(dtype=mem.counts.dtype, device=mem.counts.device))
         return mem
 
     def _ids(self, keys: torch.Tensor, prev: torch.Tensor | None = None) -> torch.Tensor:
@@ -167,7 +195,13 @@ class FastAssociativeMemory:
         return prev * self.cfg.vocab + keys
 
     def _tokens(self, tokens: torch.Tensor) -> torch.Tensor:
-        tokens = torch.as_tensor(tokens, dtype=torch.long).flatten()
+        raw = torch.as_tensor(tokens)
+        if raw.is_floating_point():
+            if not bool(torch.isfinite(raw).all()) or not bool((raw == raw.round()).all()):
+                raise ValueError("token ids must be finite integers")
+        elif raw.dtype == torch.bool:
+            raise ValueError("boolean values are not token ids")
+        tokens = raw.to(device="cpu", dtype=torch.long).flatten()
         if tokens.numel() and (int(tokens.min()) < 0 or int(tokens.max()) >= self.cfg.vocab):
             raise ValueError("token id outside the vocabulary")
         return tokens
