@@ -37,16 +37,18 @@ class TrainConfig:
     verbose: bool = False
 
     def __post_init__(self) -> None:
-        if self.hidden < 1 or self.layers < 1:
-            raise ValueError("hidden and layers must be positive")
-        if self.epochs < 1 or self.batch_size < 1:
-            raise ValueError("epochs and batch_size must be positive")
-        if not math.isfinite(self.lr) or self.lr <= 0:
-            raise ValueError("lr must be finite and positive")
-        if not math.isfinite(self.weight_decay) or self.weight_decay < 0:
-            raise ValueError("weight_decay must be finite and non-negative")
-        if not math.isfinite(self.grad_clip) or self.grad_clip < 0:
-            raise ValueError("grad_clip must be finite and non-negative")
+        for name, value in (("hidden", self.hidden), ("layers", self.layers),
+                            ("epochs", self.epochs), ("batch_size", self.batch_size)):
+            if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+                raise ValueError(f"{name} must be a positive integer")
+        for name, value, allow_zero in (("lr", self.lr, False),
+                                        ("weight_decay", self.weight_decay, True),
+                                        ("grad_clip", self.grad_clip, True)):
+            if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                    or not math.isfinite(float(value))
+                    or (value < 0 if allow_zero else value <= 0)):
+                bound = "non-negative" if allow_zero else "positive"
+                raise ValueError(f"{name} must be finite and {bound}")
         try:
             torch.device(self.device)
         except (TypeError, RuntimeError) as e:
@@ -57,11 +59,11 @@ def _validated_tokens(tokens: torch.Tensor, vocab: int, name: str) -> torch.Tens
     raw = torch.as_tensor(tokens)
     if raw.ndim != 2 or raw.shape[0] < 1 or raw.shape[1] < 2:
         raise ValueError(f"{name} must have shape (N>=1, L>=2)")
+    if raw.is_complex() or raw.dtype == torch.bool:
+        raise ValueError(f"{name} must contain real integer token ids")
     if raw.is_floating_point():
         if not bool(torch.isfinite(raw).all()) or not bool((raw == raw.round()).all()):
             raise ValueError(f"{name} must contain finite integer token ids")
-    elif raw.dtype == torch.bool:
-        raise ValueError(f"{name} must contain integer token ids")
     raw = raw.to(dtype=torch.long)
     if int(raw.min()) < 0 or int(raw.max()) >= vocab:
         raise ValueError(f"{name} contains token ids outside [0, {vocab})")
