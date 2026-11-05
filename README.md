@@ -58,7 +58,8 @@ failure modes without changing the measured research claims:
 
 Details are in `research/failures.md` F-020–F-040. The `.github/workflows/ci.yml` workflow runs
 ASHURA on Ubuntu/Windows with Python 3.11-3.13 and BrainSim on Ubuntu/Windows; BrainSim now installs
-`psutil`, the missing dependency that failed the earlier runs.
+`psutil`, the missing dependency that failed the earlier runs. Actions run `41938499183` passed all
+eight jobs on commit `17568c3`.
 
 ## Phase 1 trust repair (P01–P14)
 

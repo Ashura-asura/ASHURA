@@ -15,7 +15,7 @@ items the latest pass could and could not close.
 | F-039 conflict review | **partly fixed** | `learning/review.py list|resolve`; superseding still requires an independently verified experience. Two tests. | No UI, notification, queue prioritisation or background worker; an open conflict can go unseen. |
 | F-044 multi-seed evidence | **partly fixed** | EXP-013 now runs seeds 0-4. Verified+replay promoted 4/5; no-replay rejected 5/5; refused arms refused 5/5. | The task is still tiny: 20 old facts and 2 corrected held-out wordings. The stable baseline produced accidental correct answers in 3/5 seeds. |
 | F-006 arithmetic verifier | **partly fixed** | Same as F-042. | Same as F-042. |
-| P70-P72 CI | **workflow fixed, awaiting green run** | BrainSim installs the missing `psutil`; ASHURA matrix covers Python 3.11-3.13; BrainSim runs on Ubuntu and Windows. | A successful Actions run on the pushed commit is the evidence. |
+| P70-P72 CI | **fixed and green** | BrainSim installs the missing `psutil`; ASHURA matrix covers Python 3.11-3.13; BrainSim runs on Ubuntu and Windows. Actions run `41938499183` passed all eight jobs on commit `17568c3`. | Keep the matrix green; add real-model integration separately (P74). |
 
 The multi-seed EXP-013 result should be read with care. In seed 3 the stable memory already scored
 1.00 on the corrected held-out items (and 0.50 in seeds 1/4), so NGR correctly refused promotion for
@@ -170,7 +170,7 @@ Items 1-6 have targeted tests today. Items 7-8 and the larger independent evalua
 
 | Remaining item | What is required | Dependency |
 |---|---|---|
-| P70-P73 CI | Merge the workflow fix and confirm a green Actions run on the exact commit; record the SHA/log. | Code is done; only the CI run is pending. |
+| P70-P73 CI | Done: workflow fix plus green Actions run `41938499183` on `17568c3` (8/8 jobs). | Keep it green; P74 (real-model integration) remains separate. |
 | F-041 production loop | A defined replay source, a bootstrapped stable checkpoint, a background worker with timeout/cancel, and restart tests. | Code + storage design; no new data. |
 | F-042 arithmetic residual | Symbolic radicals or a rational-exponent policy with explicit domain/precision rules. Natural-language facts need a trusted local source. | Code/design for arithmetic; data/verifier for facts. |
 | F-039 reviewer workflow | UI or notification, queue prioritisation and an audit view. | Code; not required for learning safety. |
