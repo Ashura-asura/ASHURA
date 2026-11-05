@@ -62,6 +62,21 @@ class NGRPolicy:
     require_sample_counts: bool = False
 
     def __post_init__(self) -> None:
+        if not isinstance(self.target, str) or not self.target.strip():
+            raise ValueError("target capability must be a non-empty string")
+        for name, value in (("min_target_gain", self.min_target_gain),
+                            ("default_epsilon", self.default_epsilon),
+                            ("max_latency_ratio", self.max_latency_ratio),
+                            ("max_ram_ratio", self.max_ram_ratio)):
+            if not _finite(value) or value < 0:
+                raise ValueError(f"{name} must be finite and non-negative")
+        if self.max_latency_ratio <= 0 or self.max_ram_ratio <= 0:
+            raise ValueError("performance ratios must be positive")
+        for capability, value in self.epsilons.items():
+            if not isinstance(capability, str) or not capability.strip():
+                raise ValueError("epsilon capability names must be non-empty strings")
+            if not _finite(value) or value < 0:
+                raise ValueError(f"epsilon for {capability!r} must be finite and non-negative")
         lo, hi = self.score_range
         if not (_finite(lo) and _finite(hi)) or lo > hi:
             raise ValueError("score_range must be finite and minimum <= maximum")
