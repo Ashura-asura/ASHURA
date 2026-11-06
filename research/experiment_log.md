@@ -364,3 +364,13 @@ record their own environment. Phase 0 real-model numbers remain scoped to the ma
 - **Does not support:** an agentic3 tool-use advantage, or general agentic capability.
 - **Conclusion:** **no measurable difference; agentic3 is slower at p50 and load.** Keep gpa3.
 - **Decision:** do not promote agentic3 for tool use (D-060). Full data: `experiments/foundation/agentic_tools.json`; report: `research/EXP-020_agentic_tools.md`.
+
+---
+## EXP-021 - Local web UI production pass (2026-11-06)
+- **Scope:** replace the one-request, unauthenticated MVP with a stdlib-only local console; no new learning capability and no external API.
+- **Architecture:** `ThreadingHTTPServer` + one bounded `ControllerWorker` owning the Controller/model/SQLite; token cookie or header auth, CSRF, Host/Origin checks, CSP/security headers, rate limits, request IDs and JSON logs; SSE streaming with cancellation; persistent sessions and Markdown/JSON export.
+- **Tests:** 24 web tests pass; the full ASHURA suite is 315 passed. Coverage includes queue bounds, session persistence/reopen, history injection, SSE, cancellation, CRUD/export, OCR, auth/CSRF/Origin/Host, security headers, token bootstrap, logout and full-transcript export.
+- **Browser smoke:** Chromium headless against an isolated Echo stub verified unlock, streaming, empty-state removal, immediate title refresh, stop, retry, OCR upload, rename, export download, delete, help, theme and mobile layout; no page errors.
+- **Real model:** one `tony:7b-gpa3` streaming turn returned the exact requested text; trace total 13.6 s including load; the model was unloaded afterwards.
+- **Does not support:** load/soak/endurance, accessibility, TLS, multi-user accounts, cross-process queueing, conflict-review UI, session-DB backup/restore, or a CI browser job.
+- **Decision:** adopt D-062 (supersedes D-061). Report: `research/EXP-021_local_ui.md`.

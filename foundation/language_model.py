@@ -3,8 +3,13 @@ from __future__ import annotations
 
 import re
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 
 from .model_config import ModelConfig, verify_checkpoint
+
+
+class GenerationCancelled(Exception):
+    """Raised by a streaming callback when the client has gone away."""
 
 
 class LanguageModel(ABC):
@@ -12,6 +17,12 @@ class LanguageModel(ABC):
 
     @abstractmethod
     def generate(self, prompt: str, max_tokens: int = 128) -> str: ...
+
+    def stream(self, prompt: str, max_tokens: int = 128) -> Iterator[str]:
+        """Yield generated text chunks. Backends without token streaming yield once."""
+        text = self.generate(prompt, max_tokens)
+        if text:
+            yield text
 
 
 class EchoModel(LanguageModel):
@@ -24,6 +35,11 @@ class EchoModel(LanguageModel):
     def generate(self, prompt: str, max_tokens: int = 128) -> str:
         m = re.search(r"Question:\s*(.*)$", prompt, re.S)
         return f"[echo] {(m.group(1) if m else prompt).strip()[:200]}"
+
+    def stream(self, prompt: str, max_tokens: int = 128):
+        text = self.generate(prompt, max_tokens)
+        for index in range(0, len(text), 8):
+            yield text[index:index + 8]
 
 
 class LlamaCppModel(LanguageModel):

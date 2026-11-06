@@ -1,76 +1,236 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
   <title>ASHURA</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <span class="logo">A</span>
-        <div>
-          <h1>ASHURA</h1>
-          <p>local cognitive runtime</p>
+  <div id="app" class="app">
+    <aside id="sidebar" class="sidebar" aria-label="Sessions">
+      <div class="brand-row">
+        <div class="brand">
+          <span class="logo" aria-hidden="true">A</span>
+          <div class="brand-text">
+            <h1>ASHURA</h1>
+            <p>local cognitive runtime</p>
+          </div>
+        </div>
+        <button id="sidebar-close" class="icon-btn only-mobile" type="button" aria-label="Close sessions">×</button>
+      </div>
+
+      <div class="model-card">
+        <div class="model-row">
+          <span id="connection-dot" class="dot dot-off" aria-hidden="true"></span>
+          <strong id="model-name">connecting…</strong>
+        </div>
+        <p id="model-detail">local model · encrypted at rest by your OS</p>
+        <div class="model-meta">
+          <span id="connection-text">checking</span>
+          <span id="worker-pill" class="pill">worker idle</span>
         </div>
       </div>
 
-      <section class="panel">
-        <h2>Status</h2>
-        <div id="status" class="status-grid">
-          <p class="muted">connecting…</p>
-        </div>
-      </section>
+      <div class="session-controls">
+        <button id="new-chat" class="primary wide" type="button">
+          <span aria-hidden="true">+</span> New chat
+        </button>
+        <label class="search-field" for="session-filter">
+          <span class="sr-only">Filter sessions</span>
+          <input id="session-filter" type="search" placeholder="Filter sessions  (Ctrl K)" autocomplete="off">
+        </label>
+      </div>
 
-      <section class="panel grow">
-        <h2>Memory</h2>
-        <div class="search-row">
-          <input id="memory-query" type="search" placeholder="Search memories" autocomplete="off">
-          <button id="memory-search" type="button">Search</button>
-        </div>
-        <div id="memory-results" class="memory-list">
-          <p class="muted">Recent admissions appear here.</p>
-        </div>
-      </section>
+      <div class="section-head">
+        <h2>Sessions</h2>
+        <span id="session-count" class="muted small">0</span>
+      </div>
+      <div id="session-list" class="session-list" role="list"></div>
 
-      <footer>localhost only · no external API</footer>
+      <div class="sidebar-tools">
+        <button id="open-memory" type="button">Memory</button>
+        <button id="open-status" type="button">Status</button>
+        <button id="help-button" type="button">Shortcuts</button>
+      </div>
+      <footer class="sidebar-footer">localhost only · no external API</footer>
     </aside>
 
     <main class="main">
       <header class="topbar">
-        <div>
-          <h2>Ask ASHURA</h2>
-          <p id="model-label" class="muted">loading model…</p>
+        <div class="topbar-left">
+          <button id="menu-toggle" class="icon-btn only-mobile" type="button" aria-label="Open sessions">☰</button>
+          <div class="chat-heading">
+            <h1 id="chat-title">New chat</h1>
+            <p id="chat-subtitle" class="muted">Streaming local answers with a measured trace.</p>
+          </div>
         </div>
-        <label class="toggle">
-          <input type="checkbox" id="show-trace" checked>
-          <span>show trace</span>
-        </label>
+        <div class="topbar-actions">
+          <button id="export-chat" class="ghost-btn" type="button" title="Download this chat as Markdown">Export</button>
+          <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch theme" title="Switch theme">
+            <span id="theme-label" aria-hidden="true">☾</span>
+          </button>
+          <button id="inspector-toggle" class="ghost-btn" type="button" aria-expanded="true" aria-controls="inspector">
+            Inspector
+          </button>
+        </div>
       </header>
 
-      <section id="chat" class="chat" aria-live="polite">
-        <div class="empty-state">
-          <div class="empty-mark">A</div>
-          <h3>Local reasoning, measured.</h3>
-          <p>Ask a question, test a correction, or upload an image for OCR. Nothing leaves this machine.</p>
+      <section id="chat" class="chat" aria-live="polite" aria-label="Conversation">
+        <div id="empty-state" class="empty-state">
+          <div class="empty-mark" aria-hidden="true">A</div>
+          <h2>Local reasoning, measured.</h2>
+          <p>Ask a question, test a correction, or drop an image for local OCR. Nothing leaves this machine.</p>
+          <div class="prompt-grid">
+            <button type="button" data-prompt="Calculate 123456789 * 987654321">Exact arithmetic</button>
+            <button type="button" data-prompt="What do you remember from our earlier conversations?">Recall memory</button>
+            <button type="button" data-prompt="Explain step by step how your routing works.">Explain routing</button>
+          </div>
         </div>
       </section>
 
-      <form id="composer" class="composer">
-        <textarea id="message" rows="2" placeholder="Ask a question…" autocomplete="off"></textarea>
-        <div class="composer-actions">
-          <label class="upload" title="Run local OCR on an image">
-            OCR image
-            <input id="ocr-file" type="file" accept="image/*" hidden>
-          </label>
-          <button type="submit" id="send">Send</button>
+      <button id="jump-latest" class="jump-latest" type="button" hidden>Jump to latest ↓</button>
+
+      <div id="drop-hint" class="drop-hint" aria-hidden="true">
+        <div class="drop-card">
+          <strong>Drop an image</strong>
+          <span>It will be processed locally by OCR.</span>
+        </div>
+      </div>
+
+      <form id="composer" class="composer" autocomplete="off">
+        <div class="composer-box">
+          <textarea id="message" rows="2" placeholder="Ask a question…  (Enter to send, Shift+Enter for a newline)" aria-label="Message"></textarea>
+          <div class="composer-bar">
+            <div class="composer-left">
+              <label class="upload" title="Run local OCR on an image">
+                <span aria-hidden="true">🖼</span> OCR image
+                <input id="ocr-file" type="file" accept="image/png,image/jpeg,image/bmp,image/tiff,image/webp" hidden>
+              </label>
+              <span id="composer-hint" class="muted small">Enter sends · Shift+Enter adds a line</span>
+            </div>
+            <div class="composer-right">
+              <button id="stop" class="danger-btn" type="button" hidden>Stop</button>
+              <button id="send" class="primary" type="submit">Send</button>
+            </div>
+          </div>
         </div>
       </form>
     </main>
+
+    <aside id="inspector" class="inspector" aria-label="Inspector">
+      <header class="inspector-head">
+        <div class="tabs" role="tablist" aria-label="Inspector sections">
+          <button class="tab-button is-active" type="button" role="tab" data-tab="trace" aria-selected="true">Trace</button>
+          <button class="tab-button" type="button" role="tab" data-tab="memory" aria-selected="false">Memory</button>
+          <button class="tab-button" type="button" role="tab" data-tab="status" aria-selected="false">Status</button>
+        </div>
+        <button id="inspector-close" class="icon-btn only-narrow" type="button" aria-label="Close inspector">×</button>
+      </header>
+
+      <div class="inspector-body">
+        <section class="inspector-panel is-active" data-panel="trace" role="tabpanel">
+          <div class="panel-head">
+            <div>
+              <h2>Execution trace</h2>
+              <p class="muted small">Routing, timing and independent verification for one answer.</p>
+            </div>
+            <button id="trace-last" class="ghost-btn small" type="button">Latest</button>
+          </div>
+          <div id="trace-summary" class="trace-summary"></div>
+          <div id="trace-content" class="trace-content">
+            <p class="muted">No answer yet. Send a message to inspect its trace.</p>
+          </div>
+        </section>
+
+        <section class="inspector-panel" data-panel="memory" role="tabpanel">
+          <div class="panel-head">
+            <div>
+              <h2>Memory</h2>
+              <p class="muted small">Search episodic experiences and recent admissions.</p>
+            </div>
+          </div>
+          <div class="search-row">
+            <input id="memory-query" type="search" placeholder="Search memory…" autocomplete="off" aria-label="Search memory">
+            <button id="memory-search" class="ghost-btn" type="button">Search</button>
+          </div>
+          <div id="memory-note" class="muted small"></div>
+          <div id="memory-results" class="memory-results"></div>
+        </section>
+
+        <section class="inspector-panel" data-panel="status" role="tabpanel">
+          <div class="panel-head">
+            <div>
+              <h2>Runtime</h2>
+              <p class="muted small">Local services, memory counts and worker pressure.</p>
+            </div>
+            <button id="status-refresh" class="ghost-btn small" type="button">Refresh</button>
+          </div>
+          <div id="status-grid" class="status-grid"></div>
+          <p id="status-updated" class="muted small"></p>
+        </section>
+      </div>
+    </aside>
+
+    <div id="scrim" class="scrim" hidden></div>
   </div>
 
-  <script src="/static/app.js"></script>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <dialog id="unlock-dialog" class="dialog">
+    <form id="unlock-form" method="dialog" class="dialog-body">
+      <h2>Unlock ASHURA</h2>
+      <p class="muted">Paste the access token printed in the terminal that started the web UI.</p>
+      <input id="unlock-token" type="password" name="token" placeholder="Access token" autocomplete="off" required>
+      <p id="unlock-error" class="form-error" hidden></p>
+      <div class="dialog-actions">
+        <button id="unlock-submit" class="primary" type="submit">Unlock</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="rename-dialog" class="dialog">
+    <form id="rename-form" method="dialog" class="dialog-body">
+      <h2>Rename session</h2>
+      <input id="rename-title" type="text" maxlength="80" required autocomplete="off">
+      <p id="rename-error" class="form-error" hidden></p>
+      <div class="dialog-actions">
+        <button class="ghost-btn" type="button" data-close-dialog="rename-dialog">Cancel</button>
+        <button class="primary" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-dialog" class="dialog">
+    <form id="confirm-form" method="dialog" class="dialog-body">
+      <h2>Confirm</h2>
+      <p id="confirm-message" class="muted"></p>
+      <div class="dialog-actions">
+        <button class="ghost-btn" type="button" data-confirm="no">Cancel</button>
+        <button class="danger-btn" type="button" data-confirm="yes">Delete</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="help-dialog" class="dialog">
+    <div class="dialog-body">
+      <h2>Keyboard shortcuts</h2>
+      <dl class="shortcut-list">
+        <div><dt>Enter</dt><dd>Send message</dd></div>
+        <div><dt>Shift + Enter</dt><dd>New line</dd></div>
+        <div><dt>Ctrl / ⌘ + K</dt><dd>Focus the session filter</dd></div>
+        <div><dt>Ctrl / ⌘ + Shift + O</dt><dd>New chat</dd></div>
+        <div><dt>Esc</dt><dd>Stop streaming, close panels</dd></div>
+        <div><dt>?</dt><dd>Open this help</dd></div>
+      </dl>
+      <div class="dialog-actions">
+        <button class="primary" type="button" data-close-dialog="help-dialog">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="/static/app.js" defer></script>
 </body>
 </html>

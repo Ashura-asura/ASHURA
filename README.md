@@ -7,7 +7,9 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 Phase 1 trust repair (P01–P14), Phase 2 memory reliability (P15–P29) and Phase 3 verified-correction
 loop (P07/P75/A01–A03) implemented and tested; local OCR and a HARN arithmetic candidate are
 integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
-subproject. **297 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
+subproject. **315 ASHURA tests and 46 BrainSim tests pass.** The local web UI is now an
+authenticated operator console with persistent sessions, SSE streaming and a single-writer
+controller queue; it adds no learning capability. The adaptive memory remains
 experimental and out of the response path. BrainSim is not imported by ASHURA. The learning loop is
 **not** complete: it is an opt-in controller hook with a durable background worker, only exact
 arithmetic corrections are independently verified, and the candidate is the NumPy memory rather
@@ -27,7 +29,7 @@ so gpa3 stays the general/tool-use model. See `research/evidence_standard.md`,
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 297 tests
+python -m pytest -q                       # 315 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -55,7 +57,7 @@ python -m memory.retention --db data/ashura.db   # forgetting policy dry run
 
 ## Web UI
 
-A local, dependency-free operating interface is available alongside the CLI:
+A local operator console is available alongside the CLI:
 
 ```bash
 python -m app.web --config config/ashura.ollama.toml --open
@@ -63,15 +65,41 @@ python -m app.web --config config/ashura.ollama.toml --open
 # open http://127.0.0.1:8765/
 ```
 
+The server prints an access token at startup. Opening the printed URL with `?token=...` bootstraps
+an HttpOnly, `SameSite=Strict` cookie and redirects to `/` so the token does not stay in the page
+URL; `/api/login` does the same for a manually opened page. Scripts may send the token as
+`X-ASHURA-Token: <token>` or `Authorization: Bearer <token>`. Mutating requests need the session
+CSRF token from `/api/status` (`X-CSRF-Token`), except header-authenticated clients that bypass the
+cookie path. The server binds to loopback only and refuses non-loopback addresses; do not expose it
+to a network without a real TLS/authenticating reverse proxy.
+
 It uses only the Python standard library (`http.server`) and serves `app/static/*`; there is no
-CDN, framework or external API. The UI provides chat, an expandable execution trace, OCR image
-upload, memory search/recent admissions, and model/memory status. It binds to `127.0.0.1` only and
-has no authentication, so it refuses non-loopback bind addresses. Requests are handled one at a
-time, matching the single-model/single-SQLite-connection runtime. JSON endpoints: `/api/chat`,
-`/api/ocr`, `/api/status`, `/api/memory`, `/api/health`.
+CDN, framework or external API. The console provides:
+
+- persistent chat sessions in a separate SQLite file (`data/ui_sessions.db` by default, derived
+  from the memory database's parent; override with `--sessions-db`), with rename, delete, Markdown
+  and JSON export;
+- SSE token streaming with stop/retry, Markdown and code rendering, copy, keyboard shortcuts, and
+  desktop/mobile layouts;
+- an inspector for the execution trace, memory search/recent admissions, and runtime/worker
+  status;
+- OCR upload from the file picker, drag-and-drop or paste, and automatic image cleanup.
+
+Every `Controller` call runs through one `ControllerWorker` thread with a bounded queue (8 jobs by
+default). HTTP requests are concurrent, but model/SQLite work is serialized; a full queue returns
+429 instead of growing without limit. Responses use a strict CSP, security headers, Host and
+Origin checks, rate limits, request IDs and JSON access logs.
+
+Endpoints: unauthenticated `GET /api/health`; authenticated `GET /api/status`, `/api/sessions`,
+`/api/sessions/<id>`, `/api/sessions/<id>/export`, `/api/memory`; `POST /api/login`, `/api/logout`,
+`/api/chat`, `/api/chat/stream`, `/api/ocr`, `/api/sessions`; `PATCH` and `DELETE` on a session.
+A chat answer and its trace are committed as one session record; a cancelled stream persists only
+the user turn.
 
 The UI is an operator convenience, not a new learning capability. It calls the same `Controller`
-as the CLI; the underlying claims and limits are unchanged.
+as the CLI; the underlying claims and limits are unchanged. It remains a single-user local tool:
+no multi-user accounts, TLS, conflict-review screen or cross-process queue are claimed. The
+browser smoke matrix and the one-turn real-model check are recorded in `research/EXP-021_local_ui.md`.
 
 ## Hardening pass
 
@@ -289,7 +317,7 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 
 | Area | Files | State |
 |---|---|---|
-| Interface | `app/main.py`, `app/web.py`, `app/static/*` | CLI and local web UI: chat, execution trace, OCR upload, memory search, model/memory status; stdlib-only, localhost-only, no auth; both use the same Controller |
+| Interface | `app/main.py`, `app/web.py`, `app/worker.py`, `app/sessions.py`, `app/static/*` | CLI and local web console: token auth, persistent sessions, SSE chat, execution trace, OCR upload, memory search, runtime status; stdlib-only, loopback-only, single-writer Controller queue; both use the same Controller |
 | Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; general `tony:7b-gpa3` and privacy `tony:7b` pinned; 41/42 adjudicated each, 1.86/3.04 s p50 (EXP-018, n=42); 4.7 GB shared footprint; bounded per-process concurrency gate (EXP-019); llama.cpp untested |
 | Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + verified semantic facts, FTS5, provenance/derivation, conflict index, utility feedback, bounded working memory, deletion integrity, utility-aware retention |
 | AMA | `learning/ama.py`, `learning/compare.py` | duplicate/conflict detection, scoring, continuous surprise, conflict index, feedback-based utility, decision log, reliability-aware retrieval; weights hand-set except the measured threshold sweep |

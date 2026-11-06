@@ -14,7 +14,10 @@ class Database:
         self.path = path
         if path != ":memory:":
             Path(path).parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(path)
+        # The web UI creates the Controller in the main thread and serves requests from a dedicated
+        # worker thread. Access is serialized by that worker; callers must never use this connection
+        # from two threads at once. The CLI remains single-threaded.
+        self.conn = sqlite3.connect(path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         try:
             # Wait for a competing writer instead of failing immediately with "database is locked".

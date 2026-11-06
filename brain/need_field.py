@@ -31,6 +31,9 @@ class Task:
     # Modules the user explicitly asked for (e.g. the CLI's /ocr command). They are still skipped if
     # unavailable, but are never deferred because of RAM / CPU load or a low priority score.
     force: tuple[str, ...] = ()
+    # Prior completed turns as (user, assistant) pairs. The web UI supplies this; the CLI leaves it
+    # empty. Only the most recent turns are placed in the language prompt.
+    history: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
-from foundation.language_model import LanguageModel
+from foundation.language_model import GenerationCancelled, LanguageModel
 from learning.ama import AMA, surprise_from_prior
 from learning.cage import CAGE
 from learning.corrections import parse_correction
@@ -123,7 +123,7 @@ class Controller:
     def __exit__(self, *exc) -> None:
         self.close()
 
-    def handle(self, task: Task | str) -> Response:
+    def handle(self, task: Task | str, on_token: Callable[[str], None] | None = None) -> Response:
         task = Task(task) if isinstance(task, str) else task
         trace = ExecutionTrace(task=task.text)
         t0 = time.perf_counter()
@@ -234,10 +234,23 @@ class Controller:
             s = time.perf_counter()
             facts = f"Known: {format_value_safe(value)}\n" if value is not None else ""
             context = "".join(f"{c}\n" for c in ctx)
+            history = "".join(f"User: {u[:1000]}\nAssistant: {a[:1000]}\n"
+                              for u, a in task.history[-8:])
+            prompt = f"{history}{context}{facts}Question: {task.text}"
             try:
-                text = self.model.generate(f"{context}{facts}Question: {task.text}")
+                if on_token is None:
+                    text = self.model.generate(prompt)
+                else:
+                    chunks: list[str] = []
+                    for chunk in self.model.stream(prompt):
+                        if chunk:
+                            chunks.append(chunk)
+                            on_token(chunk)
+                    text = "".join(chunks).strip()
                 trace.add(TraceStep("language", task.text, text, (time.perf_counter() - s) * 1000))
                 outcomes["language"] = True
+            except GenerationCancelled:
+                raise
             except Exception as e:  # noqa: BLE001 - backend down / timeout / bad response: degrade, don't crash
                 trace.add(TraceStep("language", task.text, "", (time.perf_counter() - s) * 1000, ok=False,
                                     note=f"language model failed: {e}"))

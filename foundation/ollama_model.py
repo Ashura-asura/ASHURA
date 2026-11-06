@@ -94,18 +94,64 @@ class OllamaModel(LanguageModel):
         self.gate = (ConcurrencyGate(cfg.max_inflight, cfg.max_queue, cfg.queue_timeout_s)
                      if cfg.max_inflight else None)
 
-    def _request(self, prompt: str, max_tokens: int) -> str:
+    def _payload(self, prompt: str, max_tokens: int, stream: bool) -> dict:
         payload = {
-            "model": self.cfg.model, "prompt": prompt, "stream": False, "keep_alive": self.cfg.keep_alive,
+            "model": self.cfg.model, "prompt": prompt, "stream": stream,
+            "keep_alive": self.cfg.keep_alive,
             "options": {"temperature": 0, "seed": 0, "top_p": self.cfg.top_p,
                         "num_predict": max_tokens, "num_ctx": self.cfg.n_ctx},
         }
         if self.cfg.think is not None:
             payload["think"] = self.cfg.think
-        r = _call(self.cfg.host, "/api/generate", payload, timeout=self.cfg.timeout_s)
-        self.last_stats = GenStats(r.get("eval_count", 0), r.get("eval_duration", 0), r.get("prompt_eval_count", 0),
-                                   r.get("prompt_eval_duration", 0), r.get("load_duration", 0), r.get("total_duration", 0))
+        return payload
+
+    def _update_stats(self, r: dict) -> None:
+        self.last_stats = GenStats(r.get("eval_count", 0), r.get("eval_duration", 0),
+                                   r.get("prompt_eval_count", 0), r.get("prompt_eval_duration", 0),
+                                   r.get("load_duration", 0), r.get("total_duration", 0))
+
+    def _request(self, prompt: str, max_tokens: int) -> str:
+        r = _call(self.cfg.host, "/api/generate", self._payload(prompt, max_tokens, False),
+                  timeout=self.cfg.timeout_s)
+        self._update_stats(r)
         return r.get("response", "").strip()
+
+    def _stream(self, prompt: str, max_tokens: int):
+        url = self.cfg.host.rstrip("/") + "/api/generate"
+        request = urllib.request.Request(
+            url, data=json.dumps(self._payload(prompt, max_tokens, True)).encode(),
+            headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            with urllib.request.urlopen(request, timeout=self.cfg.timeout_s) as response:
+                for raw in response:
+                    if not raw.strip():
+                        continue
+                    try:
+                        chunk = json.loads(raw)
+                    except json.JSONDecodeError as error:
+                        raise OllamaError(f"Ollama returned invalid streaming JSON: {error}") from error
+                    if chunk.get("error"):
+                        raise OllamaError(f"Ollama reported an error: {str(chunk['error'])[:300]}")
+                    text = chunk.get("response", "")
+                    if text:
+                        yield text
+                    if chunk.get("done"):
+                        self._update_stats(chunk)
+                        break
+        except OllamaError:
+            raise
+        except urllib.error.HTTPError as error:
+            body = error.read().decode(errors="replace")[:300]
+            raise OllamaError(f"Ollama returned HTTP {error.code}: {body}") from error
+        except (urllib.error.URLError, ConnectionError, TimeoutError, OSError) as error:
+            raise OllamaError(f"cannot stream from Ollama at {self.cfg.host} ({error})") from error
+
+    def stream(self, prompt: str, max_tokens: int = 128):
+        if self.gate is None:
+            yield from self._stream(prompt, max_tokens)
+        else:
+            with self.gate.slot():
+                yield from self._stream(prompt, max_tokens)
 
     def generate(self, prompt: str, max_tokens: int = 128) -> str:
         if self.gate is None:
