@@ -12,7 +12,6 @@ import com.ashura.tutor.domain.ReviewSchedule
 import com.ashura.tutor.domain.SpacingScheduler
 import com.ashura.tutor.domain.TutorEngine
 import com.ashura.tutor.domain.TutorRequest
-import com.ashura.tutor.data.LearningStateEntity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,12 +67,10 @@ class TutorViewModel(
         _lesson.value = lessonPlanner.plan(subject, topic, level)
     }
 
-    fun clearLesson() = _lesson.value = null
+    fun clearLesson() {
+        _lesson.value = null
+    }
 
-    /**
-     * Record a practice attempt, update mastery via the spacing scheduler, and
-     * persist the resulting learning state (spec §7.5, §9.4).
-     */
     fun recordPractice(
         conceptId: String,
         outcome: ReviewOutcome,

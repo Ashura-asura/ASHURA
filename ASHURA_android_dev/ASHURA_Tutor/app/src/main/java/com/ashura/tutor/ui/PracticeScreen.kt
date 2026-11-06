@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,7 +47,7 @@ fun PracticeScreen(
                 title = { Text("Practice") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateHome) {
-                        Icon(imageVector = Assessment, contentDescription = null)
+                        Icon(imageVector = Icons.Filled.Assessment, contentDescription = null)
                     }
                 }
             )
@@ -74,25 +75,21 @@ fun PracticeScreen(
             Text("How did you go?", style = MaterialTheme.typography.titleMedium)
             androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
             ReviewOutcome.entries.forEach { outcome ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = selectedOutcome == outcome,
                         onClick = { selectedOutcome = outcome }
                     )
-                    Text(text = outcome.name.replace("_", " ").capitalize())
+                    Text(text = outcome.name.replace("_", " ").replaceFirstChar { it.titlecase() })
                 }
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(4.dp))
             }
             androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = {
-                    selectedOutcome?.let { outcome ->
-                        onRecord(answer, outcome)
-                    }
+                    selectedOutcome?.let { outcome -> onRecord(answer, outcome) }
                 },
-                enabled = selectedOutcome != null,
+                enabled = selectedOutcome != null && answer.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "Record attempt")

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,7 +41,7 @@ fun LessonScreen(
                 title = { Text("${lesson.subject} · ${lesson.topic}") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateHome) {
-                        Icon(imageVector = School, contentDescription = null)
+                        Icon(imageVector = Icons.Filled.School, contentDescription = null)
                     }
                 }
             )
@@ -93,9 +95,9 @@ private fun EmptyState(title: String, description: String, onNavigateHome: () ->
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(title) }, navigationIcon = {
-                androidx.compose.material3.IconButton(onClick = onNavigateHome) {
-                    androidx.compose.material3.Icon(
-                        imageVector = androidx.compose.material.icons.filled.ArrowBack,
+                IconButton(onClick = onNavigateHome) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
                         contentDescription = null
                     )
                 }

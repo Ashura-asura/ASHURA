@@ -31,7 +31,7 @@ class TaskController(
 
     interface Tool {
         val name: String
-        val handles: (String) -> Boolean        // can this tool own the request?
+        val handles: (String) -> Boolean
         suspend fun execute(request: TutorRequest): ToolResult
     }
 
@@ -63,10 +63,14 @@ class TaskController(
 
     /** Execute the plan: run the selected tool once; never retry deterministic failures. */
     suspend fun execute(plan: Plan, request: TutorRequest): TutorResponse {
+        require(plan.tools.size <= plan.maxToolCalls) { "Plan exceeds its tool-call budget." }
+        require(request.question.length <= limits.maxContextCharacters) {
+            "Question exceeds the configured context-character limit."
+        }
         if (plan.tools.isNotEmpty()) {
-            val tool = tools[plan.tools.first()] ?: return ToolResult.Unhandled("missing tool").toResponse()
-            val result = tool.execute(request)
-            return when (result) {
+            val tool = tools[plan.tools.first()]
+                ?: return ToolResult.Unhandled("missing tool").toResponse()
+            return when (val result = tool.execute(request)) {
                 is ToolResult.Handled -> TutorResponse(result.answer, result.mode, result.citations)
                 is ToolResult.Unhandled -> fallthrough(request)
             }
@@ -74,33 +78,54 @@ class TaskController(
         return fallthrough(request)
     }
 
-    private fun fallthrough(request: TutorRequest): TutorResponse {
-        return if (modelRuntime.isAvailable) {
-            // One bounded model call; no self-reflection loop.
-            TutorResponse(
-                answer = "Local model path not yet wired for this request.",
-                mode = ResponseMode.OFFLINE_FALLBACK,
-                limitation = "Model runtime integration is pending."
-            )
-        } else {
-            TutorResponse(
-                answer = buildString {
-                    appendLine("Let's work through this carefully.")
-                    appendLine()
-                    appendLine("**Your question:** ${request.question}")
-                    appendLine()
-                    appendLine("**Study method**")
-                    appendLine("1. Identify the key concept and define unfamiliar terms.")
-                    appendLine("2. List what is known and what must be explained.")
-                    appendLine("3. Break the task into smaller steps and justify each step.")
-                    appendLine("4. Check the result independently.")
-                    appendLine()
-                    append("No local language model is configured, so I won't invent a subject-specific explanation.")
-                },
-                mode = ResponseMode.OFFLINE_FALLBACK,
-                limitation = "This is a study scaffold, not a generated expert explanation."
-            )
+    /**
+     * Keep the newest retrieved snippets within the context budget, then call
+     * the configured runtime. This is the actual model-runtime seam; an
+     * available runtime must never silently degrade to a placeholder string.
+     */
+    private suspend fun fallthrough(request: TutorRequest): TutorResponse {
+        if (modelRuntime.isAvailable) {
+            val boundedRequest = requestWithBoundedContext(request)
+            val generated = modelRuntime.generate(boundedRequest, limits)
+            return if (generated.answer.isBlank()) {
+                TutorResponse(
+                    answer = "The local model returned an empty response. Please try again.",
+                    mode = ResponseMode.OFFLINE_FALLBACK,
+                    limitation = "The configured model runtime produced no answer."
+                )
+            } else {
+                generated.copy(mode = ResponseMode.LOCAL_MODEL)
+            }
         }
+
+        return TutorResponse(
+            answer = buildString {
+                appendLine("Let's work through this carefully.")
+                appendLine()
+                appendLine("**Your question:** ${request.question}")
+                appendLine()
+                appendLine("**Study method**")
+                appendLine("1. Identify the key concept and define unfamiliar terms.")
+                appendLine("2. List what is known and what must be explained.")
+                appendLine("3. Break the task into smaller steps and justify each step.")
+                appendLine("4. Check the result independently.")
+                appendLine()
+                append("No local language model is configured, so I won't invent a subject-specific explanation.")
+            },
+            mode = ResponseMode.OFFLINE_FALLBACK,
+            limitation = "This is a study scaffold, not a generated expert explanation."
+        )
+    }
+
+    private fun requestWithBoundedContext(request: TutorRequest): TutorRequest {
+        var remaining = limits.maxContextCharacters - request.question.length
+        val newestFirst = request.retrievedContext.asReversed().mapNotNull { snippet ->
+            if (remaining <= 0) return@mapNotNull null
+            val boundedText = snippet.text.take(remaining)
+            remaining -= boundedText.length
+            if (boundedText.isBlank()) null else snippet.copy(text = boundedText)
+        }
+        return request.copy(retrievedContext = newestFirst.asReversed())
     }
 
     private fun ToolResult.Unhandled.toResponse(): TutorResponse =

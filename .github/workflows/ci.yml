@@ -24,8 +24,6 @@ jobs:
       - run: python -m pytest -q
 
   brainsim:
-    # BrainSim is an independent subproject that needs PyTorch (CPU build is enough).
-    # psutil is imported by the B4/B6 experiment modules at collection time.
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -43,8 +41,6 @@ jobs:
         working-directory: BrainSim
 
   browser:
-    # Drives the real workbench in Chromium against an in-memory controller.
-    # Screenshot baselines are compared locally on Windows; CI checks behavior.
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,3 +52,25 @@ jobs:
       - run: pip install -e ".[browser]"
       - run: python -m playwright install chromium
       - run: python tests/browser/smoke.py --no-snapshots
+
+  android:
+    # The Android starter is a separate product surface and must be compiled
+    # independently; Python test success does not validate Kotlin/Room/Compose.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Run Android unit tests and assemble debug APK
+        working-directory: ASHURA_android_dev/ASHURA_Tutor
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon testDebugUnitTest assembleDebug
