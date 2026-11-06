@@ -7,7 +7,7 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 Phase 1 trust repair (P01–P14), Phase 2 memory reliability (P15–P29) and Phase 3 verified-correction
 loop (P07/P75/A01–A03) implemented and tested; local OCR and a HARN arithmetic candidate are
 integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
-subproject. **291 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
+subproject. **297 ASHURA tests and 46 BrainSim tests pass.** The adaptive memory remains
 experimental and out of the response path. BrainSim is not imported by ASHURA. The learning loop is
 **not** complete: it is an opt-in controller hook with a durable background worker, only exact
 arithmetic corrections are independently verified, and the candidate is the NumPy memory rather
@@ -27,7 +27,7 @@ so gpa3 stays the general/tool-use model. See `research/evidence_standard.md`,
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 291 tests
+python -m pytest -q                       # 297 tests
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -52,6 +52,26 @@ python -m evaluation.contradiction_bench  # EXP-010  structured answer compariso
 python -m evaluation.ollama_baseline      # PHASE 0   real-model baseline
 python -m memory.retention --db data/ashura.db   # forgetting policy dry run
 ```
+
+## Web UI
+
+A local, dependency-free operating interface is available alongside the CLI:
+
+```bash
+python -m app.web --config config/ashura.ollama.toml --open
+# or: ashura-web --config config/ashura.ollama.toml
+# open http://127.0.0.1:8765/
+```
+
+It uses only the Python standard library (`http.server`) and serves `app/static/*`; there is no
+CDN, framework or external API. The UI provides chat, an expandable execution trace, OCR image
+upload, memory search/recent admissions, and model/memory status. It binds to `127.0.0.1` only and
+has no authentication, so it refuses non-loopback bind addresses. Requests are handled one at a
+time, matching the single-model/single-SQLite-connection runtime. JSON endpoints: `/api/chat`,
+`/api/ocr`, `/api/status`, `/api/memory`, `/api/health`.
+
+The UI is an operator convenience, not a new learning capability. It calls the same `Controller`
+as the CLI; the underlying claims and limits are unchanged.
 
 ## Hardening pass
 
@@ -201,7 +221,7 @@ The 2026-11-05 Phase 3 pass connects the existing pieces into one explicit chain
 The default CLI does not configure the loop: no live replay corpus or stable checkpoint is defined,
 so sessions do not learn automatically. Arbitrary factual corrections remain unverifiable (F-042).
 EXP-014 improves the evidence but does not close the independent-author/independent-distribution
-gap (F-044). Conflict review is a minimal CLI without notification or a UI (F-039). Details:
+gap (F-044). Conflict review is a minimal CLI without notification or a conflict-review UI (F-039). Details:
 `research/phase3_learning.md`, `experiments/learning/loop.json`,
 `experiments/learning/correction_bench.json`, `experiments/learning/persistence.json`,
 `experiments/runtime/results.json`, `experiments/runtime/real_soak.json`,
@@ -269,6 +289,7 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 
 | Area | Files | State |
 |---|---|---|
+| Interface | `app/main.py`, `app/web.py`, `app/static/*` | CLI and local web UI: chat, execution trace, OCR upload, memory search, model/memory status; stdlib-only, localhost-only, no auth; both use the same Controller |
 | Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; general `tony:7b-gpa3` and privacy `tony:7b` pinned; 41/42 adjudicated each, 1.86/3.04 s p50 (EXP-018, n=42); 4.7 GB shared footprint; bounded per-process concurrency gate (EXP-019); llama.cpp untested |
 | Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + verified semantic facts, FTS5, provenance/derivation, conflict index, utility feedback, bounded working memory, deletion integrity, utility-aware retention |
 | AMA | `learning/ama.py`, `learning/compare.py` | duplicate/conflict detection, scoring, continuous surprise, conflict index, feedback-based utility, decision log, reliability-aware retrieval; weights hand-set except the measured threshold sweep |

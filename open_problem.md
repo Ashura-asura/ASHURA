@@ -1,7 +1,7 @@
 # Open problems
 
 Status: 2026-11-06, after EXP-016, EXP-017, EXP-018, EXP-018b, EXP-019, EXP-020 and the F-045 worker work.
-Test evidence: **291 ASHURA tests** and **46 BrainSim tests** pass on Windows/Python 3.13. Completion audit:
+Test evidence: **297 ASHURA tests** and **46 BrainSim tests** pass on Windows/Python 3.13. Completion audit:
 `research/completion_audit.md` records 87.5% checklist coverage but **0 of 4 language-model learning
 tests** demonstrated. This file records what is still not closed; it is
 not a roadmap promise and not a claim that the learning loop is complete. The canonical issue list
@@ -14,7 +14,7 @@ items the latest pass could and could not close.
 |---|---|---|---|
 | F-041 controller trace retention | **fixed at controller level; worker wired** | `Controller` keeps the last non-correction `ExecutionTrace`; verified corrections can invoke an opt-in `correction_loop` hook. Hook errors are captured in `Response.correction`, never raised. `LearningWorker` runs the hook in a durable job store with restart recovery and an optional hard timeout; queue-full, cancellation, error capture, crash recovery, timeout termination and controller integration are tested. | The CLI wiring is opt-in and disabled by default; no live real-model learning run has been recorded. |
 | F-042 / P47 arithmetic coverage | **partly fixed** | Decimal(60) now cross-checks `%`, integer `**` and perfect-square `sqrt`; corrections for these can become verified. Negative-modulo semantics are tested. | Irrational roots, non-integer powers, comparisons and all natural-language facts remain unverified. |
-| F-039 conflict review | **partly fixed** | `learning/review.py list / resolve`; superseding still requires an independently verified experience. Two tests. | No UI, notification, queue prioritisation or background worker; an open conflict can go unseen. |
+| F-039 conflict review | **partly fixed** | `learning/review.py list / resolve`; superseding still requires an independently verified experience. Two tests. | No conflict-review UI, notification, queue prioritisation or background worker; an open conflict can go unseen. |
 | F-044 correction benchmark evidence | **partly fixed** | EXP-013 runs seeds 0-4. EXP-014 adds 10 arithmetic forms x 3 held-out wordings x 5 seeds: 50/50 replay promotions, 0/50 no-replay promotions, 150/150 held-out predictions, 25/25 controls refused. | The corpus is still author-written; held-out wordings share expression tokens with the correction key; no independent distribution or independent author. |
 | F-006 arithmetic verifier | **partly fixed** | Same as F-042. | Same as F-042. |
 | A02/A03 consolidation persistence | **measured (NumPy only)** | EXP-017: 20/20 promoted NumPy candidates loaded in a fresh process with matching SHA-256, 60/60 corrected held-out predictions, 400/400 old-capability predictions, 20/20 rollbacks restored the parent; 131 KB artifact, 41.2 MB RSS, 6.25 s total. | This is the NumPy adaptive memory, not `tony:7b`; the corpus is author-written; no power-loss, corrupt-manifest, backup/restore or shared-database durability test. |
@@ -92,8 +92,8 @@ and tasks designed so memorising one key cannot pass.
 
 ### 2.5 Reviewer workflow is minimal (F-039/F-040)
 
-`learning/review.py` lists and resolves conflicts, but there is no UI, notification or queue
-priority, and no general natural-language verifier. Semantic facts still require a verified source
+`learning/review.py` lists and resolves conflicts, but there is no conflict-review UI, notification
+or queue priority, and no general natural-language verifier. Semantic facts still require a verified source
 within ASHURA's verifier coverage, so most user statements can never become semantic facts. This is
 honest by design, not a hidden capability.
 
@@ -210,7 +210,7 @@ do not.
 | P70-P73 CI | Done: workflow fix plus green Actions run `41938499183` on `17568c3` (8/8 jobs). | Keep it green; P74 (real-model integration) remains separate. |
 | F-041 production loop | A defined replay source, a bootstrapped stable checkpoint, a durable background job store with hard timeout/cancel, CLI configuration and restart tests. | Code + storage design; no new data. |
 | F-042 arithmetic residual | Symbolic radicals or a rational-exponent policy with explicit domain/precision rules. Natural-language facts need a trusted local source. | Code/design for arithmetic; data/verifier for facts. |
-| F-039 reviewer workflow | UI or notification, queue prioritisation and an audit view. | Code; not required for learning safety. |
+| F-039 reviewer workflow | Conflict-review UI or notification, queue prioritisation and an audit view. | Code; not required for learning safety. |
 | F-044 benchmark | An independently authored frozen corrected set, non-overlapping wordings, control probes for accidental stable hits, more seeds and confidence intervals. EXP-014 supplies size, controls and intervals but not independent authorship. | Benchmark data; no model training. |
 | F-035 AMA calibration | A realistic stream of useful, useless, repeated and contradictory unverified items. | Real usage data. |
 | F-036 task switches | A continual-learning benchmark with task boundaries and unknown switches, plus a method that actually retains old tasks. | Data + algorithm. |

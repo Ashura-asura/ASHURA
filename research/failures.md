@@ -83,7 +83,7 @@
 
 **F-038 - Replay ratios and sampling policies are not calibrated (OPEN).** All ratios (0.25/0.5/0.75/1.0) and both random/recent policies scored 1.00 new / 1.00 old retention on the EXP-006 buffer. The task is too small to distinguish them. The 0.5 default is a placeholder, not a measured optimum.
 
-**F-039 - Conflict review is a minimal CLI, not a production workflow (PARTLY FIXED).** `learning/review.py list` surfaces open/all conflicts and `resolve` records an explicit reason; superseding still requires an independently verified experience. There is no UI, notification or queue prioritisation, so an open conflict can still go unseen, and the older record stays searchable while it is open. Safe, but incomplete for production audit.
+**F-039 - Conflict review is a minimal CLI, not a production workflow (PARTLY FIXED).** `learning/review.py list` surfaces open/all conflicts and `resolve` records an explicit reason; superseding still requires an independently verified experience. There is no conflict-review UI, notification or queue prioritisation, so an open conflict can still go unseen, and the older record stays searchable while it is open. Safe, but incomplete for production audit.
 
 **F-040 - Semantic provenance cannot establish that a fact is true (OPEN by design).** A semantic fact now requires a verified source experience and preserves provenance/derivation, but 'verified' still means an independent check within ASHURA's verifier coverage (for example exact arithmetic or passing tests). No general natural-language fact verifier exists, so most user statements remain `user_provided` or `trusted_material` and never become semantic facts.
 

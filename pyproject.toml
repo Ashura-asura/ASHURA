@@ -18,6 +18,7 @@ perception = ["Pillow", "pytesseract"]
 
 [project.scripts]
 ashura = "app.main:main"
+ashura-web = "app.web:main"
 
 # Flat layout with many top-level folders: list the importable packages explicitly, otherwise
 # `pip install -e .` fails with "Multiple top-level packages discovered".
@@ -27,6 +28,7 @@ include = ["app*", "brain*", "evaluation*", "evolution*", "foundation*", "learni
 
 [tool.setuptools.package-data]
 memory = ["schema.sql"]
+app = ["static/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
