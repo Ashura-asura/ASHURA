@@ -588,6 +588,9 @@
         <svg class="icon"><use href="#i-search"/></svg>
         <label class="sr-only" for="palette-input">Search commands and sessions</label>
         <input id="palette-input" type="text" role="combobox" aria-expanded="true" aria-controls="palette-list" aria-autocomplete="list" placeholder="Search commands and sessions…" autocomplete="off">
+        <button class="icon-btn palette-close" id="palette-close" type="button" data-close-dialog="palette-dialog" aria-label="Close command palette" title="Close (Esc)">
+          <svg class="icon icon-sm"><use href="#i-x"/></svg>
+        </button>
       </div>
       <div class="palette-list" id="palette-list" role="listbox" aria-label="Commands and sessions"></div>
       <div class="palette-foot"><span>↑ ↓ navigate</span><span>Enter run</span><span>Esc close</span></div>

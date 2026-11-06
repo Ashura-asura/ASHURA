@@ -689,6 +689,9 @@ function wireChrome() {
     });
   }
   if (paletteDialog) {
+    paletteDialog.addEventListener("click", (event) => {
+      if (event.target === paletteDialog) closeDialog(paletteDialog);
+    });
     paletteDialog.addEventListener("close", () => {
       paletteItems = [];
       paletteActive = -1;
