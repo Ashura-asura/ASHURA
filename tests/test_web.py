@@ -236,8 +236,17 @@ def test_ocr_accepts_a_tiny_png_and_persists(web):
     assert "trace" in result  # OCR may be unavailable; the request path must not crash
     assert result["kind"] == "ocr"
     messages = web.get_session(result["session_id"])["messages"]
-    assert messages[0]["content"] == "[image: tiny.png]"
+    assert messages[0]["content"] == "Read the text in this image."
+    assert messages[0]["meta"]["filename"] == "tiny.png"
     assert len(messages) == 2
+
+
+def test_ocr_preserves_user_instruction(web):
+    txt = base64.b64encode(b"A small note").decode()
+    result = web.ocr("note.txt", txt, prompt="Extract only the names.")
+    user = web.get_session(result["session_id"])["messages"][0]
+    assert user["content"] == "Extract only the names."
+    assert user["meta"]["filename"] == "note.txt"
 
 
 def test_session_rename_export_and_delete(web):
@@ -597,7 +606,8 @@ def test_http_ocr_accepts_an_upload(server):
                             cookie=cookie)
     assert response.status == 200
     detail = json.loads(raw)
-    assert detail["messages"][0]["content"] == "[image: tiny.png]"
+    assert detail["messages"][0]["content"] == "Read the text in this image."
+    assert detail["messages"][0]["meta"]["filename"] == "tiny.png"
 
 
 def test_export_includes_the_whole_transcript_beyond_the_ui_page():
@@ -714,7 +724,8 @@ def test_document_upload_routes_text_through_local_extraction(web):
     assert result["kind"] == "document"
     assert result["filename"] == "plan.txt"
     messages = web.get_session(result["session_id"])["messages"]
-    assert messages[0]["content"] == "[document: plan.txt]"
+    assert messages[0]["content"] == "Read this document and summarize its key content."
+    assert messages[0]["meta"]["filename"] == "plan.txt"
     assert messages[0]["meta"]["kind"] == "document"
     assert result["document"]["ok"] is True
     assert result["document"]["kind"] == "text"

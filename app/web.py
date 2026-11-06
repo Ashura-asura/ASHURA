@@ -544,7 +544,8 @@ class WebApp:
 
     # ---- chat / OCR ------------------------------------------------------------------------
     def start_chat(self, message: str, session_id: str | None = None, *, stream: bool = False,
-                   cancel_event: threading.Event | None = None) -> tuple[dict, Job]:
+                   cancel_event: threading.Event | None = None,
+                   force: tuple[str, ...] = ()) -> tuple[dict, Job]:
         if not isinstance(message, str):
             raise ValueError("message must be a string")
         message = message.strip()
@@ -561,7 +562,7 @@ class WebApp:
                 # session are ordered exactly as the single queue executes them.
                 history = self.sessions.history(sid)
                 user_message = self.sessions.append(sid, "user", message)
-                task = Task(message, history=tuple(history), session_id=sid)
+                task = Task(message, history=tuple(history), session_id=sid, force=force)
                 response = self.controller.handle(task, on_token=emit if stream else None)
                 if cancel_event is not None and cancel_event.is_set():
                     raise GenerationCancelled()
@@ -583,7 +584,13 @@ class WebApp:
             raise
         return session, job
 
-    def start_ocr(self, filename: str, encoded: str, session_id: str | None = None) -> tuple[dict, Job]:
+    def start_ocr(self, filename: str, encoded: str, session_id: str | None = None,
+                  prompt: str | None = None) -> tuple[dict, Job]:
+        if prompt is not None and not isinstance(prompt, str):
+            raise ValueError("prompt must be a string")
+        prompt = (prompt or "").strip()
+        if len(prompt) > MAX_MESSAGE:
+            raise ValueError(f"prompt is too long (max {MAX_MESSAGE} characters)")
         if not isinstance(encoded, str):
             raise ValueError("file data must be a base64 string")
         if encoded.startswith("data:") and "," in encoded:
@@ -620,15 +627,16 @@ class WebApp:
         def work(emit):
             try:
                 is_image = info.kind == "image"
+                instruction = prompt or ("Read the text in this image." if is_image
+                                          else "Read this document and summarize its key content.")
                 user_message = self.sessions.append(
-                    sid, "user",
-                    f"[{'image' if is_image else 'document'}: {name}]",
+                    sid, "user", instruction,
                     meta={"kind": "ocr" if is_image else "document", "filename": name})
                 if is_image:
-                    task = Task("Read the text in this image.", has_image=True, image_path=path,
+                    task = Task(instruction, has_image=True, image_path=path,
                                 document_name=name, session_id=sid, force=("ocr",))
                 else:
-                    task = Task("Read this document and summarize its key content.",
+                    task = Task(instruction,
                                 has_document=True, document_path=path, document_name=name,
                                 session_id=sid, force=("documents",))
                 response = self.controller.handle(task)
@@ -667,9 +675,10 @@ class WebApp:
         _, job = self.start_chat(message, session_id, stream=False)
         return job.wait(JOB_TIMEOUT)
 
-    def ocr(self, filename: str, encoded: str, session_id: str | None = None) -> dict:
+    def ocr(self, filename: str, encoded: str, session_id: str | None = None,
+            prompt: str | None = None) -> dict:
         """Synchronous OCR wrapper. The HTTP API streams chat, not OCR."""
-        _, job = self.start_ocr(filename, encoded, session_id)
+        _, job = self.start_ocr(filename, encoded, session_id, prompt)
         return job.wait(JOB_TIMEOUT)
 
     def memory(self, query: str = "", limit: int = 20) -> dict:
@@ -1353,7 +1362,11 @@ class Handler(BaseHTTPRequestHandler):
             raise HTTPError("session_id must be a string", 400)
         if not isinstance(message, str):
             raise HTTPError("message must be a string", 400)
-        _, job = self.server.app.start_chat(message, session_id, stream=False)
+        web_search = payload.get("web_search", False)
+        if not isinstance(web_search, bool):
+            raise HTTPError("web_search must be a boolean", 400)
+        _, job = self.server.app.start_chat(message, session_id, stream=False,
+                                            force=("web",) if web_search else ())
         try:
             result = job.wait(JOB_TIMEOUT)
         except TimeoutError:
@@ -1370,10 +1383,14 @@ class Handler(BaseHTTPRequestHandler):
             raise HTTPError("session_id must be a string", 400)
         if not isinstance(message, str):
             raise HTTPError("message must be a string", 400)
+        web_search = payload.get("web_search", False)
+        if not isinstance(web_search, bool):
+            raise HTTPError("web_search must be a boolean", 400)
 
         cancel = threading.Event()
         session, job = self.server.app.start_chat(
-            message, session_id, stream=True, cancel_event=cancel)
+            message, session_id, stream=True, cancel_event=cancel,
+            force=("web",) if web_search else ())
         self._responded = True
         self.close_connection = True
         try:
@@ -1437,13 +1454,16 @@ class Handler(BaseHTTPRequestHandler):
         filename = payload.get("filename", "upload.png")
         data = payload.get("data")
         session_id = payload.get("session_id")
+        prompt = payload.get("prompt")
         if not isinstance(filename, str):
             raise HTTPError("filename must be a string", 400)
         if not isinstance(data, str):
             raise HTTPError("data must be a base64 string", 400)
         if session_id is not None and not isinstance(session_id, str):
             raise HTTPError("session_id must be a string", 400)
-        _, job = self.server.app.start_ocr(filename, data, session_id)
+        if prompt is not None and not isinstance(prompt, str):
+            raise HTTPError("prompt must be a string", 400)
+        _, job = self.server.app.start_ocr(filename, data, session_id, prompt)
         try:
             result = job.wait(JOB_TIMEOUT)
         except TimeoutError:

@@ -36,6 +36,7 @@ MAX_NOTE_BYTES = 64 * 1024
 SKIP_DIRS = {".git", ".hg", ".svn", "__pycache__", ".pytest_cache", ".mypy_cache",
              ".ruff_cache", ".venv", "venv", "env", "node_modules", "data", "results",
              "checkpoints", ".idea", ".vscode"}
+PROTECTED_CREATE_DIRS = {".git", ".hg", ".svn", ".venv", "venv", "env", "node_modules"}
 
 
 class ToolError(ValueError):
@@ -199,6 +200,14 @@ class ToolRegistry:
                 "network information is collected.",
                 {"type": "object", "properties": {}}, self._system_info),
             ToolSpec(
+                "create_directory",
+                "Create the requested directory inside the ASHURA workspace. Use the exact "
+                "workspace-relative path the user gave; parent folders are created as needed. "
+                "Absolute paths outside the workspace and protected runtime folders are refused.",
+                {"type": "object", "properties": {
+                    "path": {"type": "string", "description": "workspace-relative folder path"},
+                }, "required": ["path"]}, self._create_directory),
+            ToolSpec(
                 "write_note",
                 "Write a short note into the sandboxed data/agent directory. Never overwrites "
                 "outside that directory.",
@@ -353,6 +362,23 @@ class ToolRegistry:
         return _json({"platform": platform.platform(), "python": sys.version.split()[0],
                       "machine": platform.machine(), "workspace": str(self.root),
                       "cwd": str(Path.cwd())})
+
+    def _create_directory(self, args: dict) -> str:
+        raw = args.get("path")
+        if not isinstance(raw, str) or not raw.strip():
+            raise ToolError("path must be a non-empty workspace-relative directory path")
+        target = _resolve(self.root, raw, must_exist=False)
+        relative = target.relative_to(self.root)
+        if not relative.parts:
+            raise ToolError("refusing to treat the workspace root as a new directory")
+        if any(part.casefold() in PROTECTED_CREATE_DIRS for part in relative.parts):
+            raise ToolError("refusing to create directories inside protected runtime folders")
+        if target.exists() and not target.is_dir():
+            raise ToolError(f"a file already exists at the requested path: {_relative(target, self.root)}")
+        created = not target.exists()
+        target.mkdir(parents=True, exist_ok=True)
+        return _json({"path": _relative(target, self.root), "created": created,
+                      "workspace": str(self.root)})
 
     def _write_note(self, args: dict) -> str:
         name = args.get("name")

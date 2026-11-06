@@ -195,6 +195,7 @@ async function refreshStatus({ quiet = true } = {}) {
 function refreshStatusViews() {
   try {
     executionView.updateLive(state.status);
+    commandView.updateWebControl(state.status);
     if (state.route === "command") commandView.updateHeading();
     if (state.route === "knowledge") knowledgeView.updateSummary();
     if (state.route === "system") systemView.render();
@@ -301,6 +302,7 @@ async function hydrate() {
   state.statusUpdatedAt = Date.now();
   state.csrf = status.csrf || state.csrf;
   setCsrfToken(state.csrf);
+  commandView.updateWebControl(status);
   setAuthenticated(true, { prompt: false });
   await loadSessions({ quiet: true });
   await commandView.restore();

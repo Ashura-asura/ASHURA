@@ -252,6 +252,26 @@ def main() -> int:
             expect(page.locator(".session-row").first).to_be_visible(timeout=10_000)
             checker.check(page.locator(".msg.user").count() == 1, "user turn rendered")
             checker.check(page.locator(".msg-trace button").count() >= 1, "trace action rendered")
+            answer_size = page.locator(".msg.assistant .bubble").last.evaluate(
+                "element => getComputedStyle(element).fontSize")
+            checker.check(answer_size == "16px", "assistant answer text is readable at 16px")
+
+            print("desktop command center controls")
+            sessions_toggle = page.locator("#sessions-toggle")
+            checker.check(sessions_toggle.is_visible(), "desktop sessions toggle is visible")
+            sessions_toggle.click()
+            expect(page.locator("#session-pane")).to_be_hidden()
+            checker.check(sessions_toggle.get_attribute("aria-expanded") == "false",
+                          "hidden sessions state is announced accessibly")
+            page.reload()
+            wait_authenticated(page)
+            expect(page.locator("#session-pane")).to_be_hidden()
+            checker.check(sessions_toggle.get_attribute("aria-label") == "Show sessions",
+                          "hidden sessions preference survives reload")
+            sessions_toggle.click()
+            expect(page.locator("#session-pane")).to_be_visible()
+            checker.check(sessions_toggle.get_attribute("aria-expanded") == "true",
+                          "sessions pane can be restored")
 
             print("rich rendering")
             rendered = page.evaluate(r"""async () => {
@@ -313,11 +333,16 @@ def main() -> int:
                           in page.locator(".source-details").last.evaluate("el => el.textContent"),
                           "web sources are labelled untrusted evidence")
 
+            existing_document_cards = page.locator(".document-card").count()
             page.set_input_files("#ocr-file", {
                 "name": "smoke-notes.txt",
                 "mimeType": "text/plain",
                 "buffer": b"Local smoke document content.",
             })
+            expect(page.locator("#attachment-preview")).to_contain_text("smoke-notes.txt")
+            expect(page.locator(".document-card")).to_have_count(existing_document_cards)
+            page.locator("#message").fill("Extract the note text exactly.")
+            page.locator("#send").click()
             expect(page.locator(".document-card").last).to_contain_text("smoke-notes.txt")
             expect(page.locator(".msg.assistant .bubble").last).to_contain_text(
                 "[echo]", timeout=20_000)

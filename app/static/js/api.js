@@ -127,16 +127,16 @@ export const api = {
   webExportUrl(includeRejected = false) {
     return `/api/web/export?include_rejected=${includeRejected ? "1" : "0"}`;
   },
-  ocr(filename, data, sessionId) {
+  ocr(filename, data, sessionId, prompt) {
     return json("/api/ocr", {
       method: "POST",
-      body: { filename, data, session_id: sessionId },
+      body: { filename, data, session_id: sessionId, prompt },
     });
   },
-  stream(message, sessionId, signal) {
+  stream(message, sessionId, signal, webSearch = false) {
     return request("/api/chat/stream", {
       method: "POST",
-      body: { message, session_id: sessionId },
+      body: { message, session_id: sessionId, web_search: webSearch },
       signal,
     });
   },

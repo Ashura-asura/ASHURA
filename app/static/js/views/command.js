@@ -168,6 +168,8 @@ export function createCommandView(actions) {
   const charCount = $("#char-count");
   const ocrButton = $("#ocr-button");
   const ocrFile = $("#ocr-file");
+  const attachmentPreview = $("#attachment-preview");
+  const webSearchToggle = $("#web-search-toggle");
   const inspector = $("#turn-inspector");
   const inspectorToggle = $("#inspector-toggle");
   const inspectorClose = $("#inspector-close");
@@ -185,6 +187,35 @@ export function createCommandView(actions) {
   let renameSessionId = null;
   let streamRenderScheduled = false;
   let scrollFrame = null;
+  let pendingAttachment = null;
+  let webSearchRequested = false;
+
+  function updateWebControl(status = state.status) {
+    if (!webSearchToggle) return;
+    const enabled = Boolean(status && status.web && status.web.enabled);
+    webSearchToggle.disabled = !enabled || state.busy || state.streaming;
+    webSearchToggle.setAttribute("aria-pressed", String(webSearchRequested));
+    webSearchToggle.title = enabled
+      ? "Include web search in this message"
+      : "Enable web research in the server config to use web search";
+  }
+
+  function showAttachment(file) {
+    pendingAttachment = file || null;
+    if (!attachmentPreview) return;
+    attachmentPreview.replaceChildren();
+    attachmentPreview.hidden = !pendingAttachment;
+    if (!pendingAttachment) return;
+    attachmentPreview.appendChild(el("span", "", pendingAttachment.name));
+    const remove = el("button", "", "×");
+    remove.type = "button";
+    remove.setAttribute("aria-label", "Remove attachment");
+    remove.addEventListener("click", () => {
+      showAttachment(null);
+      if (messageInput) messageInput.focus();
+    });
+    attachmentPreview.appendChild(remove);
+  }
 
   /* ---- session list -------------------------------------------------------------------- */
 
@@ -454,6 +485,9 @@ export function createCommandView(actions) {
       bubble.innerHTML = renderMarkdown(message.content || "");
     }
     wrap.appendChild(bubble);
+    if (role === "user" && message.meta && message.meta.filename) {
+      wrap.appendChild(el("div", "attachment-chip", `📎 ${message.meta.filename}`));
+    }
 
     if (role === "assistant" && message.meta) {
       wrap.appendChild(messageBadges(message));
@@ -959,6 +993,7 @@ export function createCommandView(actions) {
         : IDLE_HINT;
     }
     if (transcript) transcript.setAttribute("aria-busy", busy ? "true" : "false");
+    updateWebControl();
   }
 
   function finishStreaming(payload) {
@@ -1092,7 +1127,7 @@ export function createCommandView(actions) {
       return;
     }
     const text = String(rawText || "").trim();
-    if (!text) return;
+    if (!text && !pendingAttachment) return;
     if (text.length > MAX_MESSAGE) {
       toast(`Message is too long (max ${MAX_MESSAGE.toLocaleString()} characters).`, "bad");
       return;
@@ -1105,6 +1140,13 @@ export function createCommandView(actions) {
     const empty = transcript.querySelector(".empty-state");
     if (empty) empty.remove();
 
+    if (pendingAttachment) {
+      await sendAttachment(pendingAttachment, text);
+      return;
+    }
+    const searchThisTurn = webSearchRequested;
+    webSearchRequested = false;
+    updateWebControl();
     const user = {
       role: "user",
       content: text,
@@ -1135,7 +1177,7 @@ export function createCommandView(actions) {
     state.streaming = stream;
 
     try {
-      const response = await api.stream(text, state.currentSessionId, controller.signal);
+      const response = await api.stream(text, state.currentSessionId, controller.signal, searchThisTurn);
       await consumeSSE(response, stream);
       if (!stream.finalized) {
         if (stream.stopped) cancelStreaming();
@@ -1174,7 +1216,7 @@ export function createCommandView(actions) {
       return;
     }
     const message = state.messages[cursor];
-    if (message.content.startsWith("[image:") || message.content.startsWith("[document:")) {
+    if ((message.meta && message.meta.filename) || message.content.startsWith("[image:") || message.content.startsWith("[document:")) {
       toast("Re-upload the file to retry extraction.", "bad");
       return;
     }
@@ -1212,22 +1254,33 @@ export function createCommandView(actions) {
       return;
     }
     actions.go("command");
+    showAttachment(file);
+    if (messageInput) messageInput.focus();
+    announce(`Attached ${file.name}. Add an instruction, then send.`);
+  }
+
+  async function sendAttachment(file, prompt) {
+    const kind = uploadKind(file);
+    webSearchRequested = false;
+    updateWebControl();
     if (!state.currentSessionId) {
       await newChat({ focus: false });
       if (!state.currentSessionId) return;
     }
     const empty = transcript.querySelector(".empty-state");
     if (empty) empty.remove();
-    const label = kind === "image" ? "image" : "document";
     const user = {
       role: "user",
-      content: `[${label}: ${file.name}]`,
+      content: prompt || (kind === "image" ? "Read the text in this image." : "Read this document and summarize its key content."),
       ts: Date.now() / 1000,
       local: true,
       meta: { kind, filename: file.name },
     };
     state.messages.push(user);
     transcript.appendChild(renderMessage(user, state.messages.length - 1));
+    if (messageInput) messageInput.value = "";
+    autoResize();
+    updateCharCount();
     const placeholder = el("div", "msg assistant streaming");
     const head = el("div", "msg-head");
     head.appendChild(el("span", "msg-author", "ASHURA"));
@@ -1245,7 +1298,7 @@ export function createCommandView(actions) {
     try {
       const dataUrl = await readFileAsDataURL(file);
       const encoded = dataUrl.includes(",") ? dataUrl.split(",", 2)[1] : dataUrl;
-      const data = await api.ocr(file.name, encoded, state.currentSessionId);
+      const data = await api.ocr(file.name, encoded, state.currentSessionId, user.content);
       if (data.user_message_id) user.id = data.user_message_id;
       const message = messageFromPayload(data);
       state.messages.push(message);
@@ -1276,6 +1329,7 @@ export function createCommandView(actions) {
         toast(message.content, "bad");
       }
     } finally {
+      showAttachment(null);
       setBusy(false);
       updateHeading();
     }
@@ -1506,6 +1560,10 @@ export function createCommandView(actions) {
         }
       });
     }
+    if (webSearchToggle) webSearchToggle.addEventListener("click", () => {
+      webSearchRequested = !webSearchRequested;
+      updateWebControl();
+    });
     if (stopButton) stopButton.addEventListener("click", stopStreaming);
     if (ocrButton && ocrFile) {
       ocrButton.addEventListener("click", () => ocrFile.click());
@@ -1538,6 +1596,7 @@ export function createCommandView(actions) {
     if (exportJson) exportJson.addEventListener("click", () => exportSession("json"));
     autoResize();
     updateCharCount();
+    updateWebControl();
     renderSessions();
     renderConversation();
     renderInspector();
@@ -1596,6 +1655,7 @@ export function createCommandView(actions) {
     renderConversation,
     renderInspector,
     updateHeading,
+    updateWebControl,
     newChat,
     selectSession,
     async selectTurn(sessionId, messageId) {

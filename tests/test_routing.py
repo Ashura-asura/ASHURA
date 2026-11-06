@@ -116,6 +116,14 @@ def test_explicit_ocr_request_is_not_deferred_by_cpu_load_or_low_ram():
     assert "ocr" not in busy.select(forced).selected                    # ...but never when the engine is missing
 
 
+def test_explicit_web_search_bypasses_latency_threshold_and_resource_deferral():
+    reg = default_registry()
+    reg.get("web").available = True
+    router = NeedField(reg, cpu_fn=lambda: 99.0, ram_fn=lambda: 100.0)
+    decision = router.select(Task("Search the web for the latest circuit specs", force=("web",)))
+    assert "web" in decision.selected
+
+
 def test_model_failure_degrades_instead_of_crashing():
     class Broken(EchoModel):
         def generate(self, prompt, max_tokens=128):

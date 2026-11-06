@@ -150,10 +150,16 @@ class NeedField:
             spec = self.registry.get(n)
             if n == "language" and pure:
                 dec.skipped[n] = "cheap skill sufficient"
-            elif sig[n].I <= 0 and n != "language":
+            elif sig[n].I <= 0 and n != "language" and n not in task.force:
                 dec.skipped[n] = "not needed"
             elif n in task.force and spec.available:
                 dec.selected.append(n)                       # explicit user request: no load-based deferral
+                dec.est_latency_ms += spec.est_latency_ms
+                dec.est_ram_mb += spec.extra_ram_mb
+            elif n == "web" and sig[n].I >= 1.0 and spec.available:
+                # Explicit web requests should not be silently skipped because the network
+                # latency estimate lowers their NFD priority below the generic threshold.
+                dec.selected.append(n)
                 dec.est_latency_ms += spec.est_latency_ms
                 dec.est_ram_mb += spec.extra_ram_mb
             elif pri[n] < self.cfg.activation_threshold:

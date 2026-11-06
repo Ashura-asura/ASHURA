@@ -185,6 +185,18 @@ def test_tool_calculate_and_note_sandbox(tmp_path):
     assert not (tmp_path / "escape.md").exists()
 
 
+def test_create_directory_uses_requested_workspace_path_and_refuses_escape(tmp_path):
+    registry = ToolRegistry(tmp_path)
+    result = registry.execute("create_directory", {"path": "projects/circuit notes"})
+    assert result.ok is True
+    payload = json.loads(result.output)
+    assert payload["path"] == "projects/circuit notes"
+    assert payload["created"] is True
+    assert (tmp_path / "projects" / "circuit notes").is_dir()
+    assert registry.execute("create_directory", {"path": "../outside"}).ok is False
+    assert registry.execute("create_directory", {"path": ".git/hooks"}).ok is False
+
+
 def test_task_needs_tools_only_for_environment_requests():
     assert task_needs_tools("List the files in this repository") is True
     assert task_needs_tools("What time is it?") is True
