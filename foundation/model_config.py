@@ -19,6 +19,7 @@ class ModelConfig:
     path: str = ""
     sha256: str = ""
     n_ctx: int = 2048
+    max_tokens: int = 1024
     n_threads: int = 4
     # --- Ollama backend (backend = "ollama") ---
     model: str = ""                 # tag as shown by `ollama list`, e.g. "tony:7b"
@@ -36,8 +37,8 @@ class ModelConfig:
     def __post_init__(self) -> None:
         if self.backend not in {"echo", "llama_cpp", "ollama"}:
             raise ValueError(f"foundation.backend must be echo, llama_cpp or ollama (got {self.backend!r})")
-        if self.n_ctx < 1 or self.n_threads < 1 or self.timeout_s <= 0:
-            raise ValueError("foundation.n_ctx, n_threads and timeout_s must be positive")
+        if self.n_ctx < 1 or self.max_tokens < 1 or self.n_threads < 1 or self.timeout_s <= 0:
+            raise ValueError("foundation.n_ctx, max_tokens, n_threads and timeout_s must be positive")
         if not 0.0 < self.top_p <= 1.0:
             raise ValueError("foundation.top_p must be in (0, 1]")
         if self.max_inflight < 0 or self.max_queue < 0 or self.queue_timeout_s <= 0:

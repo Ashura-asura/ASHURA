@@ -44,7 +44,7 @@ class Experience:
     reliability: float | None = None
     related_ids: list[str] = field(default_factory=list)
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
-    ts: float = field(default_factory=time.time)
+    ts: float = field(default_factory=lambda: time.time())
     repeat_count: int = 1
 
     def __post_init__(self):

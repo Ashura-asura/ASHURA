@@ -72,5 +72,48 @@
   store, stream over SSE, support cooperative cancellation, and export as Markdown or JSON. Loopback
   binding remains mandatory. This is still an operator convenience over the measured pipeline, not
   a learning capability: it adds no multi-user accounts, TLS, conflict-review UI, cross-process
-  queue or model training. Verified by the 24-test web suite (315 total) and the browser smoke
-  matrix in `research/EXP-021_local_ui.md`, including one real `tony:7b-gpa3` streaming turn.
+  queue or model training. Verified at that pass by the then-current 32-test web suite (328 total) and
+  the browser smoke matrix in `research/EXP-021_local_ui.md`, including one real `tony:7b-gpa3`
+  streaming turn; D-064 later extends the same console.
+- D-063 (UI rendering/model selection, extends D-062): Assistant Markdown now renders aligned tables
+  and LaTeX through a vendored KaTeX 0.16.22 build (MIT) using MathML-only output. The asset is
+  same-origin; no CDN, KaTeX CSS/fonts, inline styles or CSP relaxation are used. Expressions that
+  would emit a style attribute or fail to parse fall back to visible TeX. Settings lists only tags
+  returned by the configured local Ollama `/api/tags`, showing the documented role and digest from
+  `config/models.toml`; switching is serialized on the controller worker, pins the installed digest,
+  unloads the previous tag and replaces the in-process model. It downloads or trains nothing and
+  does not rewrite the launch configuration, so a restart returns to the configured model.
+  Real-runtime check (2026-11-06T16:35:30Z): all five installed models listed with matching
+  digests; gpa3 -> qwen3.5:2b -> gpa3; the 2B answered `OK` in 19.85 s with verification
+  unavailable; `ollama ps` showed the 2B after the turn and was empty after the unload. The
+  Settings panel was also driven in Chromium: it listed all five models with their roles, switched
+  to `qwen3.5:2b`, updated the runtime panel/header and switched back to `tony:7b-gpa3`. This is
+  presentation and runtime selection only: it does not close F-042/F-043, give the local model
+  frontier capability, or add the later D-064 document/tool/web paths, syntax highlighting,
+  multimodal generation or hosted-model parity. Verified at that pass by 328 tests and 19 browser
+  baselines; report `research/EXP-021_local_ui.md`, evidence
+  `design/EXP-021_model_switch_verification.json` and `design/EXP-021_model_switch_ui.png`.
+- D-064 (documents/tools/web/persistent token, extends D-062/D-063): The console now has four
+  additional bounded paths. (1) Uploads are routed by file type: images keep the OCR path; PDF,
+  DOCX/PPTX/ODT/ODP/ODS, HTML and text/code files use `skills/perception/documents.py`, which
+  validates magic bytes, bounds archive expansion/extracted characters and returns explicit
+  failure reasons. PDF text layers need optional `pypdf`; scanned-page OCR additionally needs
+  PyMuPDF and Tesseract. No document-accuracy claim is made (F-016 stays open). (2) `brain/tools.py`
+  exposes bounded read-only workspace tools plus a sandboxed `write_note` through Ollama native
+  tool calls; tool rounds are non-streaming, the final answer is chunked, and a tool-protocol
+  failure falls back to ordinary generation. There is no shell execution. (3) `skills/web` adds
+  optional server-side search (DuckDuckGo Lite -> Wikipedia, or SearXNG) and text-only fetch with
+  a scheme/host guard and redirect revalidation. The browser keeps `connect-src 'self'`. Web
+  answers are external, untrusted observations; when the model reports uncertainty and the
+  operator opted in, the controller retrieves once and visibly adds a "Web check" section in
+  streaming mode (non-streaming calls replace the uncertain answer). Gaps and candidate facts are
+  stored in SQLite; the Settings panel can record an operator review status, but that status is
+  not independent fact verification and every JSONL export stays `training_ready: false`.
+  (4) The launch token is persisted by default under `data/web_token` (POSIX `0600`/`0700`, atomic
+  write, symlink refusal); Windows inherits the directory ACL. `--token` and `--no-persist-token`
+  bypass persistence. Generation now uses task-aware budgets with bounded continuation and an
+  explicit truncation flag. The privacy profile keeps web disabled. Verified by 367 tests (2
+  skipped), the browser smoke matrix, live keyless searches/fetches against DuckDuckGo Lite and
+  Wikipedia, one live `tony:7b-gpa3` `list_files` tool turn, one live web-research turn that
+  exported a candidate fact with `training_ready: false`, and a two-process token-restart check;
+  see `research/EXP-022_documents_tools_web.md`.

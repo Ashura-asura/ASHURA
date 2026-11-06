@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>ASHURA — Workbench design prototype</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="workbench.css">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to workspace</a>
+
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="icon-command" viewBox="0 0 24 24"><path d="M5 7l4 5-4 5"/><path d="M12 17h7"/></symbol>
+    <symbol id="icon-execution" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></symbol>
+    <symbol id="icon-knowledge" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/><path d="M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></symbol>
+    <symbol id="icon-system" viewBox="0 0 24 24"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/><circle cx="12" cy="17" r="1.4"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M4 7h8"/><path d="M16 7h4"/><circle cx="14" cy="7" r="2"/><path d="M4 17h4"/><path d="M12 17h8"/><circle cx="10" cy="17" r="2"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20 15.2A8.4 8.4 0 0 1 8.8 4 8.4 8.4 0 1 0 20 15.2z"/></symbol>
+    <symbol id="icon-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></symbol>
+    <symbol id="icon-inspect" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M14 4v16"/><path d="M17 9l2 3-2 3"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="icon-sessions" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="icon-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="1.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5"/><path d="M18.2 16a8 8 0 1 1 .8-7"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4L19 7"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24"><path d="M12 3L2.8 20h18.4L12 3z"/><path d="M12 9v4.5M12 17h.01"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+    <symbol id="icon-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1.5"/><circle cx="8.5" cy="9" r="1.5"/><path d="M4 17l5-5 3.5 3.5L16 12l4 4"/></symbol>
+    <symbol id="icon-paperclip" viewBox="0 0 24 24"><path d="M9 12.5l5.5-5.5a3 3 0 0 1 4.2 4.2l-7 7a5 5 0 0 1-7.1-7.1l6-6"/></symbol>
+    <symbol id="icon-send" viewBox="0 0 24 24"><path d="M4 12l16-8-5.5 16L12 14l-8-2z"/><path d="M12 14l3-5"/></symbol>
+    <symbol id="icon-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+    <symbol id="icon-external" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></symbol>
+    <symbol id="icon-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v13c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-13"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-2.8 7.8-7 10-4.2-2.2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="icon-hard-drive" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h.01M11 15h.01M3 12h18"/></symbol>
+    <symbol id="icon-wifi-off" viewBox="0 0 24 24"><path d="M3 9a15 15 0 0 1 18 0"/><path d="M6.5 12.5a10 10 0 0 1 11 0"/><path d="M10 16a4 4 0 0 1 4 0"/><path d="M12 20h.01"/><path d="M3 3l18 18"/></symbol>
+    <symbol id="icon-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+    <symbol id="icon-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6V3z"/><path d="M14 3v5h5"/></symbol>
+    <symbol id="icon-cpu" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/></symbol>
+  </svg>
+
+  <div class="app">
+    <aside class="rail" aria-label="Workspaces">
+      <div class="rail-brand">
+        <div class="brand-mark" aria-hidden="true">A</div>
+        <span class="brand-word">Ashura</span>
+      </div>
+      <nav class="rail-nav" aria-label="Primary">
+        <button class="rail-item is-active" type="button" data-route="command" aria-current="page">
+          <svg class="icon"><use href="#icon-command"/></svg><span class="rail-label">Command</span>
+        </button>
+        <button class="rail-item" type="button" data-route="execution">
+          <svg class="icon"><use href="#icon-execution"/></svg><span class="rail-label">Execute</span>
+        </button>
+        <button class="rail-item" type="button" data-route="knowledge">
+          <svg class="icon"><use href="#icon-knowledge"/></svg><span class="rail-label">Knowledge</span>
+        </button>
+        <button class="rail-item" type="button" data-route="system">
+          <svg class="icon"><use href="#icon-system"/></svg><span class="rail-label">System</span>
+        </button>
+        <button class="rail-item" type="button" data-route="settings">
+          <svg class="icon"><use href="#icon-settings"/></svg><span class="rail-label">Settings</span>
+        </button>
+      </nav>
+      <div class="rail-spacer"></div>
+      <div class="rail-footer">
+        <span class="rail-lock" title="Loopback-only interface"><svg class="icon icon-sm"><use href="#icon-lock"/></svg></span>
+        <span class="rail-version">v0.2</span>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-button menu-button" type="button" id="menu-toggle" aria-label="Open workspace navigation">
+            <svg class="icon"><use href="#icon-menu"/></svg>
+          </button>
+          <div class="topbar-title">
+            <strong id="topbar-workspace">Command Center</strong>
+            <span class="crumb-sep">/</span>
+            <span class="crumb-tail" id="topbar-context">Trace architecture</span>
+          </div>
+        </div>
+        <button class="command-trigger" type="button" aria-label="Search sessions and workspaces">
+          <svg class="icon icon-sm"><use href="#icon-search"/></svg>
+          <span>Search sessions and workspaces</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+        <div class="topbar-actions">
+          <span class="runtime-chip" title="Worker and model status">
+            <span class="dot ok"></span>
+            <span class="runtime-model">tony:7b-gpa3</span>
+            <span class="runtime-sep"></span>
+            <span class="runtime-muted">idle · 0/8</span>
+          </span>
+          <button class="icon-button" type="button" id="theme-toggle" aria-label="Switch theme">
+            <svg class="icon" id="theme-icon"><use href="#icon-sun"/></svg>
+          </button>
+          <button class="icon-button desktop-only" type="button" aria-label="Open account and security settings" data-route="settings">
+            <span class="avatar" aria-hidden="true">OP</span>
+          </button>
+          <button class="icon-button mobile-close" type="button" id="sessions-toggle" aria-label="Open sessions">
+            <svg class="icon"><use href="#icon-sessions"/></svg>
+          </button>
+          <button class="icon-button mobile-close" type="button" id="context-toggle" aria-label="Open turn inspector">
+            <svg class="icon"><use href="#icon-inspect"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <main id="workspace" class="workspace-main">
+        <!-- COMMAND CENTER -->
+        <section class="view command-view is-active" data-view="command" aria-label="Command Center">
+          <aside class="session-panel" aria-label="Sessions">
+            <div class="session-head">
+              <div class="session-head-row">
+                <p class="eyebrow">Command Center</p>
+                <span class="status-chip plain">4 sessions</span>
+              </div>
+              <div class="session-actions-row">
+                <button class="button primary wide" type="button">
+                  <svg class="icon icon-sm"><use href="#icon-plus"/></svg>
+                  New task
+                  <kbd class="kbd-hint">Ctrl O</kbd>
+                </button>
+                <div class="search-input session-filter">
+                  <svg class="icon icon-sm"><use href="#icon-search"/></svg>
+                  <input type="search" placeholder="Filter sessions" aria-label="Filter sessions">
+                </div>
+              </div>
+            </div>
+            <div class="session-list-wrap">
+              <div class="session-group-label"><span>Today</span><span>4</span></div>
+              <button class="session-row is-active" type="button">
+                <span class="session-row-main">
+                  <span class="session-title">Trace architecture <span class="dot accent" title="Active"></span></span>
+                  <span class="session-meta"><span>6 turns</span><span class="sep"></span><span>just now</span></span>
+                </span>
+                <span class="session-more" aria-hidden="true"><svg class="icon icon-sm"><use href="#icon-more"/></svg></span>
+              </button>
+              <button class="session-row" type="button">
+                <span class="session-row-main">
+                  <span class="session-title">Deployment window review</span>
+                  <span class="session-meta"><span>2 turns</span><span class="sep"></span><span>12m ago</span></span>
+                </span>
+                <span class="session-more" aria-hidden="true"><svg class="icon icon-sm"><use href="#icon-more"/></svg></span>
+              </button>
+              <button class="session-row" type="button">
+                <span class="session-row-main">
+                  <span class="session-title">Verification limits</span>
+                  <span class="session-meta"><span>2 turns</span><span class="sep"></span><span>28m ago</span></span>
+                </span>
+                <span class="session-more" aria-hidden="true"><svg class="icon icon-sm"><use href="#icon-more"/></svg></span>
+              </button>
+              <button class="session-row" type="button">
+                <span class="session-row-main">
+                  <span class="session-title">OCR intake</span>
+                  <span class="session-meta"><span>2 turns</span><span class="sep"></span><span>1h ago</span></span>
+                </span>
+                <span class="session-more" aria-hidden="true"><svg class="icon icon-sm"><use href="#icon-more"/></svg></span>
+              </button>
+              <div class="session-group-label"><span>Earlier</span><span>12</span></div>
+              <button class="session-row" type="button">
+                <span class="session-row-main">
+                  <span class="session-title">Arithmetic verifier notes</span>
+                  <span class="session-meta"><span>8 turns</span><span class="sep"></span><span>Yesterday</span></span>
+                </span>
+                <span class="session-more" aria-hidden="true"><svg class="icon icon-sm"><use href="#icon-more"/></svg></span>
+              </button>
+            </div>
+            <div class="session-footer">
+              <div class="session-footer-row"><span>Session store</span><strong>ui_sessions.db</strong></div>
+              <div class="session-footer-row"><span>Export</span><span>Markdown · JSON</span></div>
+            </div>
+          </aside>
+
+          <div class="conversation-pane">
+            <div class="conversation-scroll">
+              <div class="conversation">
+                <header class="conversation-head">
+                  <div>
+                    <p class="eyebrow">Session</p>
+                    <h1>Trace architecture</h1>
+                    <div class="conversation-head-meta">
+                      <span>6 messages</span><span class="dot"></span><span>Started 20:14</span><span class="dot"></span><span>tony:7b-gpa3</span>
+                    </div>
+                  </div>
+                  <div class="conversation-head-actions">
+                    <button class="button ghost export" type="button"><svg class="icon icon-sm"><use href="#icon-file"/></svg>Export</button>
+                    <button class="icon-button" type="button" aria-label="Session actions"><svg class="icon icon-sm"><use href="#icon-more"/></svg></button>
+                  </div>
+                </header>
+
+                <article class="turn">
+                  <div class="turn-label-row">
+                    <span class="turn-author">You</span><span class="turn-time">20:14:06</span>
+                    <span class="turn-label-spacer"></span>
+                    <span class="turn-actions"><button type="button">Copy</button></span>
+                  </div>
+                  <div class="request-card">Explain how ASHURA routes a request and what the execution trace records.</div>
+                </article>
+
+                <article class="turn">
+                  <div class="turn-label-row">
+                    <span class="turn-author assistant">Ashura</span><span class="turn-time">20:14:08</span>
+                    <span class="status-chip warn">Unverified</span>
+                    <span class="turn-label-spacer"></span>
+                    <span class="turn-actions"><button type="button">Copy</button><button type="button">Retry</button></span>
+                  </div>
+                  <div class="response-body">
+                    <p>ASHURA does not run a fixed pipeline for every turn. The <strong>NeedField</strong> selector scores the available modules, and the controller records the modules that actually ran.</p>
+                    <h3>What the trace contains</h3>
+                    <ol>
+                      <li>The routing decision, including selected and skipped modules.</li>
+                      <li>One step per module, with its input, output, duration and operational status.</li>
+                      <li>A separate verification result when an independent check ran.</li>
+                    </ol>
+                    <div class="code-block">
+                      <div class="code-head"><span>text</span><button class="code-copy" type="button">Copy</button></div>
+                      <pre>route:   exact_retrieval, language
+routing: 8.4 ms
+total:   2.41 s</pre>
+                    </div>
+                    <p>The trace is evidence, not a success badge. A completed answer can still be unverified.</p>
+                  </div>
+                  <div class="turn-meta-row">
+                    <span class="status-chip plain">tony:7b-gpa3</span>
+                    <span class="status-chip plain">ADMITTED</span>
+                    <span class="status-chip plain">2 steps</span>
+                    <span class="status-chip warn">No independent verifier</span>
+                  </div>
+                  <div class="trace-inline">
+                    <svg class="icon icon-sm"><use href="#icon-execution"/></svg>
+                    <span>Trace recorded · 8.4 ms routing · 2.41 s total</span>
+                    <button type="button" data-route="execution">Inspect turn</button>
+                  </div>
+                </article>
+
+                <article class="turn">
+                  <div class="turn-label-row">
+                    <span class="turn-author">You</span><span class="turn-time">20:16:22</span>
+                    <span class="turn-label-spacer"></span>
+                    <span class="turn-actions"><button type="button">Copy</button></span>
+                  </div>
+                  <div class="request-card">Why is the previous answer marked unverified?</div>
+                </article>
+
+                <article class="turn">
+                  <div class="turn-label-row">
+                    <span class="turn-author assistant">Ashura</span><span class="turn-time">20:16:24</span>
+                    <span class="status-chip warn">Unverified</span>
+                    <span class="turn-label-spacer"></span>
+                    <span class="turn-actions"><button type="button">Copy</button><button type="button">Retry</button></span>
+                  </div>
+                  <div class="response-body">
+                    <p>The previous answer was written by the language model. In this build, the only independent verifier is exact arithmetic; it did not apply to that turn.</p>
+                    <p>So the correct state is <strong>no independent verifier</strong>, not <em>verified</em>. The execution trace still records what ran, but it cannot turn an unchecked claim into a checked one.</p>
+                  </div>
+                  <div class="turn-meta-row">
+                    <span class="status-chip plain">1 step</span>
+                    <span class="status-chip warn">No independent verifier</span>
+                  </div>
+                  <div class="trace-inline">
+                    <svg class="icon icon-sm"><use href="#icon-execution"/></svg>
+                    <span>Trace recorded · language only</span>
+                    <button type="button" data-route="execution">Inspect turn</button>
+                  </div>
+                </article>
+
+                <article class="turn">
+                  <div class="turn-label-row">
+                    <span class="turn-author">You</span><span class="turn-time">20:18:03</span>
+                    <span class="turn-label-spacer"></span>
+                    <span class="turn-actions"><button type="button">Copy</button></span>
+                  </div>
+                  <div class="request-card">What do you remember about the deployment window?</div>
+                </article>
+
+                <article class="turn">
+                  <div class="turn-label-row">
+                    <span class="turn-author assistant">Ashura</span><span class="turn-time">20:18:05</span>
+                    <span class="status-chip warn">Unverified</span>
+                    <span class="turn-label-spacer"></span>
+                    <span class="turn-actions"><button type="button">Copy</button><button type="button">Retry</button></span>
+                  </div>
+                  <div class="response-body">
+                    <p>I do not have an independently verified deployment window in memory. The only related record is user-provided, so it remains an assertion rather than an established fact.</p>
+                    <p>Open <strong>Knowledge Studio</strong> to inspect its provenance and the open conflict.</p>
+                  </div>
+                  <div class="turn-meta-row">
+                    <span class="status-chip plain">tony:7b-gpa3</span>
+                    <span class="status-chip plain">ADMITTED</span>
+                    <span class="status-chip warn">No independent verifier</span>
+                    <span class="status-chip bad">1 open conflict</span>
+                  </div>
+                  <div class="trace-inline">
+                    <svg class="icon icon-sm"><use href="#icon-execution"/></svg>
+                    <span>Trace recorded · exact retrieval · language</span>
+                    <button type="button" data-route="execution">Inspect turn</button>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <button class="jump-latest" type="button" hidden>Jump to latest <svg class="icon icon-sm"><use href="#icon-chevron-down"/></svg></button>
+
+            <div class="composer-wrap">
+              <form class="composer" onsubmit="return false">
+                <label class="sr-only" for="mock-composer">Ask ASHURA</label>
+                <textarea id="mock-composer" rows="2" placeholder="Ask a question, or attach an image for local OCR…"></textarea>
+                <div class="composer-bar">
+                  <div class="composer-tools">
+                    <button class="composer-tool" type="button"><svg class="icon icon-sm"><use href="#icon-image"/></svg><span>OCR image</span></button>
+                    <button class="composer-tool" type="button"><svg class="icon icon-sm"><use href="#icon-paperclip"/></svg><span>Attach</span></button>
+                    <span class="composer-hint">Enter send · Shift+Enter newline</span>
+                  </div>
+                  <div class="composer-spacer"></div>
+                  <span class="composer-model"><span class="dot"></span>tony:7b-gpa3</span>
+                  <button class="button primary composer-send" type="button"><svg class="icon icon-sm"><use href="#icon-send"/></svg>Send</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <aside class="context-panel" aria-label="Turn inspector">
+            <div class="context-head">
+              <h2>Turn inspector</h2>
+              <span class="status-chip ok"><span class="dot ok"></span>Completed</span>
+              <button class="icon-button" type="button" aria-label="Close inspector"><svg class="icon icon-sm"><use href="#icon-x"/></svg></button>
+            </div>
+            <div class="context-tabs" role="tablist" aria-label="Turn inspector sections">
+              <button class="context-tab is-active" type="button" role="tab" aria-selected="true">Summary</button>
+              <button class="context-tab" type="button" role="tab" aria-selected="false">Trace</button>
+              <button class="context-tab" type="button" role="tab" aria-selected="false">Memory</button>
+            </div>
+            <div class="context-body">
+              <section class="context-section">
+                <div class="context-section-head"><p class="eyebrow">Verdict</p></div>
+                <div class="verification-callout">
+                  <div class="verification-title"><svg class="icon icon-sm"><use href="#icon-alert"/></svg>No independent verifier</div>
+                  <p class="verification-copy">The answer is model-written. Exact arithmetic was not part of this turn, so ASHURA cannot establish the response as verified.</p>
+                </div>
+              </section>
+
+              <section class="context-section">
+                <div class="context-section-head"><p class="eyebrow">Turn facts</p></div>
+                <div class="kv-list">
+                  <div class="kv-row"><span class="kv-key">State</span><span class="kv-value">Completed</span></div>
+                  <div class="kv-row"><span class="kv-key">Total time</span><span class="kv-value mono">2.41 s</span></div>
+                  <div class="kv-row"><span class="kv-key">Routing</span><span class="kv-value mono">8.4 ms</span></div>
+                  <div class="kv-row"><span class="kv-key">Model</span><span class="kv-value mono">tony:7b-gpa3</span></div>
+                  <div class="kv-row"><span class="kv-key">Admission</span><span class="kv-value">ADMITTED</span></div>
+                </div>
+              </section>
+
+              <section class="context-section">
+                <div class="context-section-head">
+                  <p class="eyebrow">Execution</p>
+                  <span class="tiny faint">2 steps</span>
+                </div>
+                <div class="mini-timeline">
+                  <div class="mini-step">
+                    <span class="mini-dot ok"></span>
+                    <div class="mini-step-main">
+                      <div class="mini-step-head"><strong>exact_retrieval</strong><span>12 ms</span></div>
+                      <p>2 reliability-filtered hits</p>
+                    </div>
+                  </div>
+                  <div class="mini-step">
+                    <span class="mini-dot ok"></span>
+                    <div class="mini-step-main">
+                      <div class="mini-step-head"><strong>language</strong><span>2.39 s</span></div>
+                      <p>Streamed through the local model</p>
+                    </div>
+                  </div>
+                </div>
+                <button class="context-link" type="button" data-route="execution">
+                  Open in Execution Studio
+                  <svg class="icon icon-sm"><use href="#icon-arrow-right"/></svg>
+                </button>
+              </section>
+
+              <section class="context-section">
+                <div class="context-section-head"><p class="eyebrow">Record IDs</p></div>
+                <div class="kv-list">
+                  <div class="kv-row"><span class="kv-key">Message</span><span class="kv-value mono">#118</span></div>
+                  <div class="kv-row"><span class="kv-key">Session</span><span class="kv-value mono">4f2c…9a71</span></div>
+                  <div class="kv-row"><span class="kv-key">Job ID</span><span class="kv-value">Not persisted</span></div>
+                </div>
+                <p class="context-note">The inspector reflects the stored trace for this turn. Live step events and request IDs are not available in this build.</p>
+              </section>
+            </div>
+          </aside>
+        </section>
+
+        <!-- EXECUTION STUDIO -->
+        <section class="view execution-view" data-view="execution" aria-label="Execution Studio">
+          <header class="page-head">
+            <div>
+              <p class="eyebrow">Workspace</p>
+              <h1>Execution Studio</h1>
+              <p class="page-sub">Recorded module execution, verification evidence and operation state.</p>
+              <div class="state-legend" aria-label="Operation states">
+                <span class="status-chip neutral"><span class="dot"></span>Requested</span>
+                <span class="status-chip info"><span class="dot accent"></span>Running</span>
+                <span class="status-chip ok"><span class="dot ok"></span>Completed</span>
+                <span class="status-chip bad"><span class="dot bad"></span>Failed</span>
+                <span class="status-chip neutral"><span class="dot"></span>Cancelled</span>
+                <span class="status-chip ok">Verified</span>
+                <span class="status-chip warn">Unverified</span>
+              </div>
+            </div>
+            <div class="page-head-actions">
+              <button class="button ghost small" type="button"><svg class="icon icon-sm"><use href="#icon-refresh"/></svg><span>Refresh</span></button>
+              <button class="button small operations-mobile-toggle" id="operations-toggle" type="button"><svg class="icon icon-sm"><use href="#icon-sessions"/></svg><span>Operations</span></button>
+            </div>
+          </header>
+
+          <div class="execution-body">
+            <div class="live-strip" style="grid-column: 1 / -1">
+              <div class="live-cell">
+                <p class="eyebrow">Worker</p>
+                <div class="live-value"><span class="dot ok"></span>Idle</div>
+              </div>
+              <div class="live-cell">
+                <p class="eyebrow">Queue</p>
+                <div class="live-value mono">0 / 8</div>
+              </div>
+              <div class="live-cell">
+                <p class="eyebrow">Last operation</p>
+                <div class="live-value mono">chat · done · 2.31 s</div>
+              </div>
+              <div class="live-cell">
+                <p class="eyebrow">Errors this process</p>
+                <div class="live-value mono">0</div>
+              </div>
+            </div>
+
+            <aside class="operations-panel" aria-label="Recorded operations">
+              <div class="operations-head">
+                <div class="operations-title-row">
+                  <h2>Operations</h2>
+                  <span class="status-chip plain">5 recorded</span>
+                  <button class="icon-button mobile-close" type="button" data-close-drawer aria-label="Close operations">
+                    <svg class="icon icon-sm"><use href="#icon-x"/></svg>
+                  </button>
+                </div>
+                <div class="search-input">
+                  <svg class="icon icon-sm"><use href="#icon-search"/></svg>
+                  <input type="search" placeholder="Filter operations" aria-label="Filter operations">
+                </div>
+              </div>
+              <div class="operations-list">
+                <button class="operation-row is-active" type="button">
+                  <div class="operation-row-top"><span class="operation-state ok"></span><span class="operation-kind">arithmetic</span><span class="operation-time">20:21:07</span></div>
+                  <div class="operation-question">Calculate 123456789 * 987654321</div>
+                  <div class="operation-row-meta"><span>2 steps</span><span class="dot"></span><span>1.2 ms</span><span class="dot"></span><span>Verified</span></div>
+                </button>
+                <button class="operation-row" type="button">
+                  <div class="operation-row-top"><span class="operation-state warn"></span><span class="operation-kind">chat</span><span class="operation-time">20:18:05</span></div>
+                  <div class="operation-question">What do you remember about the deployment window?</div>
+                  <div class="operation-row-meta"><span>2 steps</span><span class="dot"></span><span>2.41 s</span><span class="dot"></span><span>Unverified</span></div>
+                </button>
+                <button class="operation-row" type="button">
+                  <div class="operation-row-top"><span class="operation-state ok"></span><span class="operation-kind">chat</span><span class="operation-time">20:16:24</span></div>
+                  <div class="operation-question">Why is the previous answer marked unverified?</div>
+                  <div class="operation-row-meta"><span>1 step</span><span class="dot"></span><span>1.84 s</span><span class="dot"></span><span>Unverified</span></div>
+                </button>
+                <button class="operation-row" type="button">
+                  <div class="operation-row-top"><span class="operation-state bad"></span><span class="operation-kind">ocr</span><span class="operation-time">20:09:44</span></div>
+                  <div class="operation-question">Read the text in scan.png</div>
+                  <div class="operation-row-meta"><span>1 step</span><span class="dot"></span><span>3.02 s</span><span class="dot"></span><span>Failed</span></div>
+                </button>
+                <button class="operation-row" type="button">
+                  <div class="operation-row-top"><span class="operation-state cancelled"></span><span class="operation-kind">chat</span><span class="operation-time">20:06:12</span></div>
+                  <div class="operation-question">Summarize the verification limits in one paragraph.</div>
+                  <div class="operation-row-meta"><span>1 step</span><span class="dot"></span><span>0.62 s</span><span class="dot"></span><span>Cancelled</span></div>
+                </button>
+              </div>
+            </aside>
+
+            <div class="timeline-panel">
+              <div class="timeline">
+                <div class="operation-head">
+                  <div>
+                    <p class="eyebrow">Operation · arithmetic</p>
+                    <h2>Calculate 123456789 * 987654321</h2>
+                    <div class="operation-head-meta">
+                      <span class="status-chip ok"><span class="dot ok"></span>Completed</span>
+                      <span class="status-chip ok">Verified</span>
+                      <span class="status-chip plain">2 steps</span>
+                      <span class="status-chip plain">1.2 ms</span>
+                    </div>
+                  </div>
+                  <div class="operation-head-right">
+                    <button class="button ghost small" type="button"><svg class="icon icon-sm"><use href="#icon-copy"/></svg>Copy trace</button>
+                    <button class="button small evidence-mobile-toggle" type="button" id="evidence-toggle"><svg class="icon icon-sm"><use href="#icon-inspect"/></svg>Evidence</button>
+                  </div>
+                </div>
+
+                <div class="trace-summary-grid">
+                  <div class="trace-summary-cell"><p class="eyebrow">Total</p><strong>1.2 ms</strong></div>
+                  <div class="trace-summary-cell"><p class="eyebrow">Routing</p><strong>0.6 ms</strong></div>
+                  <div class="trace-summary-cell"><p class="eyebrow">Model</p><strong>tony:7b-gpa3</strong></div>
+                  <div class="trace-summary-cell"><p class="eyebrow">Message</p><strong>#121</strong></div>
+                </div>
+
+                <div class="trace-route">
+                  <span class="route-label">Selected</span>
+                  <span class="status-chip plain">arithmetic</span>
+                  <span class="status-chip plain">verification</span>
+                  <span class="route-label">Skipped</span>
+                  <span class="status-chip neutral">language · cheap skill sufficient</span>
+                  <span class="status-chip neutral">exact_retrieval · not needed</span>
+                </div>
+
+                <div class="trace-section-head"><h3>Module timeline</h3><span class="tiny faint">Recorded after completion</span></div>
+                <div class="timeline-steps">
+                  <div class="step ok">
+                    <span class="step-index">01</span>
+                    <div class="step-card">
+                      <div class="step-card-head">
+                        <span class="step-module">arithmetic</span>
+                        <span class="step-badge ok">ok</span>
+                        <span class="step-duration">0.4 ms</span>
+                      </div>
+                      <div class="step-body">
+                        <p>Exact evaluator. The expression is parsed and evaluated on the CPU; it is never delegated to the model.</p>
+                        <div class="step-output">121932631112635269</div>
+                      </div>
+                      <details class="step-details">
+                        <summary>Input and output</summary>
+                        <div class="step-details-body">
+                          <div class="io-row"><span>input</span><span>123456789 * 987654321</span></div>
+                          <div class="io-row"><span>output</span><span>121932631112635269</span></div>
+                          <div class="io-row"><span>note</span><span>exact evaluator</span></div>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                  <div class="step ok">
+                    <span class="step-index">02</span>
+                    <div class="step-card">
+                      <div class="step-card-head">
+                        <span class="step-module">verification</span>
+                        <span class="step-badge ok">verified</span>
+                        <span class="step-duration">0.1 ms</span>
+                      </div>
+                      <div class="step-body">
+                        <p>An independent Decimal(60) cross-check evaluated the same expression and agreed with the result.</p>
+                        <div class="step-output">verified: decimal(60) cross-check agrees</div>
+                      </div>
+                      <details class="step-details">
+                        <summary>Input and output</summary>
+                        <div class="step-details-body">
+                          <div class="io-row"><span>input</span><span>123456789 * 987654321</span></div>
+                          <div class="io-row"><span>output</span><span>decimal(60) cross-check agrees</span></div>
+                          <div class="io-row"><span>status</span><span>verified</span></div>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="trace-note">
+                  <svg class="icon icon-sm"><use href="#icon-info"/></svg>
+                  <span>Trace steps are persisted after the turn completes. This build does not stream per-step events, and it has no external tool-call layer; module execution is the trace unit.</span>
+                </div>
+              </div>
+            </div>
+
+            <aside class="evidence-panel" aria-label="Operation evidence">
+              <div class="evidence-head">
+                <h2>Evidence</h2>
+                <span class="status-chip ok">Verified</span>
+                <button class="icon-button mobile-close" type="button" aria-label="Close evidence"><svg class="icon icon-sm"><use href="#icon-x"/></svg></button>
+              </div>
+              <div class="evidence-body">
+                <section class="evidence-section">
+                  <div class="verification-callout ok">
+                    <div class="verification-title"><svg class="icon icon-sm"><use href="#icon-check"/></svg>Verified by independent check</div>
+                    <p class="verification-copy">The response is the exact evaluated value. The verification step ran and the Decimal(60) cross-check agreed.</p>
+                  </div>
+                </section>
+
+                <section class="evidence-section">
+                  <div class="evidence-section-head"><p class="eyebrow">Verdict</p></div>
+                  <div class="kv-list">
+                    <div class="kv-row"><span class="kv-key">Verification</span><span class="kv-value">Verified</span></div>
+                    <div class="kv-row"><span class="kv-key">Method</span><span class="kv-value">Decimal(60) cross-check</span></div>
+                    <div class="kv-row"><span class="kv-key">Response check</span><span class="kv-value">Exact match</span></div>
+                    <div class="kv-row"><span class="kv-key">Verifier ran</span><span class="kv-value">Yes</span></div>
+                  </div>
+                </section>
+
+                <section class="evidence-section">
+                  <div class="evidence-section-head"><p class="eyebrow">Memory admission</p></div>
+                  <div class="admission-card ok">
+                    <div class="admission-card-head"><span class="dot ok"></span><strong>ADMITTED</strong><span class="status-chip plain">score 2.02</span></div>
+                    <p>Stored as a verified arithmetic experience. The semantic fact store receives only independently verified records.</p>
+                  </div>
+                </section>
+
+                <section class="evidence-section">
+                  <div class="evidence-section-head"><p class="eyebrow">Identifiers</p></div>
+                  <div class="evidence-id">
+                    <div class="id-row"><span>Message</span><strong>#121</strong></div>
+                    <div class="id-row"><span>Session</span><strong>4f2c…9a71</strong></div>
+                    <div class="id-row"><span>Job</span><strong>Not persisted</strong></div>
+                    <div class="id-row"><span>Request</span><strong>Not stored</strong></div>
+                  </div>
+                  <p class="context-note" style="margin-top:8px">Request IDs are returned in the HTTP header for live requests but are not written into the session transcript.</p>
+                </section>
+
+                <section class="evidence-section">
+                  <div class="evidence-section-head"><p class="eyebrow">Raw record</p></div>
+                  <button class="raw-toggle" type="button" aria-expanded="false"><span>Show trace payload</span><svg class="icon icon-sm"><use href="#icon-chevron-right"/></svg></button>
+                  <p class="context-note" style="margin-top:8px">Raw evidence may contain prompt or model text. The workbench masks common secret patterns by default and never claims full redaction.</p>
+                </section>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- KNOWLEDGE STUDIO -->
+        <section class="view knowledge-view" data-view="knowledge" aria-label="Knowledge Studio">
+          <header class="page-head">
+            <div>
+              <p class="eyebrow">Workspace</p>
+              <h1>Knowledge Studio</h1>
+              <p class="page-sub">Memory evidence, provenance, admission decisions and open contradictions.</p>
+            </div>
+            <div class="page-head-actions">
+              <button class="button ghost small" type="button"><svg class="icon icon-sm"><use href="#icon-refresh"/></svg><span>Refresh</span></button>
+              <button class="button small memory-mobile-toggle" id="memory-toggle" type="button"><svg class="icon icon-sm"><use href="#icon-knowledge"/></svg><span>Memories</span></button>
+            </div>
+          </header>
+
+          <div class="knowledge-summary">
+            <div class="summary-cell">
+              <div><span class="label">Experiences</span><span class="value">41</span><span class="sub">episodic records</span></div>
+            </div>
+            <div class="summary-cell">
+              <div><span class="label">Verified facts</span><span class="value">6</span><span class="sub">semantic store</span></div>
+            </div>
+            <div class="summary-cell">
+              <div><span class="label">Open conflicts</span><span class="value">3</span><span class="sub">require review</span></div>
+            </div>
+            <div class="summary-cell">
+              <div><span class="label">FTS rows</span><span class="value">41</span><span class="sub">searchable</span></div>
+            </div>
+          </div>
+
+          <div class="knowledge-body">
+            <aside class="knowledge-list-panel" aria-label="Memory records">
+              <div class="knowledge-toolbar">
+                <div class="search-input">
+                  <svg class="icon icon-sm"><use href="#icon-search"/></svg>
+                  <input type="search" placeholder="Search memory · FTS5" aria-label="Search memory">
+                </div>
+                <div class="knowledge-tabs" role="tablist" aria-label="Knowledge sections">
+                  <button class="knowledge-tab is-active" type="button" role="tab" aria-selected="true">Experiences</button>
+                  <button class="knowledge-tab" type="button" role="tab" aria-selected="false">Conflicts <span class="status-chip bad" style="margin-left:3px">3</span></button>
+                  <button class="knowledge-tab" type="button" role="tab" aria-selected="false">Admissions</button>
+                  <button class="icon-button mobile-close" type="button" data-close-drawer aria-label="Close memory list" style="margin-left:auto">
+                    <svg class="icon icon-sm"><use href="#icon-x"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="knowledge-list-head"><span>Recent experiences</span><span>41 total</span></div>
+              <div class="memory-list">
+                <button class="memory-row is-active" type="button">
+                  <div class="memory-row-top"><span class="memory-status warn">User provided</span><span class="memory-rel">rel 0.60</span></div>
+                  <div class="memory-question">What is the deployment window for Project Kestrel?</div>
+                  <div class="memory-answer">The staging window is Tuesday 02:00–04:00 UTC.</div>
+                  <div class="memory-row-meta"><span>Today 19:58</span><span class="dot"></span><span class="bad">1 open conflict</span></div>
+                </button>
+                <button class="memory-row" type="button">
+                  <div class="memory-row-top"><span class="memory-status ok">Verified</span><span class="memory-rel">rel 1.00</span></div>
+                  <div class="memory-question">Calculate 123456789 * 987654321</div>
+                  <div class="memory-answer">121932631112635269</div>
+                  <div class="memory-row-meta"><span>Today 20:21</span><span class="dot"></span><span>exact arithmetic</span></div>
+                </button>
+                <button class="memory-row" type="button">
+                  <div class="memory-row-top"><span class="memory-status">Unverified</span><span class="memory-rel">rel 0.20</span></div>
+                  <div class="memory-question">Explain how ASHURA routes a request</div>
+                  <div class="memory-answer">NeedField selects modules; the trace records what actually ran.</div>
+                  <div class="memory-row-meta"><span>Today 20:14</span><span class="dot"></span><span>model generated</span></div>
+                </button>
+                <button class="memory-row" type="button">
+                  <div class="memory-row-top"><span class="memory-status warn">Trusted material</span><span class="memory-rel">rel 0.80</span></div>
+                  <div class="memory-question">Project Kestrel runbook excerpt</div>
+                  <div class="memory-answer">Deployments require a signed change record before the window opens.</div>
+                  <div class="memory-row-meta"><span>Today 18:20</span><span class="dot"></span><span>not independently verified</span></div>
+                </button>
+                <button class="memory-row" type="button">
+                  <div class="memory-row-top"><span class="memory-status">Unverified</span><span class="memory-rel">rel 0.20</span></div>
+                  <div class="memory-question">Why is the previous answer unverified?</div>
+                  <div class="memory-answer">The response was written by the language model; no verifier applied.</div>
+                  <div class="memory-row-meta"><span>Today 20:16</span><span class="dot"></span><span>model generated</span></div>
+                </button>
+              </div>
+            </aside>
+
+            <div class="knowledge-detail">
+              <div class="detail-inner">
+                <header class="detail-head">
+                  <div>
+                    <p class="eyebrow">Experience · <span class="mono">exp_8b41…c02f</span></p>
+                    <h2>What is the deployment window for Project Kestrel?</h2>
+                    <div class="detail-head-meta">
+                      <span class="status-chip warn">User provided</span>
+                      <span class="status-chip bad">Open conflict</span>
+                      <span class="status-chip plain">reliability 0.60</span>
+                      <span class="status-chip plain">general</span>
+                    </div>
+                  </div>
+                  <div class="detail-actions">
+                    <button class="button primary small" type="button"><svg class="icon icon-sm"><use href="#icon-arrow-right"/></svg>Use as prompt</button>
+                    <button class="button small" type="button"><svg class="icon icon-sm"><use href="#icon-copy"/></svg>Copy ID</button>
+                  </div>
+                </header>
+
+                <section class="detail-section">
+                  <div class="detail-section-head"><h3>Stored answer</h3></div>
+                  <p class="detail-answer">The staging window is Tuesday 02:00–04:00 UTC.</p>
+                </section>
+
+                <section class="detail-section">
+                  <div class="detail-section-head"><h3>Provenance</h3><span class="tiny faint">recorded from the backend</span></div>
+                  <div class="provenance-grid">
+                    <div class="provenance-cell"><span class="k">Source</span><span class="v">user</span></div>
+                    <div class="provenance-cell"><span class="k">Status</span><span class="v">user_provided</span></div>
+                    <div class="provenance-cell"><span class="k">Method</span><span class="v">user assertion</span></div>
+                    <div class="provenance-cell"><span class="k">Recorded</span><span class="v mono">2026-11-06 19:58</span></div>
+                  </div>
+                  <div class="reliability-row">
+                    <span class="reliability-label">Reliability</span>
+                    <span class="reliability-track"><span class="reliability-fill" style="width:60%"></span></span>
+                    <span class="reliability-value">0.60</span>
+                  </div>
+                  <p class="context-note" style="margin-top:10px">Reliability is the stored evidence class, not a probability that the claim is true. The method text is shown exactly as recorded.</p>
+                </section>
+
+                <section class="detail-section">
+                  <div class="detail-section-head"><h3>Admission decision</h3><span class="tiny faint">latest decision for this record</span></div>
+                  <div class="admission-card">
+                    <div class="admission-card-head"><span class="status-chip warn">Review required</span><strong>score 0.63</strong></div>
+                    <p>Conflicts with 1 record of equal or greater reliability. Stored as evidence only and not indexed as a searchable fact.</p>
+                    <div class="feature-grid">
+                      <div class="feature"><div class="feature-head"><span>Novelty</span><span>0.72</span></div><div class="feature-track"><div class="feature-fill" style="width:72%"></div></div></div>
+                      <div class="feature"><div class="feature-head"><span>Surprise</span><span>0.41</span></div><div class="feature-track"><div class="feature-fill" style="width:41%"></div></div></div>
+                      <div class="feature"><div class="feature-head"><span>Reliability</span><span>0.60</span></div><div class="feature-track"><div class="feature-fill" style="width:60%"></div></div></div>
+                      <div class="feature"><div class="feature-head"><span>Utility</span><span>0.42</span></div><div class="feature-track"><div class="feature-fill" style="width:42%"></div></div></div>
+                      <div class="feature"><div class="feature-head"><span>Conflict</span><span>1.00</span></div><div class="feature-track"><div class="feature-fill" style="width:100%;background:var(--warning)"></div></div></div>
+                      <div class="feature"><div class="feature-head"><span>Cost</span><span>0.05</span></div><div class="feature-track"><div class="feature-fill" style="width:5%"></div></div></div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="detail-section">
+                  <div class="detail-section-head"><h3>Open conflict</h3><span class="tiny faint">recorded 19:58</span></div>
+                  <div class="conflict-card">
+                    <div class="conflict-card-head">
+                      <strong><svg class="icon icon-sm" style="vertical-align:-2px"><use href="#icon-alert"/></svg> Reliability alone does not resolve this</strong>
+                      <span class="status-chip plain">open</span>
+                    </div>
+                    <div class="conflict-body">
+                      <div class="conflict-claim">
+                        <span class="who">New claim</span>
+                        <span class="claim"><strong>user_provided · 0.60</strong><br>The staging window is Tuesday 02:00–04:00 UTC.</span>
+                      </div>
+                      <div class="conflict-claim">
+                        <span class="who">Old claim</span>
+                        <span class="claim"><strong>trusted_material · 0.80</strong><br>The staging window is Tuesday 02:00–04:00 CET.</span>
+                      </div>
+                      <p class="conflict-policy">Both records are retained and auditable. The new claim is stored as evidence only. Resolution requires an independent verifier or an explicit human decision.</p>
+                      <div class="cli-command">
+                        <code>python -m learning.review resolve 3 --db data/ashura.db --reason "reviewed"</code>
+                        <button class="button ghost small" type="button" aria-label="Copy resolve command"><svg class="icon icon-sm"><use href="#icon-copy"/></svg></button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="detail-section">
+                  <div class="detail-section-head"><h3>Related records</h3></div>
+                  <div class="kv-list">
+                    <div class="kv-row"><span class="kv-key">Old claim</span><span class="kv-value mono">exp_a1d0…77be</span></div>
+                    <div class="kv-row"><span class="kv-key">Conflict</span><span class="kv-value mono">#3 · open</span></div>
+                    <div class="kv-row"><span class="kv-key">Repeat count</span><span class="kv-value mono">1</span></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SYSTEM MONITOR -->
+        <section class="view system-view" data-view="system" aria-label="System Monitor">
+          <header class="page-head">
+            <div>
+              <p class="eyebrow">Workspace</p>
+              <h1>System Monitor</h1>
+              <p class="page-sub">Real measurements from the local process, worker and storage. No synthetic metrics.</p>
+            </div>
+            <div class="page-head-actions">
+              <button class="button ghost small" type="button"><svg class="icon icon-sm"><use href="#icon-refresh"/></svg><span>Refresh</span></button>
+              <button class="button small" type="button"><svg class="icon icon-sm"><use href="#icon-cpu"/></svg><span>Probe model</span></button>
+            </div>
+          </header>
+
+          <div class="system-body">
+            <div class="system-inner">
+              <div class="health-strip">
+                <div class="health-cell">
+                  <span class="health-icon ok"><svg class="icon icon-sm"><use href="#icon-check"/></svg></span>
+                  <div><p class="eyebrow">Health · server</p><strong>Serving</strong><p>HTTP status answered</p></div>
+                </div>
+                <div class="health-cell">
+                  <span class="health-icon ok"><svg class="icon icon-sm"><use href="#icon-check"/></svg></span>
+                  <div><p class="eyebrow">Readiness · worker</p><strong>Alive</strong><p>Single-writer thread</p></div>
+                </div>
+                <div class="health-cell">
+                  <span class="health-icon warn"><svg class="icon icon-sm"><use href="#icon-clock"/></svg></span>
+                  <div><p class="eyebrow">Readiness · model</p><strong>Configured</strong><p>Not probed this session</p></div>
+                </div>
+                <div class="health-cell">
+                  <span class="health-icon ok"><svg class="icon icon-sm"><use href="#icon-check"/></svg></span>
+                  <div><p class="eyebrow">Health · storage</p><strong>Readable</strong><p>Memory and session DBs</p></div>
+                </div>
+              </div>
+
+              <div class="system-grid">
+                <div class="system-col">
+                  <section class="panel">
+                    <div class="panel-head">
+                      <div><p class="eyebrow">This machine</p><h2 class="panel-title">Resources</h2><p class="panel-sub">Sampled 8 seconds ago with psutil.</p></div>
+                      <span class="status-chip plain">Live</span>
+                    </div>
+                    <div class="resource-grid">
+                      <div class="metric">
+                        <p class="eyebrow">CPU</p>
+                        <div class="metric-value"><strong>18</strong><span>%</span></div>
+                        <div class="metric-sub">system-wide</div>
+                        <div class="metric-track"><div class="metric-fill" style="width:18%"></div></div>
+                      </div>
+                      <div class="metric">
+                        <p class="eyebrow">Memory</p>
+                        <div class="metric-value"><strong>9.4</strong><span>/ 15.7 GB</span></div>
+                        <div class="metric-sub">59% used</div>
+                        <div class="metric-track"><div class="metric-fill warn" style="width:59%"></div></div>
+                      </div>
+                      <div class="metric">
+                        <p class="eyebrow">Process RSS</p>
+                        <div class="metric-value"><strong>1.82</strong><span>GB</span></div>
+                        <div class="metric-sub">ASHURA web process</div>
+                        <div class="metric-track"><div class="metric-fill" style="width:12%"></div></div>
+                      </div>
+                      <div class="metric">
+                        <p class="eyebrow">Disk free</p>
+                        <div class="metric-value"><strong>108</strong><span>GB</span></div>
+                        <div class="metric-sub">memory DB volume</div>
+                        <div class="metric-track"><div class="metric-fill" style="width:68%"></div></div>
+                      </div>
+                      <div class="metric">
+                        <p class="eyebrow">GPU memory</p>
+                        <div class="metric-value"><strong>—</strong></div>
+                        <div class="metric-sub">Not exposed by this runtime</div>
+                      </div>
+                      <div class="metric">
+                        <p class="eyebrow">Last inference</p>
+                        <div class="metric-value"><strong>2.31</strong><span>s</span></div>
+                        <div class="metric-sub">worker run time</div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="panel">
+                    <div class="panel-head">
+                      <div><p class="eyebrow">Single writer</p><h2 class="panel-title">Worker</h2><p class="panel-sub">All controller and SQLite work is serialized through one thread.</p></div>
+                      <span class="status-chip ok"><span class="dot ok"></span>Alive</span>
+                    </div>
+                    <div class="panel-body">
+                      <div class="worker-counters">
+                        <div class="worker-counter"><span>Submitted</span><strong>128</strong></div>
+                        <div class="worker-counter"><span>Completed</span><strong>124</strong></div>
+                        <div class="worker-counter bad"><span>Failed</span><strong>1</strong></div>
+                        <div class="worker-counter"><span>Cancelled</span><strong>3</strong></div>
+                        <div class="worker-counter"><span>Rejected</span><strong>0</strong></div>
+                      </div>
+                      <div class="runtime-list" style="margin-top:10px">
+                        <div class="runtime-row"><span class="k">Queue</span><span class="v">0 / 8</span></div>
+                        <div class="runtime-row"><span class="k">Average wait</span><span class="v">14.2 ms</span></div>
+                        <div class="runtime-row"><span class="k">Average run</span><span class="v">1.94 s</span></div>
+                      </div>
+                      <div class="worker-last">
+                        <span class="dot ok"></span>
+                        <div class="worker-last-main">
+                          <div class="worker-last-head"><strong>chat</strong><span class="status-chip ok">done</span><span class="tiny faint">2.31 s</span></div>
+                          <p>wait 12.4 ms · run 2.31 s · error none</p>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                <div class="system-col">
+                  <section class="panel">
+                    <div class="panel-head">
+                      <div><p class="eyebrow">Configured runtime</p><h2 class="panel-title">Model</h2><p class="panel-sub">Read-only values from the launch configuration.</p></div>
+                    </div>
+                    <div class="panel-body">
+                      <div class="runtime-list">
+                        <div class="runtime-row"><span class="k">Model</span><span class="v">tony:7b-gpa3</span></div>
+                        <div class="runtime-row"><span class="k">Backend</span><span class="v">ollama</span></div>
+                        <div class="runtime-row"><span class="k">Endpoint</span><span class="v">http://127.0.0.1:11434</span></div>
+                        <div class="runtime-row"><span class="k">Context</span><span class="v">4096 tokens</span></div>
+                        <div class="runtime-row"><span class="k">Digest pin</span><span class="v">2a86…</span></div>
+                        <div class="runtime-row"><span class="k">Residency</span><span class="v">Not probed</span></div>
+                      </div>
+                      <div class="probe-row">
+                        <button class="button small" type="button"><svg class="icon icon-sm"><use href="#icon-refresh"/></svg>Probe now</button>
+                        <span class="probe-result">Last probe: not run</span>
+                      </div>
+                      <p class="model-note">A probe is a real request to the configured endpoint. Until it runs, model readiness is unknown — not “ready” and not “zero”.</p>
+                    </div>
+                  </section>
+
+                  <section class="panel">
+                    <div class="panel-head">
+                      <div><p class="eyebrow">Local files</p><h2 class="panel-title">Storage</h2><p class="panel-sub">Measured from the configured SQLite paths.</p></div>
+                    </div>
+                    <div class="panel-body">
+                      <div class="storage-path">
+                        <span class="icon-wrap"><svg class="icon icon-sm"><use href="#icon-database"/></svg></span>
+                        <span class="storage-path-main"><strong>Memory database</strong><span>data/ashura.db</span></span>
+                        <span class="storage-size">144 KB</span>
+                      </div>
+                      <div class="storage-path">
+                        <span class="icon-wrap"><svg class="icon icon-sm"><use href="#icon-database"/></svg></span>
+                        <span class="storage-path-main"><strong>Session database</strong><span>data/ui_sessions.db</span></span>
+                        <span class="storage-size">212 KB</span>
+                      </div>
+                      <div class="storage-path">
+                        <span class="icon-wrap"><svg class="icon icon-sm"><use href="#icon-hard-drive"/></svg></span>
+                        <span class="storage-path-main"><strong>Free disk</strong><span>memory DB volume</span></span>
+                        <span class="storage-size">108 GB</span>
+                      </div>
+                      <p class="model-note">Both databases are plaintext SQLite. ASHURA does not encrypt them; file-system permissions and OS disk encryption are outside this application.</p>
+                    </div>
+                  </section>
+
+                  <section class="panel">
+                    <div class="panel-head">
+                      <div><p class="eyebrow">Current process</p><h2 class="panel-title">Runtime facts</h2></div>
+                    </div>
+                    <div class="panel-body">
+                      <div class="runtime-list">
+                        <div class="runtime-row"><span class="k">Version</span><span class="v">0.2</span></div>
+                        <div class="runtime-row"><span class="k">Uptime</span><span class="v">1h 42m</span></div>
+                        <div class="runtime-row"><span class="k">Sessions</span><span class="v">16</span></div>
+                        <div class="runtime-row"><span class="k">Experiences</span><span class="v">41</span></div>
+                        <div class="runtime-row"><span class="k">Open conflicts</span><span class="v" style="color:var(--warning)">3</span></div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SETTINGS & SECURITY -->
+        <section class="view settings-view" data-view="settings" aria-label="Settings and Security">
+          <header class="page-head">
+            <div>
+              <p class="eyebrow">Workspace</p>
+              <h1>Settings &amp; Security</h1>
+              <p class="page-sub">Accurate controls and explicit limits for this local, single-user runtime.</p>
+            </div>
+            <div class="page-head-actions">
+              <span class="status-chip ok"><span class="dot ok"></span>Loopback only</span>
+            </div>
+          </header>
+
+          <div class="settings-body">
+            <div class="settings-inner">
+              <div class="settings-stack">
+                <section class="panel settings-section">
+                  <div class="settings-section-head">
+                    <div><p class="eyebrow">Interface</p><h2>Appearance</h2><p>Theme preference is stored only in this browser.</p></div>
+                  </div>
+                  <div class="theme-options" role="radiogroup" aria-label="Theme">
+                    <button class="theme-option system" type="button" role="radio" aria-checked="false" data-theme-choice="system">
+                      <span class="theme-swatch" aria-hidden="true"><span class="s1"></span><span class="s2"></span><span class="s3"></span></span>
+                      <span><svg class="icon icon-sm" style="vertical-align:-3px"><use href="#icon-monitor"/></svg> System</span>
+                    </button>
+                    <button class="theme-option" type="button" role="radio" aria-checked="false" data-theme-choice="dark">
+                      <span class="theme-swatch" aria-hidden="true"><span class="s1"></span><span class="s2"></span><span class="s3"></span></span>
+                      <span><svg class="icon icon-sm" style="vertical-align:-3px"><use href="#icon-moon"/></svg> Dark</span>
+                    </button>
+                    <button class="theme-option light is-active" type="button" role="radio" aria-checked="true" data-theme-choice="light">
+                      <span class="theme-swatch" aria-hidden="true"><span class="s1"></span><span class="s2"></span><span class="s3"></span></span>
+                      <span><svg class="icon icon-sm" style="vertical-align:-3px"><use href="#icon-sun"/></svg> Light</span>
+                    </button>
+                  </div>
+                  <div class="setting-row" style="margin-top:12px">
+                    <div class="setting-copy"><strong>Reduced motion</strong><span>Follows the operating-system preference; no separate override is stored.</span></div>
+                    <span class="status-chip plain">System</span>
+                  </div>
+                </section>
+
+                <section class="panel settings-section">
+                  <div class="settings-section-head">
+                    <div><p class="eyebrow">Access</p><h2>Session &amp; security</h2><p>The browser holds one launch-token session. There is no account system.</p></div>
+                  </div>
+                  <div class="setting-row">
+                    <div class="setting-copy"><strong>Signed in</strong><span>HttpOnly cookie · SameSite=Strict · expires after 7 days</span></div>
+                    <span class="status-chip ok"><span class="dot ok"></span>Active</span>
+                  </div>
+                  <div class="setting-row">
+                    <div class="setting-copy"><strong>CSRF protection</strong><span>Mutating requests require the token returned by <code>/api/status</code>.</span></div>
+                    <span class="status-chip ok">Required</span>
+                  </div>
+                  <div class="setting-row">
+                    <div class="setting-copy"><strong>Revoke this browser session</strong><span>Logging out clears the cookie. The launch token itself is not rotated.</span></div>
+                    <button class="button danger small" type="button"><svg class="icon icon-sm"><use href="#icon-lock"/></svg>Log out</button>
+                  </div>
+                </section>
+
+                <section class="panel settings-section">
+                  <div class="settings-section-head">
+                    <div><p class="eyebrow">Runtime</p><h2>Model &amp; configuration</h2><p>Read-only in the browser. Changes belong in the config file and require a restart.</p></div>
+                    <span class="status-chip plain">Read-only</span>
+                  </div>
+                  <div class="runtime-list">
+                    <div class="runtime-row"><span class="k">Model</span><span class="v">tony:7b-gpa3</span></div>
+                    <div class="runtime-row"><span class="k">Backend</span><span class="v">ollama</span></div>
+                    <div class="runtime-row"><span class="k">Endpoint</span><span class="v">http://127.0.0.1:11434</span></div>
+                    <div class="runtime-row"><span class="k">Config</span><span class="v">config/ashura.ollama.toml</span></div>
+                    <div class="runtime-row"><span class="k">Worker queue</span><span class="v">8 jobs</span></div>
+                  </div>
+                  <p class="model-note">The interface never edits model weights, runtime configuration or the cognitive architecture.</p>
+                </section>
+
+                <section class="panel settings-section">
+                  <div class="settings-section-head">
+                    <div><p class="eyebrow">Data handling</p><h2>Privacy &amp; storage</h2><p>What is local, what is not, and what is not implemented.</p></div>
+                  </div>
+                  <div class="privacy-item">
+                    <span class="privacy-icon"><svg class="icon icon-sm"><use href="#icon-wifi-off"/></svg></span>
+                    <div><strong>No telemetry or CDN requests</strong><p>The UI is served from this process and makes no third-party requests. It does not claim that model traffic is local if the configured endpoint is remote.</p></div>
+                  </div>
+                  <div class="privacy-item">
+                    <span class="privacy-icon"><svg class="icon icon-sm"><use href="#icon-database"/></svg></span>
+                    <div><strong>Sessions and memory are local files</strong><p>Stored as plaintext SQLite under <code>data/</code>. ASHURA does not encrypt them at rest. Use OS permissions and disk encryption if that threat matters.</p></div>
+                  </div>
+                  <div class="privacy-item">
+                    <span class="privacy-icon"><svg class="icon icon-sm"><use href="#icon-terminal"/></svg></span>
+                    <div><strong>Access logs exclude message content</strong><p>HTTP logs record request ID, method, path, status, duration and client address. Prompt and answer text are not written to the access log.</p></div>
+                  </div>
+                  <div class="privacy-item">
+                    <span class="privacy-icon"><svg class="icon icon-sm"><use href="#icon-image"/></svg></span>
+                    <div><strong>Image uploads are temporary</strong><p>OCR writes the image to a temporary file, runs locally, and removes it in a <code>finally</code> block. Uploads are capped at 12 MB.</p></div>
+                  </div>
+                  <div class="security-badges">
+                    <span class="status-chip plain">CSP self-only</span>
+                    <span class="status-chip plain">Host check</span>
+                    <span class="status-chip plain">Origin check</span>
+                    <span class="status-chip plain">Rate limits</span>
+                    <span class="status-chip warn">No TLS</span>
+                  </div>
+                </section>
+              </div>
+
+              <aside class="settings-side" aria-label="Security overview">
+                <section class="panel side-card">
+                  <p class="eyebrow">Posture</p>
+                  <h3>Security boundaries</h3>
+                  <div class="side-list">
+                    <div class="side-row"><span class="k">Network bind</span><span class="v good">Loopback</span></div>
+                    <div class="side-row"><span class="k">Authentication</span><span class="v good">Launch token</span></div>
+                    <div class="side-row"><span class="k">Cookie</span><span class="v good">HttpOnly · Strict</span></div>
+                    <div class="side-row"><span class="k">CSRF</span><span class="v good">Required</span></div>
+                    <div class="side-row"><span class="k">Transport</span><span class="v warn">Plain HTTP</span></div>
+                    <div class="side-row"><span class="k">Multi-user</span><span class="v warn">Not supported</span></div>
+                  </div>
+                  <p class="side-note">Do not bind to a non-loopback address or expose this process through a proxy without TLS and real authentication.</p>
+                </section>
+
+                <section class="panel side-card">
+                  <p class="eyebrow">Storage</p>
+                  <h3>Data on this machine</h3>
+                  <div class="side-list">
+                    <div class="side-row"><span class="k">Memory DB</span><span class="v">data/ashura.db</span></div>
+                    <div class="side-row"><span class="k">Sessions</span><span class="v">data/ui_sessions.db</span></div>
+                    <div class="side-row"><span class="k">Sessions</span><span class="v">16 records</span></div>
+                    <div class="side-row"><span class="k">Encryption</span><span class="v warn">Not implemented</span></div>
+                  </div>
+                </section>
+
+                <section class="panel side-card">
+                  <p class="eyebrow">Known limits</p>
+                  <h3>Not claimed</h3>
+                  <ul class="not-implemented">
+                    <li><svg class="icon icon-sm"><use href="#icon-x"/></svg>Encryption at rest</li>
+                    <li><svg class="icon icon-sm"><use href="#icon-x"/></svg>Server-side session revocation</li>
+                    <li><svg class="icon icon-sm"><use href="#icon-x"/></svg>Multi-user accounts or roles</li>
+                    <li><svg class="icon icon-sm"><use href="#icon-x"/></svg>TLS termination</li>
+                    <li><svg class="icon icon-sm"><use href="#icon-x"/></svg>Tool-call execution traces</li>
+                  </ul>
+                  <p class="side-note">These gaps are shown intentionally. A calm interface is not a substitute for a security control.</p>
+                </section>
+              </aside>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="statusbar" aria-label="Runtime status">
+        <span class="status-group"><span class="dot ok"></span><span>serving</span></span>
+        <span class="status-sep"></span>
+        <span class="status-group"><span class="status-value">127.0.0.1:8765</span><span class="status-hide-md">loopback</span></span>
+        <span class="status-sep"></span>
+        <span class="status-group status-hide-md"><span>model</span><span class="status-value">tony:7b-gpa3</span></span>
+        <span class="status-sep"></span>
+        <span class="status-group"><span>worker</span><span class="status-value">idle · 0/8</span></span>
+        <span class="status-sep"></span>
+        <span class="status-group status-hide-md"><span>last</span><span class="status-value">2.31 s</span></span>
+        <span class="status-spacer"></span>
+        <span class="status-group status-hide-md"><span>v0.2</span></span>
+        <span class="prototype-chip">design prototype · sample data</span>
+      </footer>
+    </div>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <script src="workbench.js"></script>
+</body>
+</html>

@@ -12,9 +12,11 @@ dependencies = ["psutil>=5.9", "numpy>=1.24"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]
+browser = ["playwright>=1.40", "Pillow>=10"]
 llm = ["llama-cpp-python"]
 brainsim = ["torch", "pytest>=7"]
 perception = ["Pillow", "pytesseract"]
+documents = ["pypdf>=4", "PyMuPDF>=1.24"]
 
 [project.scripts]
 ashura = "app.main:main"
@@ -28,7 +30,7 @@ include = ["app*", "brain*", "evaluation*", "evolution*", "foundation*", "learni
 
 [tool.setuptools.package-data]
 memory = ["schema.sql"]
-app = ["static/*"]
+app = ["static/*", "static/css/*", "static/js/*", "static/js/views/*", "static/vendor/katex/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

@@ -16,9 +16,9 @@ class LanguageModel(ABC):
     name: str = "abstract"
 
     @abstractmethod
-    def generate(self, prompt: str, max_tokens: int = 128) -> str: ...
+    def generate(self, prompt: str, max_tokens: int | None = None) -> str: ...
 
-    def stream(self, prompt: str, max_tokens: int = 128) -> Iterator[str]:
+    def stream(self, prompt: str, max_tokens: int | None = None) -> Iterator[str]:
         """Yield generated text chunks. Backends without token streaming yield once."""
         text = self.generate(prompt, max_tokens)
         if text:
@@ -32,11 +32,11 @@ class EchoModel(LanguageModel):
     """
     name = "echo-stub"
 
-    def generate(self, prompt: str, max_tokens: int = 128) -> str:
+    def generate(self, prompt: str, max_tokens: int | None = None) -> str:
         m = re.search(r"Question:\s*(.*)$", prompt, re.S)
         return f"[echo] {(m.group(1) if m else prompt).strip()[:200]}"
 
-    def stream(self, prompt: str, max_tokens: int = 128):
+    def stream(self, prompt: str, max_tokens: int | None = None):
         text = self.generate(prompt, max_tokens)
         for index in range(0, len(text), 8):
             yield text[index:index + 8]
@@ -55,10 +55,12 @@ class LlamaCppModel(LanguageModel):
         except ImportError as e:  # pragma: no cover
             raise RuntimeError("pip install llama-cpp-python") from e
         self.name = f"{cfg.checkpoint}:{cfg.quantization}"
+        self.cfg = cfg
         self._llm = Llama(model_path=cfg.path, n_ctx=cfg.n_ctx, n_threads=cfg.n_threads, verbose=False)
 
-    def generate(self, prompt: str, max_tokens: int = 128) -> str:  # pragma: no cover
-        out = self._llm(prompt, max_tokens=max_tokens, temperature=0.0)  # greedy => reproducible
+    def generate(self, prompt: str, max_tokens: int | None = None) -> str:  # pragma: no cover
+        limit = self.cfg.max_tokens if max_tokens is None else max_tokens
+        out = self._llm(prompt, max_tokens=limit, temperature=0.0)  # greedy => reproducible
         return out["choices"][0]["text"].strip()
 
 

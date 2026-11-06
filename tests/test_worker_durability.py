@@ -135,7 +135,9 @@ time.sleep(60)
 
 
 def test_hard_timeout_terminates_a_job_and_the_worker_continues():
-    worker = LearningWorker(_slow_or_fast, hard_timeout_s=1.0, poll_s=0.005)
+    # 5 s, not 1 s: spawning a child can take over a second on a loaded Windows host,
+    # which would make the *next* fast job look like a timeout.
+    worker = LearningWorker(_slow_or_fast, hard_timeout_s=5.0, poll_s=0.005)
     try:
         started = time.monotonic()
         slow = worker.submit("slow", "t")

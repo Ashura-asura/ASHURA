@@ -15,7 +15,8 @@ from skills.arithmetic.parser import extract_expression, is_pure_arithmetic
 
 from .router import ModuleRegistry, RoutingDecision, available_ram_mb, cpu_busy_percent
 
-NEEDS = ["language", "exact_retrieval", "semantic_retrieval", "arithmetic", "ocr", "reasoning", "verification", "learning"]
+NEEDS = ["language", "exact_retrieval", "semantic_retrieval", "arithmetic", "ocr", "documents",
+         "tools", "web", "reasoning", "verification", "learning"]
 
 _MEMORY_CUES = re.compile(r"\b(remember|earlier|before|last time|previously|you said|i told you|what did i|recall)\b", re.I)
 _REASON_CUES = re.compile(r"\b(why|explain|step by step|prove|plan|compare|analy[sz]e|derive)\b", re.I)
@@ -27,7 +28,14 @@ class Task:
     text: str
     has_image: bool = False
     image_path: str | None = None
+    # Local document intake (PDF, Office/OpenDocument, HTML and text/code files). It is separate
+    # from image OCR so a missing Tesseract engine never disables text-document extraction.
+    has_document: bool = False
+    document_path: str | None = None
+    document_name: str | None = None
     user_correction: bool = False
+    # Session provenance for candidate web facts. The CLI leaves it empty.
+    session_id: str | None = None
     # Modules the user explicitly asked for (e.g. the CLI's /ocr command). They are still skipped if
     # unavailable, but are never deferred because of RAM / CPU load or a low priority score.
     force: tuple[str, ...] = ()
@@ -101,6 +109,19 @@ class NeedField:
         sig["arithmetic"].I = 1.0 if expr else 0.0
         sig["verification"].I = 0.9 if expr else 0.0
         sig["ocr"].I = 1.0 if task.has_image else 0.0
+        sig["documents"].I = 1.0 if task.has_document else 0.0
+        try:
+            from .tools import task_needs_tools
+            tools_cue = task_needs_tools(t)
+        except Exception:  # noqa: BLE001 - routing must survive an optional import failure
+            tools_cue = False
+        sig["tools"].I = 1.0 if tools_cue else 0.0
+        try:
+            from skills.web import needs_web
+            web_cue = needs_web(t)
+        except Exception:  # noqa: BLE001
+            web_cue = False
+        sig["web"].I = 1.0 if web_cue else 0.0
         sig["exact_retrieval"].I = 0.9 if _MEMORY_CUES.search(t) else (0.1 if not pure else 0.0)
         sig["reasoning"].I = 0.8 if _REASON_CUES.search(t) else 0.0
         sig["reasoning"].U = 0.7 if len(t.split()) > 12 else 0.4

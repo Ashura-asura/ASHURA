@@ -9,6 +9,7 @@ licence = "TBD"                # must be checked before adoption
 path = ""                      # local .gguf path (not committed)
 sha256 = ""                    # pinned hash of the stable checkpoint
 n_ctx = 2048
+max_tokens = 1024
 n_threads = 4                  # i7-1165G7: 4 cores / 8 threads
 # --- backend = "ollama" (see config/ashura.ollama.toml for a ready-made example) ---
 model = ""                     # tag from `ollama list`
@@ -49,6 +50,35 @@ activation_threshold = 0.25
 ram_headroom_mb = 1500
 cpu_busy_percent = 85          # optional heavy modules are deferred above this system-wide CPU load
 heavy_latency_ms = 500
+
+[agent]
+# Local agentic tools and task-aware generation budgets. Tools are read-only workspace
+# observations plus a sandboxed write_note; they never execute shell commands.
+enabled = true
+max_answer_tokens = 1024
+long_answer_tokens = 3072      # bounded again by the model's remaining context window
+max_continuations = 2          # continue a length-truncated answer from where it stopped
+max_tool_rounds = 3
+
+[web]
+# Server-side web research. Disabled in the default echo profile: enabling it allows outbound
+# HTTP requests. The browser CSP still keeps connect-src 'self'.
+enabled = false
+provider = "duckduckgo"        # duckduckgo | wikipedia | searxng
+searx_url = ""                 # required for provider = "searxng"
+timeout_s = 15.0
+max_results = 5
+max_fetch_pages = 2
+max_page_chars = 3500
+auto_on_uncertainty = true     # visible "Web check" after the model reports uncertainty
+facts_db = "data/web_facts.db"
+dataset_dir = "data/web_training"
+
+[ui]
+# The persistent token is a local secret; data/ is git-ignored and never served by the server.
+persist_token = true
+# token_file = "data/web_token"
+# sessions_db = "data/ui_sessions.db"
 
 [ngr]
 # Tolerances are fixed BEFORE evaluation (spec section 11.3).

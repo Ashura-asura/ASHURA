@@ -37,8 +37,10 @@ import sys
 import tempfile
 import threading
 import time
+import tomllib
 import webbrowser
 from collections import deque
+from dataclasses import replace
 from http.cookies import CookieError, SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -46,10 +48,14 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from app.main import build, resolve_config
 from app.sessions import SessionStore
+from app.token_store import TokenStoreError, load_or_create_token
 from app.worker import ControllerWorker, Job, WorkerQueueFull
 from brain.need_field import Task
 from foundation.language_model import GenerationCancelled
 from foundation.model_config import load_config
+from foundation.ollama_model import OllamaError, OllamaModel, list_models, unload
+from skills.perception import SUPPORTED_SUFFIXES, document_info, is_supported
+from skills.web import WebError
 
 VERSION = "0.2"
 STATIC = Path(__file__).with_name("static")
@@ -57,8 +63,9 @@ COOKIE = "ashura_auth"
 COOKIE_MAX_AGE = 7 * 24 * 60 * 60
 
 MAX_JSON = 1024 * 1024
-MAX_OCR_BODY = 16 * 1024 * 1024
-MAX_IMAGE = 12 * 1024 * 1024
+MAX_OCR_BODY = 24 * 1024 * 1024
+MAX_UPLOAD = 16 * 1024 * 1024
+BODY_DRAIN_TIMEOUT = 1.0
 MAX_MESSAGE = 16_000
 JOB_TIMEOUT = 300.0
 STREAM_DEADLINE = 600.0
@@ -88,6 +95,14 @@ class HTTPError(Exception):
         self.message = message
         self.status = status
         self.headers = headers or []
+
+
+class ModelNotInstalled(ValueError):
+    """The requested Ollama tag is not present in the local model list."""
+
+
+class ModelSwitchUnavailable(RuntimeError):
+    """Model switching is unavailable or could not be completed."""
 
 
 class RateLimiter:
@@ -123,6 +138,11 @@ def serialize_response(response, model: str | None = None) -> dict:
         "admission": response.admission,
         "attribution": response.attribution,
         "correction": response.correction,
+        "sources": getattr(response, "sources", None) or [],
+        "truncated": bool(getattr(response, "truncated", False)),
+        "tool_calls": getattr(response, "tool_calls", None) or [],
+        "document": getattr(response, "document", None),
+        "web": getattr(response, "web", None),
         "model": model,
         "trace": {
             "routing": trace.routing,
@@ -191,6 +211,11 @@ def _message_meta(payload: dict) -> dict:
         "correction": payload.get("correction"),
         "trace": payload.get("trace"),
         "total_ms": (payload.get("trace") or {}).get("total_ms"),
+        "sources": payload.get("sources") or [],
+        "truncated": bool(payload.get("truncated", False)),
+        "tool_calls": payload.get("tool_calls") or [],
+        "document": payload.get("document"),
+        "web": payload.get("web"),
     }
 
 
@@ -241,6 +266,19 @@ class WebApp:
         except Exception:  # noqa: BLE001 - a stale counter is not a reason to lose an answer
             pass
 
+    def _web_summary(self) -> dict:
+        web, store = self._web_state()
+        if web is None:
+            return {"enabled": False, "provider": None, "stats": None}
+        stats = None
+        if store is not None:
+            try:
+                stats = store.stats()
+            except Exception as error:  # noqa: BLE001 - a stale counter must not break status
+                stats = {"error": f"{type(error).__name__}: {error}"}
+        return {"enabled": True, "provider": web.config.provider, "stats": stats,
+                "dataset_dir": web.config.dataset_dir}
+
     def status(self) -> dict:
         with self._counts_lock:
             counts = dict(self._counts) if self._counts is not None else None
@@ -248,6 +286,9 @@ class WebApp:
             session_count = self.sessions.count()
         except Exception:  # noqa: BLE001
             session_count = None
+        web = self._web_summary()
+        tools_enabled = bool(getattr(self.controller, "tools", None) is not None
+                             and callable(getattr(self.controller.model, "chat", None)))
         return {
             "version": VERSION,
             "model": getattr(self.controller.model, "name", type(self.controller.model).__name__),
@@ -259,14 +300,161 @@ class WebApp:
             "sessions": session_count,
             "worker": self.worker.stats(),
             "csrf": self.csrf,
+            "web": web,
             "capabilities": {
                 "streaming": True,
                 "sessions": True,
                 "ocr": True,
+                "documents": True,
                 "memory": True,
                 "export": True,
+                "tools": tools_enabled,
+                "web": bool(web["enabled"]),
+                "model_switch": isinstance(self.controller.model, OllamaModel),
             },
         }
+
+    # ---- local model runtime ---------------------------------------------------------------
+    def _model_catalog(self) -> dict[str, dict]:
+        """Read the optional, informational model roles shipped beside the config."""
+        path = Path(self.config_path).with_name("models.toml")
+        try:
+            data = tomllib.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError):
+            return {}
+        entries = data.get("model")
+        if not isinstance(entries, list):
+            return {}
+        return {
+            str(entry["tag"]): entry
+            for entry in entries
+            if isinstance(entry, dict) and isinstance(entry.get("tag"), str) and entry["tag"]
+        }
+
+    def _ollama_model(self) -> OllamaModel | None:
+        model = self.controller.model
+        return model if isinstance(model, OllamaModel) else None
+
+    def models(self) -> dict:
+        """List installed Ollama models. This never downloads or invents a model."""
+        active_model = getattr(self.controller.model, "name", type(self.controller.model).__name__)
+        model = self._ollama_model()
+        if model is None:
+            return {
+                "available": False,
+                "runtime": type(self.controller.model).__name__,
+                "active": active_model,
+                "reason": ("Model switching requires the Ollama backend. This process was started "
+                           "with a different model backend."),
+                "models": [],
+            }
+        try:
+            installed = list_models(model.cfg.host)
+        except OllamaError as error:
+            return {
+                "available": False,
+                "runtime": "ollama",
+                "host": model.cfg.host,
+                "active": model.cfg.model,
+                "reason": str(error),
+                "models": [],
+            }
+        catalog = self._model_catalog()
+        items = []
+        for entry in installed:
+            name = entry.get("name")
+            if not isinstance(name, str) or not name:
+                continue
+            documented = catalog.get(name, {})
+            documented_id = str(documented.get("id") or "")
+            digest = str(entry.get("digest") or "")
+            items.append({
+                "name": name,
+                "digest": digest,
+                "size": entry.get("size", 0),
+                "active": name == model.cfg.model,
+                "role": str(documented.get("role") or "No documented role in this build."),
+                "note": str(documented.get("note") or ""),
+                "documented": bool(documented),
+                "matches_catalog": (digest.startswith(documented_id)
+                                    if documented and documented_id else None),
+            })
+        items.sort(key=lambda item: (not item["active"], item["name"]))
+        return {
+            "available": True,
+            "runtime": "ollama",
+            "host": model.cfg.host,
+            "active": model.cfg.model,
+            "digest": model.digest,
+            "models": items,
+            "notes": [
+                "The list is read from the configured Ollama endpoint; nothing is downloaded here.",
+                "Switching affects this process only. The launch configuration is not rewritten.",
+                "A response already streaming finishes on the model that started it.",
+            ],
+        }
+
+    def _switch_model(self, name: str) -> dict:
+        """Worker-thread operation: validate, unload the previous tag, then swap the model."""
+        current = self._ollama_model()
+        if current is None:
+            raise ModelSwitchUnavailable("Model switching requires the Ollama backend.")
+        installed = {item["name"]: item for item in list_models(current.cfg.host)
+                     if isinstance(item.get("name"), str)}
+        entry = installed.get(name)
+        if entry is None:
+            raise ModelNotInstalled(
+                f"Model {name!r} is not installed. Only tags returned by the local Ollama "
+                "endpoint can be selected."
+            )
+        digest = str(entry.get("digest") or "")
+        if not digest:
+            raise ModelSwitchUnavailable(f"Ollama did not report a digest for {name!r}; refusing to switch.")
+        new_config = replace(current.cfg, model=name, digest=digest)
+        new_model = OllamaModel(new_config)
+        warning = None
+        previous_unloaded = False
+        try:
+            unload(current.cfg.host, current.cfg.model)
+            previous_unloaded = True
+        except OllamaError as error:
+            warning = f"The previous model was not unloaded: {error}"
+        self.controller.model = new_model
+        return {
+            "ok": True,
+            "changed": True,
+            "active": name,
+            "model": new_model.name,
+            "previous": current.cfg.model,
+            "previous_unloaded": previous_unloaded,
+            "warning": warning,
+            "message": "Model switched for subsequent turns. The launch configuration is unchanged.",
+        }
+
+    def select_model(self, name: str) -> dict:
+        if not isinstance(name, str):
+            raise ValueError("model must be a string")
+        name = name.strip()
+        if not name or len(name) > 200:
+            raise ValueError("model must be a non-empty tag of at most 200 characters")
+        current = self._ollama_model()
+        if current is None:
+            raise ModelSwitchUnavailable("Model switching requires the Ollama backend.")
+        if name == current.cfg.model:
+            return {
+                "ok": True,
+                "changed": False,
+                "active": name,
+                "message": "That model is already active.",
+            }
+        job = self.worker.submit(lambda emit: self._switch_model(name), kind="model")
+        try:
+            return job.wait(timeout=120)
+        except TimeoutError:
+            raise ModelSwitchUnavailable(
+                "The model switch did not finish within 120 s. It may still be queued behind a "
+                "running turn; check the model list before retrying."
+            ) from None
 
     # ---- sessions --------------------------------------------------------------------------
     def _resolve_session(self, session_id: str | None) -> tuple[dict, bool]:
@@ -283,13 +471,21 @@ class WebApp:
         limit = max(1, min(int(limit), 200))
         return self.sessions.list(limit)
 
-    def get_session(self, session_id: str) -> dict:
+    def get_session(self, session_id: str, limit: int = 200,
+                    before: int | None = None) -> dict:
         if not SESSION_RE.fullmatch(session_id):
             raise ValueError("invalid session id")
         session = self.sessions.get(session_id)
         if session is None:
             raise KeyError(f"session {session_id} not found")
-        return {"session": session, "messages": self.sessions.messages(session_id)}
+        messages = self.sessions.messages(session_id, limit=limit, before=before)
+        try:
+            total = self.sessions.count_messages(session_id)
+        except Exception:  # noqa: BLE001 - a count failure must not hide the transcript
+            total = None
+        has_more = bool(messages) and self.sessions.has_older(session_id, messages[0]["id"])
+        return {"session": session, "messages": messages,
+                "has_more": has_more, "total": total}
 
     def create_session(self, title: str = "New chat") -> dict:
         return self.sessions.create(title)
@@ -365,7 +561,7 @@ class WebApp:
                 # session are ordered exactly as the single queue executes them.
                 history = self.sessions.history(sid)
                 user_message = self.sessions.append(sid, "user", message)
-                task = Task(message, history=tuple(history))
+                task = Task(message, history=tuple(history), session_id=sid)
                 response = self.controller.handle(task, on_token=emit if stream else None)
                 if cancel_event is not None and cancel_event.is_set():
                     raise GenerationCancelled()
@@ -389,21 +585,25 @@ class WebApp:
 
     def start_ocr(self, filename: str, encoded: str, session_id: str | None = None) -> tuple[dict, Job]:
         if not isinstance(encoded, str):
-            raise ValueError("image data must be a base64 string")
+            raise ValueError("file data must be a base64 string")
         if encoded.startswith("data:") and "," in encoded:
             encoded = encoded.split(",", 1)[1]
         try:
             raw = base64.b64decode(encoded, validate=True)
         except (binascii.Error, ValueError) as error:
-            raise ValueError("invalid base64 image data") from error
-        if not raw or len(raw) > MAX_IMAGE:
-            raise ValueError("image is empty or too large")
+            raise ValueError("invalid base64 file data") from error
+        if not raw:
+            raise ValueError("file is empty")
+        if len(raw) > MAX_UPLOAD:
+            raise ValueError(f"file is too large (max {MAX_UPLOAD // (1024 * 1024)} MB)")
+        name = (filename or "upload").replace("\\", "/").rsplit("/", 1)[-1][:120] or "upload"
+        info = document_info(name)
+        if info.kind == "unsupported":
+            supported = ", ".join(sorted(SUPPORTED_SUFFIXES))
+            raise ValueError(f"unsupported file type {info.suffix or '(none)'}; supported: {supported}")
         session, created = self._resolve_session(session_id)
         sid = session["id"]
-        name = (filename or "upload.png").replace("\\", "/").rsplit("/", 1)[-1][:120] or "upload.png"
-        suffix = Path(name).suffix.lower()
-        if suffix not in {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp"}:
-            suffix = ".png"
+        suffix = info.suffix or ".bin"
         fd, path = tempfile.mkstemp(suffix=suffix)
         try:
             with os.fdopen(fd, "wb") as handle:
@@ -419,18 +619,27 @@ class WebApp:
 
         def work(emit):
             try:
+                is_image = info.kind == "image"
                 user_message = self.sessions.append(
-                    sid, "user", f"[image: {name}]", meta={"kind": "ocr", "filename": name})
-                task = Task("Read the text in this image.", has_image=True, image_path=path,
-                            force=("ocr",))
+                    sid, "user",
+                    f"[{'image' if is_image else 'document'}: {name}]",
+                    meta={"kind": "ocr" if is_image else "document", "filename": name})
+                if is_image:
+                    task = Task("Read the text in this image.", has_image=True, image_path=path,
+                                document_name=name, session_id=sid, force=("ocr",))
+                else:
+                    task = Task("Read this document and summarize its key content.",
+                                has_document=True, document_path=path, document_name=name,
+                                session_id=sid, force=("documents",))
                 response = self.controller.handle(task)
                 payload = serialize_response(response, self.controller.model.name)
                 payload["session_id"] = sid
                 payload["user_message_id"] = user_message["id"]
-                payload["kind"] = "ocr"
+                payload["kind"] = "ocr" if is_image else "document"
                 payload["filename"] = name
                 assistant = self.sessions.append(
-                    sid, "assistant", payload["text"], meta={**_message_meta(payload), "kind": "ocr"})
+                    sid, "assistant", payload["text"],
+                    meta={**_message_meta(payload), "kind": payload["kind"]})
                 payload["assistant_message_id"] = assistant["id"]
                 return payload
             finally:
@@ -504,6 +713,101 @@ class WebApp:
         self._collect_counts_safe()
         return {"query": query, "items": rows}
 
+    # ---- web research and candidate facts ----------------------------------------------------
+    def _web_state(self) -> tuple[object | None, object | None]:
+        web = getattr(self.controller, "web", None)
+        store = getattr(self.controller, "fact_store", None)
+        if web is None or not getattr(web, "enabled", False):
+            return None, None
+        return web, store
+
+    def web_status(self) -> dict:
+        """Capabilities and counters for the web research panel."""
+        web, store = self._web_state()
+        if web is None:
+            return {"enabled": False, "provider": None,
+                    "reason": "Web research is disabled in this configuration.",
+                    "stats": None, "facts": [], "gaps": []}
+        config = web.config
+        stats = None
+        if store is not None:
+            try:
+                stats = store.stats()
+            except Exception as error:  # noqa: BLE001 - status must survive a locked database
+                stats = {"error": f"{type(error).__name__}: {error}"}
+        return {
+            "enabled": True,
+            "provider": config.provider,
+            "host": getattr(config, "searx_url", "") or None,
+            "auto_on_uncertainty": bool(config.auto_on_uncertainty),
+            "max_results": config.max_results,
+            "max_fetch_pages": config.max_fetch_pages,
+            "dataset_dir": config.dataset_dir,
+            "stats": stats,
+            "facts": store.list_facts(limit=25) if store is not None else [],
+            "gaps": store.list_gaps(limit=25, unresolved_only=True) if store is not None else [],
+            "notes": [
+                "Web text is external and untrusted. Answers are observations, not verified facts.",
+                "Candidate facts are exported with training_ready=false until a human reviews them.",
+                "Search runs on the server only; the browser keeps connect-src 'self'.",
+            ],
+        }
+
+    def web_facts(self, limit: int = 50, status: str | None = None) -> dict:
+        """Recent candidate facts and unresolved gaps, with honest review status."""
+        web, store = self._web_state()
+        if web is None or store is None:
+            return {"enabled": False, "facts": [], "gaps": [], "stats": None}
+        if status is not None and status not in {"candidate", "verified", "rejected"}:
+            raise ValueError("status must be candidate, verified or rejected")
+        return {
+            "enabled": True,
+            "provider": web.config.provider,
+            "dataset_dir": web.config.dataset_dir,
+            "stats": store.stats(),
+            "facts": store.list_facts(limit=limit, status=status),
+            "gaps": store.list_gaps(limit=limit, unresolved_only=True),
+            "training_ready": False,
+            "warning": ("These rows are web-sourced observations, not verified training labels. "
+                        "Review is required before any training run."),
+            "notes": [
+                "Web text is external and untrusted.",
+                "Review status is an operator decision, not independent fact verification.",
+                "The JSONL export always marks rows training_ready=false.",
+            ],
+        }
+
+    def review_web_fact(self, fact_id, status: str, note: str = "") -> dict:
+        _, store = self._web_state()
+        if store is None:
+            raise ModelSwitchUnavailable("Web fact storage is not enabled in this configuration.")
+        if not isinstance(fact_id, int) or isinstance(fact_id, bool) or fact_id < 1:
+            raise ValueError("id must be a positive integer")
+        if status not in {"candidate", "verified", "rejected"}:
+            raise ValueError("status must be candidate, verified or rejected")
+        if not isinstance(note, str):
+            raise ValueError("note must be a string")
+        try:
+            store.set_status(fact_id, status, note)
+        except KeyError as error:
+            raise KeyError(str(error)) from None
+        return {"ok": True, "id": fact_id, "status": status,
+                "note": "Review status recorded. This does not by itself make the fact verified."}
+
+    def export_web_facts(self, include_rejected: bool = False) -> tuple[bytes, str, str]:
+        web, store = self._web_state()
+        if store is None:
+            raise ModelSwitchUnavailable("Web fact storage is not enabled in this configuration.")
+        result = store.export_dataset(getattr(web.config, "dataset_dir", None),
+                                      include_rejected=include_rejected)
+        path = Path(result["path"])
+        try:
+            body = path.read_bytes()
+        except OSError as error:
+            raise ValueError(f"dataset export was written but could not be read: {error}") from error
+        filename = f"ashura-web-candidates-{result['stamp']}.jsonl"
+        return body, "application/x-ndjson; charset=utf-8", filename
+
     # ---- shutdown --------------------------------------------------------------------------
     def close(self) -> None:
         if self._closed:
@@ -539,6 +843,7 @@ class Handler(BaseHTTPRequestHandler):
     def handle_one_request(self) -> None:
         self.request_id = secrets.token_hex(8)
         self._responded = False
+        self._body_consumed = False
         self._status_code = 0
         self._started = time.monotonic()
         try:
@@ -677,6 +982,11 @@ class Handler(BaseHTTPRequestHandler):
             logger.warning(json.dumps({"event": "late_error", "request_id": self.request_id,
                                        "error": message[:200]}))
             return
+        # An error may be raised before the request body is read. Drain it first:
+        # closing a socket with unread bytes can make Windows send RST, so the
+        # client would see a connection abort instead of this 4xx response.
+        self._drain_unread_body()
+        self.close_connection = True
         self._json({"error": message, "request_id": getattr(self, "request_id", "")},
                    status, headers)
 
@@ -730,6 +1040,41 @@ class Handler(BaseHTTPRequestHandler):
                 self.close_connection = True
 
     # ---- request body ---------------------------------------------------------------------
+    def _drain_unread_body(self) -> None:
+        """Consume a JSON body that an early error did not need."""
+        if getattr(self, "_body_consumed", True):
+            return
+        if self.headers.get("Transfer-Encoding"):
+            return
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return
+        if not 0 < length <= MAX_JSON:
+            return
+        remaining = length
+        previous_timeout = self.connection.gettimeout()
+        try:
+            # Never let an early rejection pin a request thread forever when a
+            # client advertises a body and then stops sending it.
+            self.connection.settimeout(
+                BODY_DRAIN_TIMEOUT if previous_timeout is None
+                else min(previous_timeout, BODY_DRAIN_TIMEOUT)
+            )
+            while remaining:
+                chunk = self.rfile.read(min(remaining, 64 * 1024))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+        except OSError:
+            pass
+        finally:
+            try:
+                self.connection.settimeout(previous_timeout)
+            except OSError:
+                pass
+        self._body_consumed = remaining == 0
+
     def _body(self, limit: int = MAX_JSON) -> dict:
         content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
         if content_type not in {"application/json", "application/x-json"} and not content_type.endswith("+json"):
@@ -744,6 +1089,7 @@ class Handler(BaseHTTPRequestHandler):
             raise HTTPError("request body is required", 400)
         if length > limit:
             raise HTTPError("request body is too large", 413)
+        self._body_consumed = True
         raw = self.rfile.read(length)
         if len(raw) != length:
             raise HTTPError("incomplete request body", 400)
@@ -754,6 +1100,21 @@ class Handler(BaseHTTPRequestHandler):
         if not isinstance(payload, dict):
             raise HTTPError("JSON body must be an object", 400)
         return payload
+
+    def _discard_body(self, limit: int = MAX_JSON) -> None:
+        """Consume a body that the route does not need, so keep-alive stays framed."""
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            raise HTTPError("invalid Content-Length", 400) from None
+        if length <= 0:
+            return
+        if length > limit:
+            raise HTTPError("request body is too large", 413)
+        self._body_consumed = True
+        raw = self.rfile.read(length)
+        if len(raw) != length:
+            raise HTTPError("incomplete request body", 400)
 
     # ---- dispatch -------------------------------------------------------------------------
     def do_GET(self):
@@ -828,6 +1189,8 @@ class Handler(BaseHTTPRequestHandler):
         self._api_guard()
         if path == "/api/status":
             return self._json(self.server.app.status())
+        if path == "/api/models":
+            return self._json(self.server.app.models())
         if path == "/api/sessions":
             query = parse_qs(parsed.query)
             try:
@@ -842,6 +1205,26 @@ class Handler(BaseHTTPRequestHandler):
             except (TypeError, ValueError):
                 raise HTTPError("limit must be an integer", 400) from None
             return self._json(self.server.app.memory(query.get("q", [""])[0], limit))
+        if path == "/api/web/facts":
+            query = parse_qs(parsed.query)
+            try:
+                limit = int(query.get("limit", ["50"])[0])
+            except (TypeError, ValueError):
+                raise HTTPError("limit must be an integer", 400) from None
+            if not 1 <= limit <= 200:
+                raise HTTPError("limit must be between 1 and 200", 400)
+            status = query.get("status", [None])[0] or None
+            return self._json(self.server.app.web_facts(limit, status))
+        if path == "/api/web/export":
+            include_rejected = parse_qs(parsed.query).get("include_rejected", ["0"])[0]
+            if include_rejected not in {"0", "1"}:
+                raise HTTPError("include_rejected must be 0 or 1", 400)
+            try:
+                body, content_type, filename = self.server.app.export_web_facts(
+                    include_rejected == "1")
+            except ModelSwitchUnavailable as error:
+                raise HTTPError(str(error), 409) from None
+            return self._download(body, content_type, filename)
         export = re.fullmatch(r"/api/sessions/([0-9a-f]{32})/export", path)
         if export:
             fmt = parse_qs(parsed.query).get("format", ["md"])[0].lower()
@@ -849,7 +1232,24 @@ class Handler(BaseHTTPRequestHandler):
             return self._download(body, content_type, filename)
         session = re.fullmatch(r"/api/sessions/([0-9a-f]{32})", path)
         if session:
-            return self._json(self.server.app.get_session(session.group(1)))
+            query = parse_qs(parsed.query)
+            try:
+                limit = int(query.get("limit", ["200"])[0])
+            except (TypeError, ValueError):
+                raise HTTPError("limit must be an integer", 400) from None
+            if not 1 <= limit <= 1000:
+                raise HTTPError("limit must be between 1 and 1000", 400)
+            before_raw = query.get("before", [None])[0]
+            before = None
+            if before_raw is not None:
+                try:
+                    before = int(before_raw)
+                except (TypeError, ValueError):
+                    raise HTTPError("before must be a message id", 400) from None
+                if before < 1:
+                    raise HTTPError("before must be a positive message id", 400)
+            return self._json(self.server.app.get_session(
+                session.group(1), limit=limit, before=before))
         raise HTTPError("not found", 404)
 
     def _index(self, parsed) -> None:
@@ -875,6 +1275,7 @@ class Handler(BaseHTTPRequestHandler):
         self._api_guard()
         self._csrf_guard()
         if path == "/api/logout":
+            self._discard_body(limit=4096)
             self._responded = True
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -888,8 +1289,43 @@ class Handler(BaseHTTPRequestHandler):
             return self._chat()
         if path == "/api/chat/stream":
             return self._chat_stream()
+        if path == "/api/model":
+            self._rate("model", 20)
+            payload = self._body(limit=4096)
+            try:
+                return self._json(self.server.app.select_model(payload.get("model")))
+            except ModelNotInstalled as error:
+                raise HTTPError(str(error), 404) from None
+            except ModelSwitchUnavailable as error:
+                raise HTTPError(str(error), 409) from None
+            except ValueError as error:
+                raise HTTPError(str(error), 400) from None
+            except OllamaError as error:
+                raise HTTPError(str(error), 503) from None
+            except RuntimeError as error:
+                raise HTTPError(str(error), 503) from None
         if path == "/api/ocr":
             return self._ocr()
+        if path == "/api/web/review":
+            self._rate("web-review", 30)
+            payload = self._body(limit=8192)
+            fact_id = payload.get("id")
+            status = payload.get("status")
+            note = payload.get("note", "")
+            if isinstance(fact_id, str) and fact_id.isdigit():
+                fact_id = int(fact_id)
+            if not isinstance(fact_id, int) or isinstance(fact_id, bool):
+                raise HTTPError("id must be an integer", 400)
+            if not isinstance(status, str):
+                raise HTTPError("status must be a string", 400)
+            if not isinstance(note, str):
+                raise HTTPError("note must be a string", 400)
+            try:
+                return self._json(self.server.app.review_web_fact(fact_id, status, note))
+            except KeyError as error:
+                raise HTTPError(str(error.args[0]) if error.args else str(error), 404) from None
+            except ModelSwitchUnavailable as error:
+                raise HTTPError(str(error), 409) from None
         if path == "/api/sessions":
             payload = self._body()
             title = payload.get("title", "New chat")
@@ -1034,6 +1470,7 @@ class Handler(BaseHTTPRequestHandler):
         match = re.fullmatch(r"/api/sessions/([0-9a-f]{32})", urlparse(self.path).path)
         if not match:
             raise HTTPError("not found", 404)
+        self._discard_body(limit=4096)
         self.server.app.delete_session(match.group(1))
         self._json({"deleted": True})
 
@@ -1063,7 +1500,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--open", action="store_true", help="open the browser after starting")
     parser.add_argument("--token", default=os.environ.get("ASHURA_WEB_TOKEN") or None,
-                        help="fixed access token; omitted means a random token is generated")
+                        help="fixed access token; omitted means the token is loaded or generated")
+    parser.add_argument("--token-file", default=None,
+                        help="persisted token path (default: [ui].token_file or <data>/web_token)")
+    parser.add_argument("--no-persist-token", action="store_true",
+                        help="generate an ephemeral token instead of reusing the token file")
     parser.add_argument("--sessions-db", default=None,
                         help="chat-session database (default: [ui].sessions_db or "
                              "<memory db directory>/ui_sessions.db)")
@@ -1081,7 +1522,7 @@ def main(argv: list[str] | None = None) -> int:
     sessions = None
     app = None
     server = None
-    generated_token = args.token is None
+    token_info = None
     try:
         controller = build(args.config)
         cfg = load_config(resolve_config(args.config))
@@ -1090,8 +1531,19 @@ def main(argv: list[str] | None = None) -> int:
         memory_db = str(memory_section.get("db_path", "data/ashura.db"))
         default_sessions = (Path(memory_db).parent / "ui_sessions.db").as_posix()
         session_db = args.sessions_db or ui.get("sessions_db", default_sessions)
+        token = args.token
+        if token is None:
+            persist = bool(ui.get("persist_token", True)) and not args.no_persist_token
+            if persist:
+                token_path = args.token_file or ui.get("token_file")
+                if not token_path:
+                    token_path = (Path(memory_db).parent / "web_token").as_posix()
+                stored = load_or_create_token(token_path)
+                token, token_info = stored.token, stored
+            else:
+                token = secrets.token_urlsafe(32)
         sessions = SessionStore(session_db)
-        app = WebApp(controller, args.config, sessions=sessions, token=args.token,
+        app = WebApp(controller, args.config, sessions=sessions, token=token,
                      max_queue=max(1, args.max_queue))
         server_type = AppHTTPServerV6 if ":" in args.host else AppHTTPServer
         server = server_type((args.host, args.port), app)
@@ -1110,7 +1562,13 @@ def main(argv: list[str] | None = None) -> int:
     display_host = f"[{args.host}]" if ":" in args.host else args.host
     url = f"http://{display_host}:{server.server_port}/"
     print(f"ASHURA web UI: {url}")
-    print(f"access token: {app.token}" if generated_token else "access token: supplied")
+    if args.token:
+        print("access token: supplied")
+    elif token_info is not None:
+        print(f"access token: {app.token}")
+        print(f"token file: {token_info.path} ({token_info.status}; {token_info.permissions_note})")
+    else:
+        print(f"access token: {app.token} (ephemeral; not persisted)")
     print("loopback only · Ctrl-C to stop")
     if args.open:
         webbrowser.open(url + "?token=" + quote(app.token))

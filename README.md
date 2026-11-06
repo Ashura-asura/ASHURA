@@ -7,9 +7,12 @@ Adaptive Self-modifying Hierarchical Unified Reasoning Architecture, built from
 Phase 1 trust repair (P01–P14), Phase 2 memory reliability (P15–P29) and Phase 3 verified-correction
 loop (P07/P75/A01–A03) implemented and tested; local OCR and a HARN arithmetic candidate are
 integrated behind optional dependencies/checkpoints; BrainSim B1–B6 measured as an independent
-subproject. **315 ASHURA tests and 46 BrainSim tests pass.** The local web UI is now an
-authenticated operator console with persistent sessions, SSE streaming and a single-writer
-controller queue; it adds no learning capability. The adaptive memory remains
+subproject. **367 ASHURA tests pass (2 skipped), 46 BrainSim tests and 19 browser screenshot baselines
+pass.** The local web UI is a five-workspace, authenticated operator console with persistent
+sessions, SSE streaming, a single-writer controller queue, local MathML math/table rendering, a
+runtime-only Ollama model selector, local document extraction, bounded agent tools and optional
+server-side web research. The web/fact features store review candidates, not verified training
+labels, and add no learning capability. The adaptive memory remains
 experimental and out of the response path. BrainSim is not imported by ASHURA. The learning loop is
 **not** complete: it is an opt-in controller hook with a durable background worker, only exact
 arithmetic corrections are independently verified, and the candidate is the NumPy memory rather
@@ -29,7 +32,9 @@ so gpa3 stays the general/tool-use model. See `research/evidence_standard.md`,
 
 ```bash
 pip install -e ".[dev]"                   # or: pip install psutil numpy pytest
-python -m pytest -q                       # 315 tests
+pip install -e ".[browser]"               # once, for the Playwright smoke
+python -m pytest -q                       # 367 passed, 2 skipped
+python tests/browser/smoke.py             # Playwright checks + 19 screenshot baselines
 python -m app.main --trace                # CLI (echo stub until a real model is configured)
 # at the prompt: /ocr <image path>, /help, /quit   (the installed command is `ashura --trace`)
 python -m experiments.ama.run             # EXP-001  AMA vs store-everything
@@ -65,7 +70,12 @@ python -m app.web --config config/ashura.ollama.toml --open
 # open http://127.0.0.1:8765/
 ```
 
-The server prints an access token at startup. Opening the printed URL with `?token=...` bootstraps
+The server prints an access token at startup. The token is persisted by default in `data/web_token`
+(git-ignored, never served over HTTP) so a browser stays signed in across restarts; pass `--token`
+for a fixed token or `--no-persist-token` for an ephemeral one. On POSIX the file is created `0600`
+inside a `0700` directory. Windows has no POSIX mode here, so the file inherits the profile
+directory ACL; anyone who can read it or the process memory can use this operator console.
+Opening the printed URL with `?token=...` bootstraps
 an HttpOnly, `SameSite=Strict` cookie and redirects to `/` so the token does not stay in the page
 URL; `/api/login` does the same for a manually opened page. Scripts may send the token as
 `X-ASHURA-Token: <token>` or `Authorization: Bearer <token>`. Mutating requests need the session
@@ -79,27 +89,75 @@ CDN, framework or external API. The console provides:
 - persistent chat sessions in a separate SQLite file (`data/ui_sessions.db` by default, derived
   from the memory database's parent; override with `--sessions-db`), with rename, delete, Markdown
   and JSON export;
-- SSE token streaming with stop/retry, Markdown and code rendering, copy, keyboard shortcuts, and
-  desktop/mobile layouts;
+- SSE token streaming with stop/retry, Markdown/code rendering, local LaTeX-to-MathML rendering,
+  aligned tables, copy, keyboard shortcuts, and desktop/mobile layouts;
 - an inspector for the execution trace, memory search/recent admissions, and runtime/worker
   status;
-- OCR upload from the file picker, drag-and-drop or paste, and automatic image cleanup.
+- document intake from the file picker or drag-and-drop: images (OCR), PDF text layers (with
+  optional scanned-page OCR), DOCX/PPTX/ODT/ODP/ODS, HTML and common text/code formats. Extraction
+  is local, bounded, reports its engine/pages/truncation, and never invents text on failure;
+- task-aware answer budgets with bounded continuation. A long derivation is continued from where
+  it stopped; if the model is still at its token limit the answer is explicitly marked truncated;
+- bounded local agent tools (`list_files`, `read_text_file`, `search_text`, `file_info`,
+  `calculate`, `current_time`, `text_stats`, `system_info`, plus a sandboxed `write_note`) exposed
+  through Ollama native tool calls. They are read-only over the workspace except for one note
+  directory and never execute shell commands;
+- optional server-side web research. Search uses a keyless DuckDuckGo Lite/Wikipedia chain or a
+  configured SearXNG instance; page fetch is bounded, text-only and rejects loopback/private
+  targets by default. The browser still has `connect-src 'self'`. Results are untrusted evidence
+  and are stored as review candidates, never as automatic training labels;
+- a Settings panel for web-review status/export and a selector for models already installed in the
+  local Ollama runtime. Nothing is downloaded; switching is process-local, pins the installed
+  digest, unloads the previous tag and leaves the launch configuration unchanged, so a restart
+  returns to the configured model.
 
 Every `Controller` call runs through one `ControllerWorker` thread with a bounded queue (8 jobs by
 default). HTTP requests are concurrent, but model/SQLite work is serialized; a full queue returns
 429 instead of growing without limit. Responses use a strict CSP, security headers, Host and
 Origin checks, rate limits, request IDs and JSON access logs.
 
-Endpoints: unauthenticated `GET /api/health`; authenticated `GET /api/status`, `/api/sessions`,
-`/api/sessions/<id>`, `/api/sessions/<id>/export`, `/api/memory`; `POST /api/login`, `/api/logout`,
-`/api/chat`, `/api/chat/stream`, `/api/ocr`, `/api/sessions`; `PATCH` and `DELETE` on a session.
+Math uses a vendored KaTeX 0.16.22 build (MIT; source and licence in
+`app/static/vendor/katex/`) with MathML-only output. It needs no CDN, KaTeX CSS or fonts, and emits
+no inline styles, so the strict `script-src 'self'; style-src 'self'` policy is unchanged. An
+expression that would require an inline style is shown as its source instead of being rendered.
+
+Endpoints: unauthenticated `GET /api/health`; authenticated `GET /api/status`, `/api/models`,
+`/api/sessions`, `/api/sessions/<id>`, `/api/sessions/<id>/export`, `/api/memory`,
+`/api/web/facts`, `/api/web/export`; `POST /api/login`, `/api/logout`, `/api/chat`,
+`/api/chat/stream`, `/api/model`, `/api/ocr`, `/api/sessions`, `/api/web/review`; `PATCH` and
+`DELETE` on a session.
 A chat answer and its trace are committed as one session record; a cancelled stream persists only
 the user turn.
 
 The UI is an operator convenience, not a new learning capability. It calls the same `Controller`
-as the CLI; the underlying claims and limits are unchanged. It remains a single-user local tool:
-no multi-user accounts, TLS, conflict-review screen or cross-process queue are claimed. The
-browser smoke matrix and the one-turn real-model check are recorded in `research/EXP-021_local_ui.md`.
+as the CLI; the underlying claims and limits are unchanged.
+
+### Why this does not match ChatGPT or Claude
+
+Rendering is not reasoning. The UI can now display LaTeX and tables, but it cannot make
+`tony:7b-gpa3` produce a correct derivation, long-context analysis or reliable code. The local
+model is a 7.6B Q4_K_M checkpoint with a 4k-token working context, served on a laptop; frontier
+hosted assistants use much larger models with long context, hosted retrieval and tool
+infrastructure. Better math display does not change the model's accuracy, and the only independent
+verifier here covers exact arithmetic.
+
+The workbench has no hosted browser, code-execution sandbox, connector ecosystem, artifact or image
+generation, voice mode, collaborative accounts, syntax highlighting or a diff editor. Its web
+research is a bounded server-side search/fetch path with keyless providers, not a hosted browsing
+service: pages are reduced to text, there is no JavaScript execution, and the model may still
+misread or overstate what it fetched. Web-sourced answers are stored as candidates with
+`training_ready: false`; accepting a review does not independently verify a claim, and no model is
+trained on them. Document extraction reads text locally but has no measured accuracy on a labelled
+target corpus, and scanned PDFs need optional PyMuPDF plus Tesseract. Code is rendered in copyable
+blocks, not executed or highlighted. These are deliberate limits: adding the missing services would
+conflict with the local-only, strict-CSP design.
+
+It remains a single-user local tool: no multi-user accounts, TLS, conflict-review screen or
+cross-process queue. The browser smoke matrix (19 baselines), the 367-test suite (2 skipped), the
+real model-switch check, one live tool turn, one live web-research/candidate-export turn and a
+two-process token-restart check are recorded in `research/EXP-021_local_ui.md`,
+`research/EXP-022_documents_tools_web.md` and
+`design/EXP-021_model_switch_verification.json`.
 
 ## Hardening pass
 
@@ -278,22 +336,31 @@ Durable background learning is opt-in: `[learning].enabled = true` requires a JS
 `learning.replay_path` and `learning.checkpoint_dir`; `hard_timeout_s > 0` runs each job in a
 killable child. The shipped configs leave it disabled.
 
-## Local OCR (optional)
+## Local document intake (optional)
 
 ```powershell
-pip install -e ".[perception]"     # Pillow + pytesseract
+pip install -e ".[perception]"     # Pillow + pytesseract for images
+pip install -e ".[documents]"      # pypdf + PyMuPDF for PDF text layers / scanned pages
 # Install the Tesseract executable for your OS; add it to PATH or set OCRConfig.tesseract_cmd.
 python -m app.main --config config/ashura.ollama.toml --trace
 # at the prompt:
 /ocr "C:\path\to\image.png"
+/ocr "C:\path\to\report.pdf"
 ```
 
 `skills/perception/ocr.py` validates the image, hashes it, optionally preprocesses/upscales it,
 calls local Tesseract, and records text/confidence/engine/version. OCR output is **unverified**.
+
+`skills/perception/documents.py` extends the same local path to PDFs (text layer via `pypdf`;
+scanned-page OCR only when PyMuPDF and Tesseract are available), DOCX/PPTX/ODT/ODP/ODS (stdlib
+ZIP+XML), HTML (stdlib parser) and common text/code formats. It validates magic bytes, bounds
+archive expansion and extracted characters, and returns an explicit failure reason instead of
+fabricated text. Office/OpenDocument and HTML extraction need no extra package; PDFs do.
+
 Explicit user corrections are stored separately in `ocr_records`; they are not automatic training
 labels. `evaluation.ocr_benchmark` computes CER/WER against a labelled JSONL manifest, but no
-held-out OCR corpus has been measured on the target laptop yet, so no OCR accuracy claim is made.
-A clean synthetic smoke image (900x220, 56 px text) returned the exact string at 0.935 mean
+held-out OCR or document corpus has been measured on the target laptop yet, so no accuracy claim is
+made. A clean synthetic smoke image (900x220, 56 px text) returned the exact string at 0.935 mean
 confidence in 0.6-1.2 s with Tesseract 5.4.0; the Tesseract child peaked at ~27 MB RSS in that
 run. This is a smoke test, not document accuracy.
 
@@ -317,13 +384,15 @@ no capability over the exact path. See `research/experiment_log.md` EXP-007.
 
 | Area | Files | State |
 |---|---|---|
-| Interface | `app/main.py`, `app/web.py`, `app/worker.py`, `app/sessions.py`, `app/static/*` | CLI and local web console: token auth, persistent sessions, SSE chat, execution trace, OCR upload, memory search, runtime status; stdlib-only, loopback-only, single-writer Controller queue; both use the same Controller |
+| Interface | `app/main.py`, `app/web.py`, `app/worker.py`, `app/sessions.py`, `app/token_store.py`, `app/static/*` | CLI and local web console: token auth with a persisted launch token, persistent sessions, SSE chat, execution trace, document/OCR upload, memory search, runtime status, review/export of web candidates; stdlib-only, loopback-only, single-writer Controller queue; both use the same Controller |
 | Foundation | `foundation/*` | Echo, Ollama and llama.cpp adapters; general `tony:7b-gpa3` and privacy `tony:7b` pinned; 41/42 adjudicated each, 1.86/3.04 s p50 (EXP-018, n=42); 4.7 GB shared footprint; bounded per-process concurrency gate (EXP-019); llama.cpp untested |
 | Memory (LAMS) | `memory/*`, `brain/working_memory.py` | SQLite episodic + verified semantic facts, FTS5, provenance/derivation, conflict index, utility feedback, bounded working memory, deletion integrity, utility-aware retention |
 | AMA | `learning/ama.py`, `learning/compare.py` | duplicate/conflict detection, scoring, continuous surprise, conflict index, feedback-based utility, decision log, reliability-aware retrieval; weights hand-set except the measured threshold sweep |
 | NFD + router | `brain/need_field.py`, `brain/router.py`, `brain/controller.py` | priority scoring, RAM/CPU-aware selection, cheap-skill path, traces, measured costs when calibrated |
 | Arithmetic | `skills/arithmetic/*` | exact rational path + independent Decimal verifier; neural addition is a non-authoritative candidate |
-| OCR | `skills/perception/ocr.py`, `evaluation/ocr_benchmark.py` | optional local Tesseract, confidence, corrections, CER/WER runner; no target-corpus measurement yet |
+| OCR and documents | `skills/perception/*`, `evaluation/ocr_benchmark.py` | optional local Tesseract for images and scanned PDF pages; stdlib extraction for text/HTML/Office/OpenDocument; PDF text layer via pypdf; confidence, corrections and CER/WER runner; no target-corpus measurement yet |
+| Agent tools | `brain/tools.py` | bounded workspace listing/read/search/info, exact calculation, clock, text stats, system info and a sandboxed note; native Ollama tool calls with trace/evidence metadata; no shell execution |
+| Web research | `skills/web/__init__.py`, `brain/controller.py`, `app/web.py` | optional server-side DuckDuckGo Lite/Wikipedia/SearXNG search, SSRF-guarded text fetch, uncertainty fallback, candidate facts/gaps in SQLite, review API and JSONL export; every export is `training_ready: false` |
 | Adaptive memory | `memory/adaptive_memory.py` | Titans-inspired linear memory; **no advantage over FTS5 yet** |
 | DPF + CAGE | `plasticity/*`, `learning/cage.py` | bounded fast state, candidate checkpoints, NGR-only promotion, trace attribution, gated update consumer (`GatedUpdater`) |
 | Learning loop | `learning/loop.py`, `learning/corrections.py`, `learning/worker.py`, `learning/jobs.py` | verified correction -> CAGE -> fast update -> DREAM -> NGR; exact arithmetic corrections only; opt-in durable worker with restart recovery and hard timeout; CLI wiring disabled by default; no live real-model learning run |

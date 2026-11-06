@@ -1,0 +1,199 @@
+/* ASHURA workbench design tokens.
+   Source of truth: design/mockups/tokens.css (approved Phase 1 package).
+   Runtime values are copied here; the mockup file is never linked. */
+
+:root {
+  /* Type */
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Code", "Cascadia Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  --text-11: 0.6875rem;
+  --text-12: 0.75rem;
+  --text-13: 0.8125rem;
+  --text-14: 0.875rem;
+  --text-16: 1rem;
+  --text-20: 1.25rem;
+  --text-24: 1.5rem;
+  --text-30: 1.875rem;
+
+  --leading-tight: 1.25;
+  --leading-snug: 1.4;
+  --leading-body: 1.55;
+  --leading-code: 1.6;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --tracking-tight: -0.012em;
+  --tracking-wide: 0.06em;
+  --tracking-wider: 0.1em;
+
+  /* Space: 4 px base */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Shape */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 10px;
+  --radius-xl: 13px;
+  --radius-full: 999px;
+
+  --border-width: 1px;
+  --focus-width: 2px;
+  --focus-offset: 2px;
+
+  /* Layout */
+  --rail-w: 76px;
+  --session-w: 272px;
+  --context-w: 344px;
+  --topbar-h: 56px;
+  --statusbar-h: 30px;
+  --content-max: 840px;
+  --control-h: 32px;
+  --control-h-lg: 38px;
+  --touch-h: 44px;
+
+  /* Motion */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 240ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Layers */
+  --z-sticky: 10;
+  --z-drawer: 40;
+  --z-overlay: 50;
+  --z-dialog: 60;
+  --z-toast: 80;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --canvas: #0a0c0f;
+  --surface-1: #0f1216;
+  --surface-2: #13171c;
+  --surface-3: #191e24;
+  --surface-4: #20262e;
+  --surface-inset: #0c0f12;
+
+  --border: #252b33;
+  --border-strong: #39424d;
+  --border-accent: rgba(116, 199, 184, 0.42);
+  --control-border: #596675;
+
+  --text: #e7eaed;
+  --text-secondary: #9ca5b0;
+  --text-tertiary: #7c8796;
+  --text-disabled: #5c6672;
+
+  --accent: #74c7b8;
+  --accent-hover: #8bd7c9;
+  --accent-soft: rgba(116, 199, 184, 0.1);
+  --accent-soft-strong: rgba(116, 199, 184, 0.16);
+  --accent-ink: #07110f;
+  --focus: #a8e3d8;
+
+  --success: #7ad3a7;
+  --success-soft: rgba(122, 211, 167, 0.09);
+  --success-border: rgba(122, 211, 167, 0.3);
+  --warning: #e0b86a;
+  --warning-soft: rgba(224, 184, 106, 0.09);
+  --warning-border: rgba(224, 184, 106, 0.3);
+  --danger: #f08a7e;
+  --danger-soft: rgba(240, 138, 126, 0.09);
+  --danger-border: rgba(240, 138, 126, 0.32);
+  --info: #8fb5dc;
+  --info-soft: rgba(143, 181, 220, 0.09);
+  --neutral: #9ca5b0;
+  --neutral-soft: rgba(156, 165, 176, 0.08);
+
+  --button-primary-bg: var(--accent);
+  --button-primary-text: var(--accent-ink);
+  --button-primary-hover: var(--accent-hover);
+  --button-secondary-bg: var(--surface-2);
+  --button-secondary-hover: var(--surface-3);
+  --button-ghost-hover: var(--surface-2);
+
+  --selection: rgba(116, 199, 184, 0.24);
+  --scrim: rgba(4, 6, 8, 0.72);
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.02), 0 8px 24px rgba(0, 0, 0, 0.22);
+  --shadow-2: 0 18px 50px rgba(0, 0, 0, 0.42);
+
+  --code-bg: #0b0e11;
+  --code-head: #12161a;
+  --meter-track: #242b33;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --canvas: #f3f4f1;
+  --surface-1: #ffffff;
+  --surface-2: #fafbf9;
+  --surface-3: #f0f2ef;
+  --surface-4: #e7eae6;
+  --surface-inset: #f7f8f5;
+
+  --border: #dce0db;
+  --border-strong: #bcc3bc;
+  --border-accent: rgba(23, 107, 94, 0.38);
+  --control-border: #8f978f;
+
+  --text: #171b18;
+  --text-secondary: #59625c;
+  --text-tertiary: #66706a;
+  --text-disabled: #8b948e;
+
+  --accent: #176b5e;
+  --accent-hover: #0f544a;
+  --accent-soft: #e4f1ed;
+  --accent-soft-strong: #d5eae4;
+  --accent-ink: #ffffff;
+  --focus: #176b5e;
+
+  --success: #1d7a57;
+  --success-soft: #e5f2ec;
+  --success-border: #b9ddce;
+  --warning: #8a5a00;
+  --warning-soft: #f7eedb;
+  --warning-border: #e4cf9f;
+  --danger: #b53a32;
+  --danger-soft: #f8e8e6;
+  --danger-border: #e7bdb8;
+  --info: #2c5f8a;
+  --info-soft: #e9f0f7;
+  --neutral: #59625c;
+  --neutral-soft: #eef0ed;
+
+  --button-primary-bg: var(--accent);
+  --button-primary-text: #ffffff;
+  --button-primary-hover: #0f544a;
+  --button-secondary-bg: #ffffff;
+  --button-secondary-hover: #f5f7f4;
+  --button-ghost-hover: #eef0ed;
+
+  --selection: rgba(23, 107, 94, 0.16);
+  --scrim: rgba(18, 24, 20, 0.38);
+  --shadow-1: 0 1px 2px rgba(20, 30, 24, 0.05), 0 8px 24px rgba(20, 30, 24, 0.07);
+  --shadow-2: 0 18px 50px rgba(20, 30, 24, 0.14);
+
+  --code-bg: #fbfcfa;
+  --code-head: #f0f2ef;
+  --meter-track: #e2e5e1;
+}

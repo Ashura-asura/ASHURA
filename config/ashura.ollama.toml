@@ -9,6 +9,7 @@ licence = "Local fine-tune of Qwen2 (Apache-2.0 base); user-supplied bio/curricu
 path = ""                      # local .gguf path (not committed)
 sha256 = ""                    # pinned hash of the stable checkpoint
 n_ctx = 4096                   # EXP-018 used 4096; model supports 32768
+max_tokens = 1024              # leave room for complete explanations and derivations
 n_threads = 4                  # i7-1165G7: 4 cores / 8 threads
 # --- backend = "ollama" (see config/ashura.ollama.toml for a ready-made example) ---
 model = "tony:7b-gpa3"         # general tutor: 41/42 adjudicated, 1.86 s p50 (EXP-018)
@@ -55,6 +56,35 @@ activation_threshold = 0.25
 ram_headroom_mb = 1500
 cpu_busy_percent = 85          # optional heavy modules are deferred above this system-wide CPU load
 heavy_latency_ms = 500
+
+[agent]
+# Local agentic tools and task-aware generation budgets. Tools are read-only workspace
+# observations plus a sandboxed write_note; they never execute shell commands.
+enabled = true
+max_answer_tokens = 1024
+long_answer_tokens = 3072      # bounded again by the model's remaining context window
+max_continuations = 2          # continue a length-truncated answer from where it stopped
+max_tool_rounds = 3
+
+[web]
+# Server-side web research. Search runs in this process; the browser CSP keeps
+# connect-src 'self'. Results are candidate evidence, never verified facts.
+enabled = true
+provider = "duckduckgo"        # duckduckgo | wikipedia | searxng
+searx_url = ""                 # required for provider = "searxng"
+timeout_s = 15.0
+max_results = 5
+max_fetch_pages = 2
+max_page_chars = 3500
+auto_on_uncertainty = true     # visible "Web check" after the model reports uncertainty
+facts_db = "data/web_facts.db"
+dataset_dir = "data/web_training"
+
+[ui]
+# The persistent token is a local secret; data/ is git-ignored and never served by the server.
+persist_token = true
+# token_file = "data/web_token"
+# sessions_db = "data/ui_sessions.db"
 
 [ngr]
 # Tolerances are fixed BEFORE evaluation (spec section 11.3).

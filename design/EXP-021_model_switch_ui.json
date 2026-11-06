@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-06",
+  "config": "config/ashura.ollama.toml",
+  "browser": "Chromium 1248 headless, 1440x900",
+  "steps": [
+    {
+      "step": "model_panel",
+      "options": [
+        "tony:7b-gpa3 — General / tool use (default)",
+        "lfm3:latest — Not a foundation candidate",
+        "qwen3.5:2b — Fallback only",
+        "tony:7b — Privacy profile",
+        "tony:7b-agentic3 — Evaluated candidate, not promoted"
+      ]
+    },
+    {
+      "step": "switch_to_2b",
+      "selected": "qwen3.5:2b",
+      "runtime_model": "ollama:qwen3.5:2b",
+      "detail": "Fallback only; 2.5 GB; digest 0689d44085e0; Active for subsequent turns."
+    },
+    {
+      "step": "switch_back",
+      "selected": "tony:7b-gpa3",
+      "runtime_model": "ollama:tony:7b-gpa3"
+    }
+  ],
+  "screenshot": "design/EXP-021_model_switch_ui.png",
+  "ok": true
+}

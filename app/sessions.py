@@ -112,8 +112,14 @@ class SessionStore:
                    GROUP BY s.id ORDER BY s.updated DESC LIMIT ?""", (limit,)).fetchall()
         return [dict(row) for row in rows]
 
-    def messages(self, session_id: str, limit: int | None = 200) -> list[dict]:
-        """Return messages in order. ``limit=None`` returns the whole transcript."""
+    def messages(self, session_id: str, limit: int | None = 200,
+                 before: int | None = None) -> list[dict]:
+        """Return messages in ascending order.
+
+        ``limit=None`` returns the whole transcript. Otherwise the newest
+        ``limit`` messages are returned, or the newest messages older than the
+        ``before`` message id when it is supplied.
+        """
         with self._connect() as conn:
             if limit is None:
                 rows = conn.execute(
@@ -121,10 +127,17 @@ class SessionStore:
                        WHERE session_id = ? ORDER BY id""", (session_id,)).fetchall()
             else:
                 limit = max(1, min(int(limit), 1000))
-                rows = list(reversed(conn.execute(
-                    """SELECT id, role, content, meta, ts FROM messages
-                       WHERE session_id = ? ORDER BY id DESC LIMIT ?""",
-                    (session_id, limit)).fetchall()))
+                if before is None:
+                    rows = list(reversed(conn.execute(
+                        """SELECT id, role, content, meta, ts FROM messages
+                           WHERE session_id = ? ORDER BY id DESC LIMIT ?""",
+                        (session_id, limit)).fetchall()))
+                else:
+                    rows = list(reversed(conn.execute(
+                        """SELECT id, role, content, meta, ts FROM messages
+                           WHERE session_id = ? AND id < ?
+                           ORDER BY id DESC LIMIT ?""",
+                        (session_id, int(before), limit)).fetchall()))
         out = []
         for row in rows:
             item = dict(row)
@@ -134,6 +147,19 @@ class SessionStore:
                 item["meta"] = {}
             out.append(item)
         return out
+
+    def count_messages(self, session_id: str) -> int:
+        with self._connect() as conn:
+            return int(conn.execute(
+                "SELECT COUNT(*) FROM messages WHERE session_id = ?",
+                (session_id,)).fetchone()[0])
+
+    def has_older(self, session_id: str, before_id: int) -> bool:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT 1 FROM messages WHERE session_id = ? AND id < ? LIMIT 1",
+                (session_id, int(before_id))).fetchone()
+        return row is not None
 
     def append(self, session_id: str, role: str, content: str, meta: dict | None = None) -> dict:
         now = time.time()

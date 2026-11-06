@@ -52,6 +52,9 @@ class OCRResult:
     elapsed_ms: float = 0.0
     reason: str | None = None
     verified: bool = False
+    pages: int = 0
+    truncated: bool = False
+    meta: dict[str, Any] | None = None
 
 
 class OCREngine:
@@ -111,52 +114,80 @@ class OCREngine:
                 return self._fail(ref, document_type, started,
                                   "local OCR unavailable; install Tesseract and pytesseract",
                                   image_sha256=digest)
-            Image, ImageOps, ImageFilter = self._pil
+            Image = self._pil[0]
             with Image.open(path) as raw:
                 raw.verify()
             with Image.open(path) as raw:
-                image = ImageOps.exif_transpose(raw).convert("RGB")
-                # Upscale small screenshots/scans before thresholding; cap growth to avoid
-                # pathological RAM use on tiny images.
-                if max(image.size) < 1400:
-                    scale = min(3, max(1, int(1400 / max(image.size))))
-                    if scale > 1:
-                        image = image.resize((image.width * scale, image.height * scale), Image.Resampling.LANCZOS)
-                if self.config.preprocess:
-                    image = ImageOps.grayscale(image)
-                    image = ImageOps.autocontrast(image)
-                    image = image.filter(ImageFilter.MedianFilter(size=3))
-                data = self._pytesseract.image_to_data(
-                    image, lang=self.config.languages,
-                    config=f"--psm {self.config.psm}",
-                    output_type=self._pytesseract.Output.DICT,
-                    timeout=self.config.timeout_s)
-                words, confidences = [], []
-                for word, raw_conf in zip(data.get("text", []), data.get("conf", [])):
-                    word = str(word).strip()
-                    try:
-                        conf = float(raw_conf)
-                    except (TypeError, ValueError):
-                        continue
-                    if word and conf >= 0:
-                        words.append(word)
-                        confidences.append(conf / 100.0)
-                text = " ".join(words).strip()
-                confidence = sum(confidences) / len(confidences) if confidences else 0.0
-                version = str(self._pytesseract.get_tesseract_version()).splitlines()[0]
+                image = self._prepare(raw)
+            return self.recognize_pil(image, image_ref=ref, document_type=document_type,
+                                      image_sha256=digest, started=started)
+        except Exception as exc:
+            return self._fail(ref, document_type, started, f"OCR failed: {exc}")
+
+    def recognize_pil(self, image: Any, *, image_ref: str, document_type: str = "document",
+                      image_sha256: str | None = None,
+                      started: float | None = None) -> OCRResult:
+        """OCR an already-decoded image (used for rendered PDF pages)."""
+        started = started if started is not None else time.perf_counter()
+        ref = image_ref
+        try:
+            if not self.available:
+                return self._fail(ref, document_type, started,
+                                  "local OCR unavailable; install Tesseract and pytesseract",
+                                  image_sha256=image_sha256)
+            if not hasattr(image, "size"):
+                return self._fail(ref, document_type, started,
+                                  "rendered page is not a Pillow image",
+                                  image_sha256=image_sha256)
+            image = self._prepare(image)
+            data = self._pytesseract.image_to_data(
+                image, lang=self.config.languages,
+                config=f"--psm {self.config.psm}",
+                output_type=self._pytesseract.Output.DICT,
+                timeout=self.config.timeout_s)
+            words, confidences = [], []
+            for word, raw_conf in zip(data.get("text", []), data.get("conf", [])):
+                word = str(word).strip()
+                try:
+                    conf = float(raw_conf)
+                except (TypeError, ValueError):
+                    continue
+                if word and conf >= 0:
+                    words.append(word)
+                    confidences.append(conf / 100.0)
+            text = " ".join(words).strip()
+            confidence = sum(confidences) / len(confidences) if confidences else 0.0
+            version = str(self._pytesseract.get_tesseract_version()).splitlines()[0]
             if not text:
                 return self._fail(ref, document_type, started, "OCR returned no text",
-                                 image_sha256=digest, engine_version=version)
+                                  image_sha256=image_sha256, engine_version=version)
             if confidence < self.config.min_confidence:
                 return self._fail(ref, document_type, started,
                                   f"confidence {confidence:.3f} below configured minimum",
-                                  image_sha256=digest, engine_version=version, text=text,
+                                  image_sha256=image_sha256, engine_version=version, text=text,
                                   confidence=confidence)
-            return OCRResult(True, text, confidence, "tesseract", version, ref, digest,
+            return OCRResult(True, text, confidence, "tesseract", version, ref, image_sha256,
                              document_type, (time.perf_counter() - started) * 1000,
                              verified=False)
         except Exception as exc:
             return self._fail(ref, document_type, started, f"OCR failed: {exc}")
+
+    def _prepare(self, raw: Any):
+        """Convert, upscale and preprocess one decoded image."""
+        Image, ImageOps, ImageFilter = self._pil
+        image = ImageOps.exif_transpose(raw).convert("RGB")
+        # Upscale small screenshots/scans before thresholding; cap growth to avoid
+        # pathological RAM use on tiny images.
+        if max(image.size) < 1400:
+            scale = min(3, max(1, int(1400 / max(image.size))))
+            if scale > 1:
+                image = image.resize((image.width * scale, image.height * scale),
+                                     Image.Resampling.LANCZOS)
+        if self.config.preprocess:
+            image = ImageOps.grayscale(image)
+            image = ImageOps.autocontrast(image)
+            image = image.filter(ImageFilter.MedianFilter(size=3))
+        return image
 
     def _fail(self, ref: str, document_type: str, started: float, reason: str,
               **kwargs: Any) -> OCRResult:

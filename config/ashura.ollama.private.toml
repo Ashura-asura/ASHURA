@@ -10,6 +10,7 @@ licence = "Local fine-tune of Qwen2 (Apache-2.0 base); user-supplied bio/curricu
 path = ""                      # local .gguf path (not committed)
 sha256 = ""                    # pinned hash of the stable checkpoint
 n_ctx = 4096                   # EXP-018 used 4096; model supports 32768
+max_tokens = 1024              # leave room for complete explanations and derivations
 n_threads = 4                  # i7-1165G7: 4 cores / 8 threads
 # --- backend = "ollama" (see config/ashura.ollama.toml for a ready-made example) ---
 model = "tony:7b"              # privacy profile: 41/42 adjudicated, 3.04 s p50 (EXP-018)
@@ -55,6 +56,35 @@ activation_threshold = 0.25
 ram_headroom_mb = 1500
 cpu_busy_percent = 85          # optional heavy modules are deferred above this system-wide CPU load
 heavy_latency_ms = 500
+
+[agent]
+# Local agentic tools and task-aware generation budgets. Tools are read-only workspace
+# observations plus a sandboxed write_note; they never execute shell commands.
+enabled = true
+max_answer_tokens = 1024
+long_answer_tokens = 3072      # bounded again by the model's remaining context window
+max_continuations = 2
+max_tool_rounds = 3
+
+[web]
+# The privacy profile keeps web research off. Outbound search would disclose the question to a
+# third party, which contradicts the purpose of this profile.
+enabled = false
+provider = "duckduckgo"
+searx_url = ""
+timeout_s = 15.0
+max_results = 5
+max_fetch_pages = 2
+max_page_chars = 3500
+auto_on_uncertainty = false
+facts_db = "data/web_facts.private.db"
+dataset_dir = "data/web_training_private"
+
+[ui]
+# Separate persisted token and sessions so the privacy profile does not share the general one.
+persist_token = true
+token_file = "data/web_token.private"
+sessions_db = "data/ui_sessions.private.db"
 
 [ngr]
 # Tolerances are fixed BEFORE evaluation (spec section 11.3).

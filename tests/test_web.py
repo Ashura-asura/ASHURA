@@ -1,6 +1,8 @@
 import base64
 import http.client
 import json
+import pathlib
+import socket
 import threading
 import time
 from http.cookies import SimpleCookie
@@ -12,6 +14,7 @@ from app.web import AppHTTPServer, WebApp, static_file
 from app.worker import ControllerWorker, WorkerQueueFull
 from brain.controller import Controller
 from foundation.language_model import EchoModel
+from foundation.model_config import ModelConfig
 from learning.ama import AMA
 from memory.database import Database
 
@@ -77,6 +80,68 @@ def test_status_reports_model_memory_and_worker(web):
     assert status["worker"]["max_queue"] == 8
     assert status["csrf"] == "test-csrf"
     assert status["capabilities"]["streaming"] is True
+    assert status["capabilities"]["model_switch"] is False
+
+
+class FakeOllamaModel:
+    """Minimal Ollama stand-in: swapping is tested without a network or weights."""
+
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.name = f"ollama:{cfg.model}"
+        self.digest = cfg.digest
+
+
+def test_model_switch_lists_and_swaps_installed_models(monkeypatch):
+    import app.web as web_module
+
+    active = FakeOllamaModel(ModelConfig(backend="ollama", model="tony:a", digest="aaaa"))
+    controller = Controller(active)
+    app = WebApp(controller, "config/ashura.ollama.toml",
+                 sessions=SessionStore(":memory:"), token="test-token", csrf="test-csrf")
+    calls = []
+    monkeypatch.setattr(web_module, "OllamaModel", FakeOllamaModel)
+    monkeypatch.setattr(web_module, "list_models", lambda host: [
+        {"name": "tony:a", "digest": "aaaa", "size": 4_700_000_000},
+        {"name": "tony:b", "digest": "bbbb", "size": 2_700_000_000},
+    ])
+    monkeypatch.setattr(web_module, "unload", lambda host, model: calls.append((host, model)))
+    try:
+        listing = app.models()
+        assert listing["available"] is True
+        assert listing["active"] == "tony:a"
+        assert [item["name"] for item in listing["models"]] == ["tony:a", "tony:b"]
+        assert listing["models"][0]["active"] is True
+
+        result = app.select_model("tony:b")
+        assert result["changed"] is True
+        assert controller.model.cfg.model == "tony:b"
+        assert controller.model.cfg.digest == "bbbb"
+        assert calls == [(active.cfg.host, "tony:a")]
+
+        again = app.select_model("tony:b")
+        assert again["changed"] is False
+        assert [item["name"] for item in app.models()["models"]] == ["tony:b", "tony:a"]
+    finally:
+        app.close()
+
+
+def test_model_switch_rejects_an_uninstalled_tag(monkeypatch):
+    import app.web as web_module
+
+    active = FakeOllamaModel(ModelConfig(backend="ollama", model="tony:a", digest="aaaa"))
+    app = WebApp(Controller(active), "config/ashura.ollama.toml",
+                 sessions=SessionStore(":memory:"), token="test-token", csrf="test-csrf")
+    monkeypatch.setattr(web_module, "OllamaModel", FakeOllamaModel)
+    monkeypatch.setattr(web_module, "list_models", lambda host: [
+        {"name": "tony:a", "digest": "aaaa"},
+    ])
+    monkeypatch.setattr(web_module, "unload", lambda host, model: None)
+    try:
+        with pytest.raises(web_module.ModelNotInstalled):
+            app.select_model("missing:tag")
+    finally:
+        app.close()
 
 
 def test_chat_persists_session_messages_and_trace(web):
@@ -254,7 +319,9 @@ def test_session_store_survives_reopen(tmp_path):
 
 
 def test_static_paths_are_confined_to_the_static_directory():
-    assert static_file("/static/style.css").name == "style.css"
+    assert static_file("/static/favicon.svg").name == "favicon.svg"
+    assert static_file("/static/css/tokens.css").name == "tokens.css"
+    assert static_file("/static/js/views/command.js").name == "command.js"
     assert static_file("/static/../web.py") is None
     assert static_file("/static/%2e%2e/web.py") is None
     assert static_file("/static/missing.js") is None
@@ -417,6 +484,51 @@ def test_http_token_bootstrap_sets_cookie_and_redirects(server):
     assert json.loads(raw)["model"] == "echo-stub"
 
 
+def test_http_models_reports_switch_unavailable_for_echo(server):
+    cookie, _ = login(server)
+    response, raw = request(server, "GET", "/api/models", cookie=cookie)
+    assert response.status == 200
+    body = json.loads(raw)
+    assert body["available"] is False
+    assert body["models"] == []
+    assert "Ollama" in body["reason"]
+
+
+def test_http_model_switch_requires_csrf_and_rejects_non_ollama(server):
+    cookie, csrf = login(server)
+    response, _ = request(server, "POST", "/api/model", body={"model": "tony:7b"},
+                          cookie=cookie)
+    assert response.status == 403
+
+    response, raw = request(server, "POST", "/api/model", body={"model": "tony:7b"},
+                            cookie=cookie, headers={"X-CSRF-Token": csrf})
+    assert response.status == 409
+    assert "Ollama" in json.loads(raw)["error"]
+
+
+def test_early_http_error_bounds_wait_for_incomplete_body(server):
+    cookie, _ = login(server)
+    client = socket.create_connection(("127.0.0.1", server.server_port), timeout=4)
+    try:
+        client.sendall((
+            f"POST /api/model HTTP/1.1\r\n"
+            f"Host: 127.0.0.1:{server.server_port}\r\n"
+            f"Cookie: {cookie}\r\n"
+            "Content-Type: application/json\r\n"
+            "Content-Length: 100\r\n"
+            "Connection: close\r\n\r\n"
+        ).encode("ascii"))
+        response = bytearray()
+        while b"\r\n\r\n" not in response:
+            chunk = client.recv(4096)
+            if not chunk:
+                break
+            response.extend(chunk)
+        assert b" 403 " in response.split(b"\r\n", 1)[0]
+    finally:
+        client.close()
+
+
 def test_http_logout_requires_csrf_and_clears_cookie(server):
     cookie, csrf = login(server)
     response, _ = request(server, "POST", "/api/logout", cookie=cookie)
@@ -427,6 +539,34 @@ def test_http_logout_requires_csrf_and_clears_cookie(server):
     assert response.status == 200
     assert json.loads(raw)["ok"] is True
     assert "Max-Age=0" in response.getheader("Set-Cookie")
+
+
+def test_http_logout_body_does_not_poison_the_next_keepalive_request(server):
+    cookie, csrf = login(server)
+    connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=10)
+    try:
+        body = b"{}"
+        connection.request("POST", "/api/logout", body=body, headers={
+            "Content-Type": "application/json",
+            "Content-Length": str(len(body)),
+            "Cookie": cookie,
+            "X-CSRF-Token": csrf,
+        })
+        response = connection.getresponse()
+        assert response.status == 200
+        assert json.loads(response.read())["ok"] is True
+
+        body = json.dumps({"token": "test-token"}).encode()
+        connection.request("POST", "/api/login", body=body, headers={
+            "Content-Type": "application/json",
+            "Content-Length": str(len(body)),
+        })
+        response = connection.getresponse()
+        raw = response.read()
+        assert response.status == 200, raw.decode(errors="replace")
+        assert json.loads(raw)["csrf"] == "test-csrf"
+    finally:
+        connection.close()
 
 
 def test_http_memory_endpoint_returns_admission(server):
@@ -478,4 +618,223 @@ def test_export_includes_the_whole_transcript_beyond_the_ui_page():
         assert "message-000" in text
         assert "message-204" in text
     finally:
+        app.close()
+
+
+def test_get_session_reports_pagination_metadata(web):
+    session = web.create_session("Paged session")
+    for index in range(205):
+        role = "user" if index % 2 == 0 else "assistant"
+        web.sessions.append(session["id"], role, f"message-{index:03d}")
+
+    latest = web.get_session(session["id"], limit=50)
+    assert latest["total"] == 205
+    assert latest["has_more"] is True
+    assert len(latest["messages"]) == 50
+    assert latest["messages"][0]["content"] == "message-155"
+    assert latest["messages"][-1]["content"] == "message-204"
+
+    older = web.get_session(session["id"], limit=50, before=latest["messages"][0]["id"])
+    assert older["has_more"] is True
+    assert older["messages"][-1]["content"] == "message-154"
+    assert older["messages"][0]["content"] == "message-105"
+
+    oldest = web.get_session(session["id"], limit=200, before=older["messages"][0]["id"])
+    assert oldest["has_more"] is False
+    assert oldest["total"] == 205
+    assert oldest["messages"][-1]["content"] == "message-104"
+
+
+def test_http_session_detail_accepts_limit_and_before(server):
+    cookie, csrf = login(server)
+    session = server.app.create_session("HTTP paged")
+    for index in range(5):
+        server.app.sessions.append(session["id"], "user", f"page-{index}")
+
+    response, raw = request(server, "GET", f"/api/sessions/{session['id']}?limit=2",
+                            cookie=cookie)
+    assert response.status == 200
+    detail = json.loads(raw)
+    assert detail["total"] == 5
+    assert detail["has_more"] is True
+    assert [m["content"] for m in detail["messages"]] == ["page-3", "page-4"]
+
+    before = detail["messages"][0]["id"]
+    response, raw = request(
+        server, "GET", f"/api/sessions/{session['id']}?limit=2&before={before}",
+        cookie=cookie)
+    assert response.status == 200
+    older = json.loads(raw)
+    assert [m["content"] for m in older["messages"]] == ["page-1", "page-2"]
+    assert older["has_more"] is True
+
+    response, raw = request(server, "GET", f"/api/sessions/{session['id']}?limit=nope",
+                            cookie=cookie)
+    assert response.status == 400
+    response, raw = request(server, "GET", f"/api/sessions/{session['id']}?before=nope",
+                            cookie=cookie)
+    assert response.status == 400
+
+
+def test_ui_assets_stay_local_and_avoid_forbidden_claims():
+    static = pathlib.Path(__file__).resolve().parents[1] / "app" / "static"
+    index = (static / "index.html").read_text(encoding="utf-8")
+    sources = {path: path.read_text(encoding="utf-8")
+               for path in static.rglob("*")
+               if path.is_file() and path.suffix in {".html", ".css", ".js", ".svg"}}
+    joined = "\n".join(sources.values()).lower()
+
+    for phrase in (
+        "nothing leaves this machine",
+        "end-to-end encrypted",
+        "military-grade",
+        "bank-level",
+        "100% secure",
+        "fully private",
+        "zero data collection",
+    ):
+        assert phrase not in joined
+
+    for path, text in sources.items():
+        assert 'src="http' not in text, path
+        assert 'href="http' not in text, path
+        assert "url(http" not in text, path
+
+    assert 'style="' not in index
+    # Only external module scripts; the strict CSP forbids inline script.
+    for marker in index.split("<script")[1:]:
+        assert "src=" in marker.split(">", 1)[0]
+
+
+# ---- documents, tools and web research -------------------------------------------------
+
+def test_document_upload_routes_text_through_local_extraction(web):
+    encoded = base64.b64encode("Quarterly plan: ship locally.".encode()).decode()
+    result = web.ocr("plan.txt", encoded)
+    assert result["kind"] == "document"
+    assert result["filename"] == "plan.txt"
+    messages = web.get_session(result["session_id"])["messages"]
+    assert messages[0]["content"] == "[document: plan.txt]"
+    assert messages[0]["meta"]["kind"] == "document"
+    assert result["document"]["ok"] is True
+    assert result["document"]["kind"] == "text"
+
+
+def test_document_upload_reports_an_honest_extraction_failure(web):
+    encoded = base64.b64encode(b"not a pdf").decode()
+    result = web.ocr("broken.pdf", encoded)
+    assert result["kind"] == "document"
+    assert result["document"]["ok"] is False
+    assert "does not match" in result["text"]
+
+
+def test_unsupported_upload_is_rejected_before_the_model_runs(web):
+    encoded = base64.b64encode(b"MZ").decode()
+    with pytest.raises(ValueError, match="unsupported file type"):
+        web.ocr("program.exe", encoded)
+
+
+def test_http_document_upload_and_unsupported_type(server):
+    cookie, csrf = login(server)
+    encoded = base64.b64encode("local notes".encode()).decode()
+    response, raw = request(server, "POST", "/api/ocr",
+                            body={"filename": "notes.md", "data": encoded},
+                            cookie=cookie, headers={"X-CSRF-Token": csrf})
+    assert response.status == 200
+    payload = json.loads(raw)
+    assert payload["kind"] == "document"
+    assert payload["document"]["kind"] == "text"
+
+    response, raw = request(server, "POST", "/api/ocr",
+                            body={"filename": "run.exe", "data": encoded},
+                            cookie=cookie, headers={"X-CSRF-Token": csrf})
+    assert response.status == 400
+    assert "unsupported file type" in json.loads(raw)["error"]
+
+
+def test_web_endpoints_are_explicitly_disabled_in_the_default_profile(web):
+    status = web.status()
+    assert status["capabilities"]["web"] is False
+    assert status["web"]["enabled"] is False
+    facts = web.web_facts()
+    assert facts["enabled"] is False
+    with pytest.raises(Exception, match="not enabled"):
+        web.review_web_fact(1, "verified")
+    with pytest.raises(Exception, match="not enabled"):
+        web.export_web_facts()
+
+
+def test_http_web_endpoints_report_disabled_professionally(server):
+    cookie, csrf = login(server)
+    response, raw = request(server, "GET", "/api/web/facts", cookie=cookie)
+    assert response.status == 200
+    assert json.loads(raw)["enabled"] is False
+
+    response, raw = request(server, "POST", "/api/web/review",
+                            body={"id": 1, "status": "verified"},
+                            cookie=cookie, headers={"X-CSRF-Token": csrf})
+    assert response.status == 409
+
+    response, raw = request(server, "GET", "/api/web/export", cookie=cookie)
+    assert response.status == 409
+
+
+def build_web_with_facts(tmp_path, token="test-token", csrf="test-csrf"):
+    from skills.web import WebConfig, WebFactStore, WebSearch
+
+    config = WebConfig(enabled=True, facts_db=str(tmp_path / "facts.db"),
+                       dataset_dir=str(tmp_path / "dataset"))
+    store = WebFactStore(config.facts_db)
+    controller = Controller(EchoModel(), ama=AMA(Database(":memory:")),
+                            web=WebSearch(config), fact_store=store)
+    app = WebApp(controller, "config/ashura.toml", sessions=SessionStore(":memory:"),
+                 token=token, csrf=csrf)
+    return app, store
+
+
+def test_http_web_review_and_export_require_csrf_and_stay_candidates(tmp_path):
+    import threading
+
+    app, store = build_web_with_facts(tmp_path)
+    fact = store.record_fact("What is new?", "A local release.",
+                             [{"title": "Source", "url": "https://example.com/new"}])
+    httpd = AppHTTPServer(("127.0.0.1", 0), app)
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    try:
+        cookie, csrf = login(httpd)
+        response, raw = request(httpd, "GET", "/api/web/facts", cookie=cookie)
+        assert response.status == 200
+        payload = json.loads(raw)
+        assert payload["enabled"] is True
+        assert payload["training_ready"] is False
+        assert payload["stats"]["candidates"] == 1
+        assert payload["facts"][0]["id"] == fact
+
+        response, raw = request(httpd, "POST", "/api/web/review",
+                                body={"id": fact, "status": "verified"},
+                                cookie=cookie)
+        assert response.status == 403
+
+        response, raw = request(httpd, "POST", "/api/web/review",
+                                body={"id": fact, "status": "verified", "note": "checked"},
+                                cookie=cookie, headers={"X-CSRF-Token": csrf})
+        assert response.status == 200
+        assert "not by itself" in json.loads(raw)["note"]
+        assert store.list_facts()[0]["status"] == "verified"
+
+        response, raw = request(httpd, "GET", "/api/web/export", cookie=cookie)
+        assert response.status == 200
+        assert response.getheader("Content-Disposition").startswith("attachment;")
+        rows = [json.loads(line) for line in raw.decode().splitlines()]
+        assert len(rows) == 1
+        assert rows[0]["training_ready"] is False
+        assert rows[0]["review_status"] == "verified"
+
+        response, _ = request(httpd, "GET", "/api/web/facts?status=trusted", cookie=cookie)
+        assert response.status == 400
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+        thread.join(timeout=3)
         app.close()

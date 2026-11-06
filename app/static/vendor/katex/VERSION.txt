@@ -1,0 +1,4 @@
+KaTeX 0.16.22 (MIT)
+Source: https://www.npmjs.com/package/katex/v/0.16.22
+File: dist/katex.min.mjs, renamed to katex.min.js for the static server MIME map.
+Rendered with output: "mathml" so no KaTeX CSS, fonts or inline styles are required.

@@ -1,3 +1,6 @@
 Pillow
 pytesseract
+pypdf
+PyMuPDF
 # Tesseract OCR is a separate local system executable; install it for your OS and language packs.
+# pypdf reads a PDF text layer. PyMuPDF is only needed to render scanned PDF pages for local OCR.

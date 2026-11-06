@@ -21,6 +21,9 @@ config/module_costs.json
 
 *.log
 
+# Playwright screenshot comparison artefacts
+design/ui-baselines/*.actual.png
+
 # build / tooling artefacts
 *.egg-info/
 build/

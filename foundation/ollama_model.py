@@ -84,6 +84,7 @@ class OllamaModel(LanguageModel):
             raise ValueError("foundation.model is empty; set it to a tag from `ollama list`")
         self.cfg, self.name = cfg, f"ollama:{cfg.model}"
         self.last_stats = GenStats()
+        self.last_finish_reason: str | None = None
         installed = {m["name"]: m for m in list_models(cfg.host)}
         if cfg.model not in installed:
             raise OllamaError(f"model {cfg.model!r} is not installed; installed: {sorted(installed)}")
@@ -109,14 +110,17 @@ class OllamaModel(LanguageModel):
         self.last_stats = GenStats(r.get("eval_count", 0), r.get("eval_duration", 0),
                                    r.get("prompt_eval_count", 0), r.get("prompt_eval_duration", 0),
                                    r.get("load_duration", 0), r.get("total_duration", 0))
+        self.last_finish_reason = r.get("done_reason") or self.last_finish_reason
 
     def _request(self, prompt: str, max_tokens: int) -> str:
+        self.last_finish_reason = None
         r = _call(self.cfg.host, "/api/generate", self._payload(prompt, max_tokens, False),
                   timeout=self.cfg.timeout_s)
         self._update_stats(r)
         return r.get("response", "").strip()
 
     def _stream(self, prompt: str, max_tokens: int):
+        self.last_finish_reason = None
         url = self.cfg.host.rstrip("/") + "/api/generate"
         request = urllib.request.Request(
             url, data=json.dumps(self._payload(prompt, max_tokens, True)).encode(),
@@ -146,15 +150,70 @@ class OllamaModel(LanguageModel):
         except (urllib.error.URLError, ConnectionError, TimeoutError, OSError) as error:
             raise OllamaError(f"cannot stream from Ollama at {self.cfg.host} ({error})") from error
 
-    def stream(self, prompt: str, max_tokens: int = 128):
+    def chat(self, messages: list[dict], tools: list[dict] | None = None,
+             max_tokens: int | None = None) -> dict:
+        """One native ``/api/chat`` completion, with optional tool schemas.
+
+        Returns ``{"content", "tool_calls", "finish_reason"}``. Tool calls are normalized to
+        ``[{"function": {"name", "arguments"}}]`` with JSON-object arguments; malformed calls are
+        returned with empty arguments so the controller records an explicit tool failure instead
+        of inventing an observation.
+        """
+        if not isinstance(messages, list) or not messages:
+            raise ValueError("messages must be a non-empty list")
+        limit = self.cfg.max_tokens if max_tokens is None else max_tokens
+        payload = {
+            "model": self.cfg.model, "messages": messages, "stream": False,
+            "keep_alive": self.cfg.keep_alive,
+            "options": {"temperature": 0, "seed": 0, "top_p": self.cfg.top_p,
+                        "num_predict": limit, "num_ctx": self.cfg.n_ctx},
+        }
+        if self.cfg.think is not None:
+            payload["think"] = self.cfg.think
+        if tools:
+            payload["tools"] = tools
+        self.last_finish_reason = None
         if self.gate is None:
-            yield from self._stream(prompt, max_tokens)
+            response = _call(self.cfg.host, "/api/chat", payload, timeout=self.cfg.timeout_s)
         else:
             with self.gate.slot():
-                yield from self._stream(prompt, max_tokens)
+                response = _call(self.cfg.host, "/api/chat", payload, timeout=self.cfg.timeout_s)
+        self._update_stats(response)
+        message = response.get("message") if isinstance(response.get("message"), dict) else {}
+        calls = []
+        for raw in message.get("tool_calls") or []:
+            if not isinstance(raw, dict):
+                continue
+            function = raw.get("function") if isinstance(raw.get("function"), dict) else raw
+            name = function.get("name") if isinstance(function, dict) else None
+            if not isinstance(name, str) or not name:
+                continue
+            arguments = function.get("arguments", {})
+            if isinstance(arguments, str):
+                try:
+                    arguments = json.loads(arguments)
+                except json.JSONDecodeError:
+                    arguments = {"_invalid_json": arguments[:500]}
+            if not isinstance(arguments, dict):
+                arguments = {}
+            calls.append({"function": {"name": name, "arguments": arguments}})
+        return {
+            "content": str(message.get("content") or ""),
+            "tool_calls": calls,
+            "finish_reason": response.get("done_reason"),
+        }
 
-    def generate(self, prompt: str, max_tokens: int = 128) -> str:
+    def stream(self, prompt: str, max_tokens: int | None = None):
+        limit = self.cfg.max_tokens if max_tokens is None else max_tokens
         if self.gate is None:
-            return self._request(prompt, max_tokens)
+            yield from self._stream(prompt, limit)
+        else:
+            with self.gate.slot():
+                yield from self._stream(prompt, limit)
+
+    def generate(self, prompt: str, max_tokens: int | None = None) -> str:
+        limit = self.cfg.max_tokens if max_tokens is None else max_tokens
+        if self.gate is None:
+            return self._request(prompt, limit)
         with self.gate.slot():
-            return self._request(prompt, max_tokens)
+            return self._request(prompt, limit)

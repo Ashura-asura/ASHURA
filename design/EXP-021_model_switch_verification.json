@@ -1,0 +1,131 @@
+{
+  "date": "2026-11-06T16:35:30Z",
+  "config": "config/ashura.ollama.toml",
+  "configured_model": "tony:7b-gpa3",
+  "host": "http://127.0.0.1:11434",
+  "steps": [
+    {
+      "step": "login",
+      "status": 200
+    },
+    {
+      "step": "list_models",
+      "status": 200,
+      "active": "tony:7b-gpa3",
+      "models": [
+        {
+          "name": "tony:7b-gpa3",
+          "digest": "2a86766287cf5e24eeac2a663fcf3a6bac8e6e821bae91c61729881042d641ad",
+          "size": 4683075848,
+          "active": true,
+          "role": "General / tool use (default)",
+          "documented": true,
+          "matches_catalog": true
+        },
+        {
+          "name": "lfm3:latest",
+          "digest": "b36a103fe2f8fbe9df2ceec88b9cfdf842dc04aaabe2b4677d1acf8e16570b5d",
+          "size": 1099638680,
+          "active": false,
+          "role": "Not a foundation candidate",
+          "documented": true,
+          "matches_catalog": true
+        },
+        {
+          "name": "qwen3.5:2b",
+          "digest": "0689d44085e06d165161a8a9a1731344278cfb5aade63a3c3dbdb48ab54b130a",
+          "size": 2683396812,
+          "active": false,
+          "role": "Fallback only",
+          "documented": true,
+          "matches_catalog": true
+        },
+        {
+          "name": "tony:7b",
+          "digest": "0455603ff4301c68c37ae8acdb8d65fb9755d002bcec53a858e3af955f4bd7d3",
+          "size": 4683076124,
+          "active": false,
+          "role": "Privacy profile",
+          "documented": true,
+          "matches_catalog": true
+        },
+        {
+          "name": "tony:7b-agentic3",
+          "digest": "0efe3817d5c1d203e29e9f2b6e2bfe7e63ad7d62401d1672f2de350f5412fce7",
+          "size": 4683075848,
+          "active": false,
+          "role": "Evaluated candidate, not promoted",
+          "documented": true,
+          "matches_catalog": true
+        }
+      ]
+    },
+    {
+      "step": "running_before",
+      "models": []
+    },
+    {
+      "step": "switch_to_2b",
+      "status": 200,
+      "result": {
+        "ok": true,
+        "changed": true,
+        "active": "qwen3.5:2b",
+        "model": "ollama:qwen3.5:2b",
+        "previous": "tony:7b-gpa3",
+        "previous_unloaded": true,
+        "warning": null,
+        "message": "Model switched for subsequent turns. The launch configuration is unchanged."
+      }
+    },
+    {
+      "step": "running_after_switch",
+      "models": []
+    },
+    {
+      "step": "status_after_switch",
+      "status": 200,
+      "model": "ollama:qwen3.5:2b",
+      "model_switch": true
+    },
+    {
+      "step": "chat_on_2b",
+      "status": 200,
+      "model": "ollama:qwen3.5:2b",
+      "verified": null,
+      "verification": "unavailable",
+      "elapsed_s": 19.85,
+      "text_preview": "OK"
+    },
+    {
+      "step": "running_after_chat",
+      "models": [
+        "qwen3.5:2b"
+      ]
+    },
+    {
+      "step": "switch_back",
+      "status": 200,
+      "result": {
+        "ok": true,
+        "changed": true,
+        "active": "tony:7b-gpa3",
+        "model": "ollama:tony:7b-gpa3",
+        "previous": "qwen3.5:2b",
+        "previous_unloaded": true,
+        "warning": null,
+        "message": "Model switched for subsequent turns. The launch configuration is unchanged."
+      }
+    },
+    {
+      "step": "running_after_restore",
+      "models": []
+    },
+    {
+      "step": "status_after_restore",
+      "status": 200,
+      "model": "ollama:tony:7b-gpa3"
+    }
+  ],
+  "ok": true
+}
