@@ -10,14 +10,19 @@ import com.ashura.tutor.data.DocumentReader
 import com.ashura.tutor.data.LibraryItemEntity
 import com.ashura.tutor.data.ReadResult
 import com.ashura.tutor.data.TutorRepository
+import com.ashura.tutor.data.model.ModelManager
+import com.ashura.tutor.data.model.ModelState
 import com.ashura.tutor.domain.LearnerLevel
 import com.ashura.tutor.domain.Lesson
 import com.ashura.tutor.domain.LessonPlanner
 import com.ashura.tutor.domain.PracticeQuestion
+import com.ashura.tutor.domain.ResponseMode
 import com.ashura.tutor.domain.ReviewOutcome
 import com.ashura.tutor.domain.ReviewSchedule
 import com.ashura.tutor.domain.TutorEngine
 import com.ashura.tutor.domain.TutorRequest
+import com.ashura.tutor.domain.runtime.ModelManifest
+import com.ashura.tutor.domain.runtime.RamTier
 import com.ashura.tutor.domain.assessment.AnswerCheck
 import com.ashura.tutor.domain.assessment.Verdict
 import com.ashura.tutor.domain.library.ClozeGenerator
@@ -42,7 +47,8 @@ import kotlinx.coroutines.launch
 data class TutorUiState(
     val question: String = "", val answer: String? = null, val limitation: String? = null,
     val citations: List<String> = emptyList(),
-    val isBusy: Boolean = false, val error: String? = null
+    val isBusy: Boolean = false, val error: String? = null,
+    val mode: ResponseMode? = null
 )
 
 data class TopicSummary(val id: String, val title: String, val subject: String, val prerequisiteTitles: List<String>)
@@ -90,7 +96,8 @@ class TutorViewModel(
     private val lessonPlanner: LessonPlanner,
     private val practiceService: PracticeService,
     private val pack: CurriculumPack,
-    private val documentReader: DocumentReader
+    private val documentReader: DocumentReader,
+    private val modelManager: ModelManager
 ) : ViewModel() {
     private val _state = MutableStateFlow(TutorUiState())
     val state: StateFlow<TutorUiState> = _state.asStateFlow()
@@ -126,6 +133,26 @@ class TutorViewModel(
 
     val libraryItems: StateFlow<List<LibraryItemEntity>> = repository.libraryItems()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    // Local model state is owned by the application-scoped manager so a download or load survives
+    // screen recreation and only one engine ever exists.
+    val modelState: StateFlow<ModelState> = modelManager.state
+    val modelCatalog: List<ModelManifest> = modelManager.catalog
+    val deviceTier: RamTier = modelManager.deviceTier
+
+    fun downloadModel(id: String) {
+        modelCatalog.firstOrNull { it.id == id }?.let(modelManager::download)
+    }
+
+    fun importModel(uri: Uri) = modelManager.importFromUri(uri)
+
+    fun loadModel() = modelManager.loadInstalled()
+
+    fun unloadModel() = modelManager.unload()
+
+    fun deleteModel() = modelManager.deleteInstalled()
+
+    fun cancelModelDownload() = modelManager.cancelDownload()
 
     private val _library = MutableStateFlow(LibraryUiState())
     val library: StateFlow<LibraryUiState> = _library.asStateFlow()
@@ -264,7 +291,12 @@ class TutorViewModel(
                 }
                 val result = engine.answer(TutorRequest(question, retrievedContext = grounded.snippets, notesSearched = true))
                 repository.appendMessage(id, "assistant", result.answer, result.mode.name)
-                _state.update { it.copy(answer = result.answer, limitation = result.limitation, citations = result.citations, isBusy = false) }
+                _state.update {
+                    it.copy(
+                        answer = result.answer, limitation = result.limitation, citations = result.citations,
+                        isBusy = false, mode = result.mode
+                    )
+                }
             } catch (timeout: TimeoutCancellationException) {
                 _state.update { it.copy(isBusy = false, error = "This request took too long. Try a shorter question.") }
             } catch (cancelled: CancellationException) {
@@ -367,11 +399,14 @@ class TutorViewModelFactory(
     private val lessonPlanner: LessonPlanner,
     private val practiceService: PracticeService,
     private val pack: CurriculumPack,
-    private val documentReader: DocumentReader
+    private val documentReader: DocumentReader,
+    private val modelManager: ModelManager
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         require(modelClass.isAssignableFrom(TutorViewModel::class.java))
-        return TutorViewModel(repository, engine, lessonPlanner, practiceService, pack, documentReader) as T
+        return TutorViewModel(
+            repository, engine, lessonPlanner, practiceService, pack, documentReader, modelManager
+        ) as T
     }
 }

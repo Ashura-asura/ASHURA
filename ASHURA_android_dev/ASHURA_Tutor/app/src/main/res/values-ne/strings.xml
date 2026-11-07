@@ -23,7 +23,11 @@
     <string name="home_ask">प्रश्न सोध्नुहोस्</string>
 
     <string name="tutor_title">शिक्षक</string>
-    <string name="tutor_intro">यो संस्करणले अंकगणित र एकाइ रूपान्तरण ठ्याक्कै गणना गर्छ र अन्य प्रश्नका लागि इमानदार अफलाइन अध्ययन ढाँचा दिन्छ। अझै भाषा मोडेल स्थापना गरिएको छैन।</string>
+    <string name="tutor_intro">यो संस्करणले अंकगणित र एकाइ रूपान्तरण ठ्याक्कै गणना गर्छ, र स्थानीय मोडेल लोड भएको छ भने त्यसको प्रयोग गर्छ। मोडेल नभए इमानदार अफलाइन अध्ययन ढाँचा दिन्छ र त्यो स्पष्ट बताउँछ।</string>
+    <string name="tutor_no_model_hint">कुनै स्थानीय मोडेल लोड भएको छैन। सेटिङ → स्थानीय शिक्षक मोडेलबाट स्थापना गर्नुहोस्; तबसम्म जवाफ निर्धारक रहन्छ।</string>
+    <string name="tutor_mode_local">स्थानीय मोडेलद्वारा जवाफ</string>
+    <string name="tutor_mode_offline">अफलाइन अध्ययन ढाँचा</string>
+    <string name="tutor_mode_deterministic">ठ्याक्कै उपकरण परिणाम</string>
     <string name="tutor_question_label">तपाईं के बुझ्न चाहनुहुन्छ?</string>
     <string name="tutor_ask">सोध्नुहोस्</string>
     <string name="tutor_working">काम गर्दै…</string>
@@ -43,11 +47,37 @@
     <string name="progress_misconceptions">दोहोरिने गलत बुझाइहरू</string>
 
     <string name="settings_title">सेटिङ</string>
-    <string name="settings_intro">कुनै खाता, विश्लेषण, विज्ञापन, API कुञ्जी वा अनिवार्य क्लाउड सेवा समावेश छैन। स्थानीय मोडेल नियन्त्रण रनटाइम एकीकरणसँगै आउनेछ।</string>
+    <string name="settings_intro">कुनै खाता, विश्लेषण, विज्ञापन, API कुञ्जी वा अनिवार्य क्लाउड सेवा समावेश छैन। मोडेल स्थापना भएपछि शिक्षक यही उपकरणमा चल्छ।</string>
     <string name="settings_export">मेरो डाटा निर्यात गर्नुहोस् (JSON)</string>
     <string name="settings_delete_all">मेरो सबै डाटा मेटाउनुहोस्</string>
     <string name="settings_delete_title">सबै डाटा मेटाउने?</string>
     <string name="settings_delete_body">यसले तपाईंका कुराकानी, पुस्तकालय नोट, प्रगति र अभ्यास प्रयासहरू यो उपकरणबाट स्थायी रूपमा मेटाउनेछ।</string>
+
+    <string name="settings_model_heading">स्थानीय शिक्षक मोडेल</string>
+    <string name="settings_model_intro">कुनै मोडेल एपमै समावेश छैन। एउटा प्रमाणित फाइल डाउनलोड वा आयात गर्नुहोस्; त्यसपछिको सबै प्रयोग अफलाइन हुन्छ।</string>
+    <string name="settings_model_device">यो उपकरण: %1$s RAM तह</string>
+    <string name="settings_model_privacy">डाउनलोड गर्दा मोडेल होस्टसँग एक पटक सम्पर्क हुन्छ। प्रश्न, नोट र प्रगति यो उपकरणबाट कहिल्यै बाहिर जाँदैनन्।</string>
+    <string name="settings_model_recommended">यो उपकरणका लागि सिफारिस</string>
+    <string name="settings_model_details">%1$s · %2$s</string>
+    <string name="settings_model_meta">आवश्यक: %1$s उपकरण · इजाजतपत्र: %2$s</string>
+    <string name="settings_model_unsupported">यो उपकरण आवश्यक तहभन्दा तल छ, त्यसैले यो मोडेल स्थापना रोकिएको छ।</string>
+    <string name="settings_model_download">डाउनलोड</string>
+    <string name="settings_model_cancel">डाउनलोड रद्द गर्नुहोस्</string>
+    <string name="settings_model_load">लोड गर्नुहोस्</string>
+    <string name="settings_model_unload">अनलोड गर्नुहोस्</string>
+    <string name="settings_model_delete">मोडेल मेटाउनुहोस्</string>
+    <string name="settings_model_import">प्रमाणित .litertlm फाइल आयात गर्नुहोस्</string>
+    <string name="settings_model_import_hint">आकार र SHA-256 क्याटलग प्रविष्टिसँग मिलेको खण्डमा मात्र आयात स्वीकार गरिन्छ।</string>
+    <string name="settings_model_downloading">%2$s मध्ये %1$s डाउनलोड हुँदै</string>
+    <string name="settings_model_verifying">चेकसम जाँच्दै…</string>
+    <string name="settings_model_importing">आयात र प्रमाणीकरण गर्दै…</string>
+    <string name="settings_model_loading">मोडेल लोड गर्दै…</string>
+    <string name="settings_model_ready_loaded">%1$s लोड भयो। जवाफ स्थानीय मोडेलबाट आउँछ।</string>
+    <string name="settings_model_ready_unloaded">%1$s स्थापना भयो तर लोड भएको छैन।</string>
+    <string name="settings_model_none">कुनै मोडेल स्थापना गरिएको छैन।</string>
+    <string name="settings_model_failed">मोडेल त्रुटि: %1$s</string>
+    <string name="settings_model_delete_title">स्थापित मोडेल मेटाउने?</string>
+    <string name="settings_model_delete_body">%1$s यो उपकरणबाट हटाइनेछ। पछि फेरि डाउनलोड वा आयात गर्न सकिन्छ।</string>
 
     <string name="lesson_none_title">कुनै पाठ चयन गरिएको छैन</string>
     <string name="lesson_open_hint">पाठ सुरु गर्न कुनै विषय खोल्नुहोस्।</string>

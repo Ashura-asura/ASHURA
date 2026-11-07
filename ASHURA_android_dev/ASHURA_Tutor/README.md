@@ -2,9 +2,23 @@
 
 Offline-first, Android-first adaptive learning platform.
 
-**Status:** Checkpoint 1 — offline learning core (curriculum, assessment, tools, persistence). See `CHECKPOINT.md` and `docs/ARCHITECTURE_STATUS.md`.  
+**Status:** v0.3.0 — offline learning core plus an integrated local-model runtime (LiteRT-LM), verified model downloads and
+SAF import. See `CHECKPOINT.md`, `docs/ARCHITECTURE_STATUS.md` and `docs/RUNTIME_INTEGRATION.md`.
 **Spec:** `docs/PRODUCT_SPEC.md` (architecture v5.0).  
 **Target:** 4 GB RAM Android phones (primary), 6 GB (standard), 8 GB+ (enhanced).
+
+## Local model
+
+No weights are bundled. Settings → *Local tutor model* offers two pinned artifacts:
+
+| Model | Tier | Size |
+|---|---|---|
+| Qwen2.5-1.5B-Instruct Q8 | 6 GB+ | 1.6 GB |
+| Qwen3-0.6B INT4 | 4 GB+ | 343 MB |
+
+Downloads are HTTPS-only and checked against a pinned SHA-256; a `.litertlm` file can also be imported through the system
+file picker, but only if its size and hash match the catalog. One model is installed and loaded at a time. Until a model is
+loaded, the tutor answers with the deterministic tools and an honest offline study scaffold.
 
 ## Current implementation layout
 
@@ -43,7 +57,7 @@ scripts/        — setup, test, build_debug, benchmark (PowerShell)
 ## Build prerequisites
 
 Install JDK 17 or newer and Android SDK Platform 35 plus Build Tools 35.0.0. The Gradle Wrapper
-is checked in; on first use it downloads Gradle 8.9. On Windows:
+is checked in; on first use it downloads Gradle 8.14.4. On Windows:
 
 ```powershell
 sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"

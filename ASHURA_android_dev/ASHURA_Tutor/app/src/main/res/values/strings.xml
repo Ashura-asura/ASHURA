@@ -21,7 +21,11 @@
 
     <!-- Tutor -->
     <string name="tutor_title">Tutor</string>
-    <string name="tutor_intro">This build computes arithmetic and unit conversions exactly and gives an honest offline study scaffold for other questions. No language model is installed yet.</string>
+    <string name="tutor_intro">This build computes arithmetic and unit conversions exactly, and uses a locally installed model when one is loaded. Without a model it gives an honest offline study scaffold and says so.</string>
+    <string name="tutor_no_model_hint">No local model is loaded. Settings → Local tutor model installs one; until then answers stay deterministic.</string>
+    <string name="tutor_mode_local">Answered by the local model</string>
+    <string name="tutor_mode_offline">Offline study scaffold</string>
+    <string name="tutor_mode_deterministic">Exact tool result</string>
     <string name="tutor_question_label">What would you like to understand?</string>
     <string name="tutor_ask">Ask</string>
     <string name="tutor_working">Working…</string>
@@ -43,11 +47,38 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_intro">No account, analytics, advertising, API key, or mandatory cloud service is included. Local model controls will arrive with runtime integration.</string>
+    <string name="settings_intro">No account, analytics, advertising, API key, or mandatory cloud service is included. The tutor runs on this device once a model is installed.</string>
     <string name="settings_export">Export my data (JSON)</string>
     <string name="settings_delete_all">Delete all my data</string>
     <string name="settings_delete_title">Delete all data?</string>
     <string name="settings_delete_body">This permanently erases your conversations, library notes, progress and practice attempts from this device.</string>
+
+    <!-- Settings: local model -->
+    <string name="settings_model_heading">Local tutor model</string>
+    <string name="settings_model_intro">No model is bundled in the app. Download or import one verified file; all later use is offline.</string>
+    <string name="settings_model_device">This device: %1$s RAM tier</string>
+    <string name="settings_model_privacy">Downloading contacts the model host once. Questions, notes and progress never leave this device.</string>
+    <string name="settings_model_recommended">Recommended for this device</string>
+    <string name="settings_model_details">%1$s · %2$s</string>
+    <string name="settings_model_meta">Needs: %1$s device · Licence: %2$s</string>
+    <string name="settings_model_unsupported">This device is below the required tier, so installing this model is blocked.</string>
+    <string name="settings_model_download">Download</string>
+    <string name="settings_model_cancel">Cancel download</string>
+    <string name="settings_model_load">Load</string>
+    <string name="settings_model_unload">Unload</string>
+    <string name="settings_model_delete">Delete model</string>
+    <string name="settings_model_import">Import a verified .litertlm file</string>
+    <string name="settings_model_import_hint">Imports are accepted only when the size and SHA-256 match the pinned catalog entry.</string>
+    <string name="settings_model_downloading">Downloading %1$s of %2$s</string>
+    <string name="settings_model_verifying">Verifying checksum…</string>
+    <string name="settings_model_importing">Importing and verifying…</string>
+    <string name="settings_model_loading">Loading model…</string>
+    <string name="settings_model_ready_loaded">%1$s is loaded. Answers use the local model.</string>
+    <string name="settings_model_ready_unloaded">%1$s is installed but not loaded.</string>
+    <string name="settings_model_none">No model is installed.</string>
+    <string name="settings_model_failed">Model error: %1$s</string>
+    <string name="settings_model_delete_title">Delete the installed model?</string>
+    <string name="settings_model_delete_body">%1$s will be removed from this device. You can download or import it again later.</string>
 
     <!-- Lesson -->
     <string name="lesson_none_title">No lesson selected</string>

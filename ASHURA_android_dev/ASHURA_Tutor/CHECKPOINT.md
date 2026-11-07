@@ -99,3 +99,35 @@ still uncompiled here. That first build is the single most valuable next step.
 
 Deliberately NOT done (cannot be done or verified honestly without a device/toolchain): real LLM runtime and benchmarks, PDF/Office/OCR
 parsers, Nepali string localisation, release signing, on-device accessibility and performance audits.
+
+
+---
+
+# Checkpoint 4 — integrated local model (v0.3.0)
+
+Scope: replace `UnavailableModelRuntime` with a real on-device runtime and make model installation usable end to end.
+
+New:
+- **LiteRT-LM 0.19.1** adapter (`LiteRtLmModelRuntime`): one mutex-guarded engine, streaming `sendMessageAsync`, cancellation via
+  `cancelProcess`, timeout, CPU backend, rehash-on-load, safe unload during generation, honest health/errors.
+- **Pinned catalog** (`ModelCatalog`): Qwen2.5-1.5B Q8 for 6 GB+ devices and Qwen3-0.6B INT4 for 4 GB+, with exact revision,
+  byte size, SHA-256, HTTPS URL, licence and RAM-tier gating. Qwen3 thinking is disabled for direct tutor answers.
+- **ModelManager**: HTTPS-only download with progress and cancel, SAF `.litertlm` import, size/checksum verification, `.part`
+  temp file and atomic rename, 1 GB storage reserve, one installed model at a time, explicit load/unload/delete.
+- **Settings UI**: device tier, catalog, recommended marker, size/quantisation/licence, download/import/load/unload/delete,
+  progress, failure text, delete confirmation, privacy disclosure. Progress/state changes are announced to screen readers.
+  Tutor shows the response mode and a no-model hint.
+- **Memory pressure**: `Application.onTrimMemory` unloads the model when the process is critical or background-moderate;
+  the user reloads it from Settings.
+- **Build/toolchain**: Kotlin 2.4.0, AGP 8.13.2, Gradle 8.14.4, KSP 2.3.13, Room 2.8.5 (required by LiteRT-LM metadata),
+  `arm64-v8a`/`x86_64` ABI filter, INTERNET/ACCESS_NETWORK_STATE, R8 keep rules.
+- **Tests**: `ModelCatalogTest`, `PromptBuilderPartsTest`, `LiteRtLmRuntimeContractTest`; 115 JVM tests pass in total.
+- **Artifact**: `dist/ASHURA_Tutor-v0.3.0-dev-debug.apk` (~65 MB), SHA-256
+  `9f9c682ce8147704b5f9cd60fee4c69ee23d8acbc6d3f909e9f696fb0ad553b0`.
+
+Verification: `:app:assembleDebug` and `:app:testDebugUnitTest` succeed. Static/written only: native load and generation,
+download progress against the real hosts, cancellation timing, memory/latency/thermal behaviour, GPU backend. A physical
+device or emulator is still required for those. The catalog hashes have not been re-downloaded in this environment.
+
+Next: run the device checklist in `docs/RUNTIME_INTEGRATION.md`, then record results in a benchmark note before changing the
+default model or backend.

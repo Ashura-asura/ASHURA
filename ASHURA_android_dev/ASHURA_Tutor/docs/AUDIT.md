@@ -1,8 +1,8 @@
 # Deep audit — ASHURA Tutor (Android)
 
 Scope: all code written in checkpoints 1–3 + UI review + final checkpoint. Method: static review; execution of the real
-migration/FTS SQL against SQLite 3.45; fuzzing and stress tests on a JVM (kotlinc 2.0.21). **Not done:** compiling Android/Compose/Room,
-running on a device — see Open O1.
+migration/FTS SQL against SQLite 3.45; fuzzing and stress tests on a JVM (kotlinc 2.0.21). **A later integration checkpoint
+(see the last section) compiled and unit-tested the Android project with Gradle.** Device execution remains open (O1, O4).
 
 ## Evidence gathered
 | Check | Result |
@@ -29,11 +29,11 @@ running on a device — see Open O1.
 ## Open findings (not fixed here)
 | # | Sev | Finding | Recommendation |
 |---|---|---|---|
-| O1 | **High** | ~4 000 lines of Android code (Compose, Room DAOs, ViewModel, SAF) have never been compiled or run | `./gradlew assembleDebug testDebugUnitTest`; send me the output |
-| O2 | Med | No Room schema JSON committed, so `MigrationTestHelper` tests cannot exist yet (SQL itself is verified) | Commit `app/schemas/*.json` after first build; add migration tests 1→4 |
+| O1 | **High** | ~4 000 lines of Android code (Compose, Room DAOs, ViewModel, SAF) have never been compiled or run | Gradle `assembleDebug testDebugUnitTest` now passes (115 tests); **running on a device is still unverified** |
+| O2 | Med | No Room schema JSON committed, so `MigrationTestHelper` tests cannot exist yet (SQL itself is verified) | Resolved in a later checkpoint: schemas 1–4 committed and `MigrationTest` runs |
 | O3 | Med | Database and export file are unencrypted at rest (Android sandbox + disk encryption only) | Decide threat model; SQLCipher or Keystore-wrapped key if notes are sensitive |
-| O4 | Med | No real model runtime; tutoring beyond curriculum/notes is a scaffold | Follow `RUNTIME_INTEGRATION.md`; benchmark on two devices |
-| O5 | Med | All UI strings hard-coded English; no Nepali | Move to `strings.xml` + `values-ne`; native-speaker review |
+| O4 | Med | No real model runtime; tutoring beyond curriculum/notes is a scaffold | Runtime integrated (LiteRT-LM 0.19.1, pinned catalog, verified download/import). Device load, latency and memory benchmarks remain |
+| O5 | Med | All UI strings hard-coded English; no Nepali | Addressed: `values-ne` exists; native-speaker review still required |
 | O6 | Low | Keyword-only retrieval; paraphrases miss; generated answers are not checked against sources | Add embeddings later; add support check |
 | O7 | Low | Lists use `Column.forEach`; fine for tens of items | `LazyColumn` |
 | O8 | Low | Cloze quiz quality is modest (one key term per sentence; multi-word answers collapse spaces) | Add multiple-choice distractors from the same note |
@@ -46,3 +46,22 @@ No `INTERNET` permission, no network code, no analytics, no secrets in the repo.
 rendered as plain text, delimited and control-token-stripped in prompts; FTS input is quoted per token (verified against
 real FTS5). File reads are streamed with a hard size cap; stored URIs are not kept. Backup disabled. Logging records exception
 objects only, never user text. Remaining exposure: O3.
+
+## Runtime integration checkpoint (v0.3.0)
+| Check | Result |
+|---|---|
+| Toolchain | Kotlin 2.4.0, AGP 8.13.2, Gradle 8.14.4, KSP 2.3.13, Room 2.8.5, compile/target SDK 35, minSdk 26 |
+| Build | `:app:assembleDebug` succeeds; `:app:compileDebugKotlin` succeeds |
+| Unit tests | 115/115 passing on the JVM, including catalog pinning, prompt-parts, and LiteRT-LM refusal paths |
+| Static checks | `lintDebug` runs with `abortOnError = true` |
+| Runtime | LiteRT-LM 0.19.1, single mutex-guarded engine, CPU backend, one model slot, app-scoped manager |
+| Model supply chain | HTTPS-only, exact revision + size + SHA-256, `.part` + atomic rename, 1 GB reserve, one-model enforcement |
+| Packaging | Only `arm64-v8a` and `x86_64`; weights are never bundled; R8 keep rules for LiteRT-LM JNI |
+
+New residual risks:
+- The two pinned model URLs and hashes were taken from published repository metadata but have **not** been re-downloaded and
+  re-hashed in this environment. Verify both artifacts once on a real device before a public release.
+- Loading, generation, cancellation under load, peak memory and thermal behaviour are unmeasured on hardware.
+- The GPU backend is not exercised; CPU is the default.
+- The debug APK is ~65 MB (native AAR), above GitHub's 50 MB guidance. Prefer release artifacts outside Git history later.
+

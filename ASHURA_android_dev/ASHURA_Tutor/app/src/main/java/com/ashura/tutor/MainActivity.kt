@@ -21,7 +21,8 @@ class MainActivity : ComponentActivity() {
                 Surface {
                     val vm: TutorViewModel = viewModel(
                         factory = TutorViewModelFactory(
-                            app.repository, app.tutorEngine, app.lessonPlanner, app.practiceService, app.curriculum, app.documentReader
+                            app.repository, app.tutorEngine, app.lessonPlanner, app.practiceService,
+                            app.curriculum, app.documentReader, app.modelManager
                         )
                     )
                     AshuraTutorApp(vm)

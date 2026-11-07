@@ -1,5 +1,6 @@
 package com.ashura.tutor.ui
 
+import android.text.format.Formatter
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -49,12 +50,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.ashura.tutor.R
+import com.ashura.tutor.data.model.ModelState
+import com.ashura.tutor.domain.ResponseMode
+import com.ashura.tutor.domain.runtime.ModelCatalog
+import com.ashura.tutor.domain.runtime.ModelManifest
+import com.ashura.tutor.domain.runtime.RamTier
+import com.ashura.tutor.domain.runtime.rank
 import java.text.DateFormat
 import java.util.Date
 
@@ -78,6 +88,7 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
     val libraryState by viewModel.library.collectAsState()
     val libraryItems by viewModel.libraryItems.collectAsState()
     val settingsMessage by viewModel.settingsMessage.collectAsState()
+    val modelState by viewModel.modelState.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.openTutorTab.collect { selected = Destination.TUTOR.name } }
 
@@ -124,8 +135,10 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                         onNavigateHome = viewModel::clearLesson
                     )
                     else -> TutorScreen(
-                        question = state.question, answer = state.answer, limitation = state.limitation, citations = state.citations,
+                        question = state.question, answer = state.answer, limitation = state.limitation,
+                        citations = state.citations, mode = state.mode,
                         isBusy = state.isBusy, error = state.error,
+                        modelLoaded = (modelState as? ModelState.Ready)?.loaded == true,
                         topics = viewModel.topics, recommendedId = progress.recommendedTopicId,
                         onQuestionChange = viewModel::updateQuestion, onAsk = viewModel::ask,
                         onCancel = viewModel::cancelAsk, onStartTopic = viewModel::startTopic
@@ -138,7 +151,17 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                 )
                 Destination.PROGRESS -> ProgressScreen(progress)
                 Destination.SETTINGS -> SettingsScreen(
-                    message = settingsMessage, onExport = viewModel::exportData,
+                    message = settingsMessage,
+                    modelState = modelState,
+                    catalog = viewModel.modelCatalog,
+                    deviceTier = viewModel.deviceTier,
+                    onDownloadModel = viewModel::downloadModel,
+                    onImportModel = viewModel::importModel,
+                    onLoadModel = viewModel::loadModel,
+                    onUnloadModel = viewModel::unloadModel,
+                    onDeleteModel = viewModel::deleteModel,
+                    onCancelModel = viewModel::cancelModelDownload,
+                    onExport = viewModel::exportData,
                     onDeleteAll = { viewModel.deleteAllData { selected = Destination.HOME.name } }
                 )
             }
@@ -169,7 +192,8 @@ private fun HomeScreen(recommendedTitle: String?, dueCount: Int, onContinue: () 
 
 @Composable
 private fun TutorScreen(
-    question: String, answer: String?, limitation: String?, citations: List<String>, isBusy: Boolean, error: String?,
+    question: String, answer: String?, limitation: String?, citations: List<String>,
+    mode: ResponseMode?, isBusy: Boolean, error: String?, modelLoaded: Boolean,
     topics: List<TopicSummary>, recommendedId: String?,
     onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit, onStartTopic: (String) -> Unit
 ) {
@@ -179,6 +203,15 @@ private fun TutorScreen(
     ) {
         item { ScreenHeading(stringResource(R.string.tutor_title)) }
         item { Text(stringResource(R.string.tutor_intro)) }
+        if (!modelLoaded) {
+            item {
+                Text(
+                    stringResource(R.string.tutor_no_model_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         item {
             OutlinedTextField(
                 value = question, onValueChange = onQuestionChange, modifier = Modifier.fillMaxWidth(),
@@ -202,6 +235,20 @@ private fun TutorScreen(
             item { Text(text) }
             limitation?.let { l ->
                 item { Text(l, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            }
+            mode?.let { m ->
+                item {
+                    val label = when (m) {
+                        ResponseMode.LOCAL_MODEL -> R.string.tutor_mode_local
+                        ResponseMode.OFFLINE_FALLBACK -> R.string.tutor_mode_offline
+                        ResponseMode.DETERMINISTIC -> R.string.tutor_mode_deterministic
+                    }
+                    Text(
+                        stringResource(label),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             if (citations.isNotEmpty()) {
                 item {
@@ -260,30 +307,187 @@ private fun ProgressScreen(progress: ProgressUiState) {
 }
 
 @Composable
-private fun SettingsScreen(message: String?, onExport: (android.net.Uri) -> Unit, onDeleteAll: () -> Unit) {
-    var confirm by remember { mutableStateOf(false) }
+private fun SettingsScreen(
+    message: String?,
+    modelState: ModelState,
+    catalog: List<ModelManifest>,
+    deviceTier: RamTier,
+    onDownloadModel: (String) -> Unit,
+    onImportModel: (android.net.Uri) -> Unit,
+    onLoadModel: () -> Unit,
+    onUnloadModel: () -> Unit,
+    onDeleteModel: () -> Unit,
+    onCancelModel: () -> Unit,
+    onExport: (android.net.Uri) -> Unit,
+    onDeleteAll: () -> Unit
+) {
+    var confirmDeleteAll by remember { mutableStateOf(false) }
+    var confirmDeleteModel by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri -> uri?.let(onExport) }
+    val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(onImportModel) }
+
+    val busy = modelState is ModelState.Downloading || modelState is ModelState.Verifying ||
+        modelState is ModelState.Importing || modelState is ModelState.Loading
+    val ready = modelState as? ModelState.Ready
+    val failed = modelState as? ModelState.Failed
+    val recommended = catalog.filter { it.supports(deviceTier) }.maxByOrNull { it.minimumTier.rank }
+    val live = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         ScreenHeading(stringResource(R.string.settings_title))
         Text(stringResource(R.string.settings_intro))
+
+        Text(stringResource(R.string.settings_model_heading), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.settings_model_intro), style = MaterialTheme.typography.bodySmall)
+        Text(
+            stringResource(R.string.settings_model_device, deviceTier.label),
+            style = MaterialTheme.typography.bodySmall
+        )
+        Text(
+            stringResource(R.string.settings_model_privacy),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        when (modelState) {
+            ModelState.NotInstalled -> Text(stringResource(R.string.settings_model_none))
+            ModelState.Importing -> {
+                Text(stringResource(R.string.settings_model_importing), modifier = live)
+                CircularProgressIndicator()
+            }
+            is ModelState.Downloading -> {
+                val fraction = if (modelState.total > 0) {
+                    (modelState.bytes.toFloat() / modelState.total.toFloat()).coerceIn(0f, 1f)
+                } else 0f
+                Text(
+                    stringResource(
+                        R.string.settings_model_downloading,
+                        Formatter.formatShortFileSize(context, modelState.bytes),
+                        Formatter.formatShortFileSize(context, modelState.total)
+                    ),
+                    modifier = live
+                )
+                LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth())
+            }
+            is ModelState.Verifying -> {
+                Text(stringResource(R.string.settings_model_verifying), modifier = live)
+                CircularProgressIndicator()
+            }
+            is ModelState.Loading -> {
+                Text(stringResource(R.string.settings_model_loading), modifier = live)
+                CircularProgressIndicator()
+            }
+            is ModelState.Ready -> Text(
+                if (modelState.loaded) {
+                    stringResource(R.string.settings_model_ready_loaded, modelState.manifest.displayName)
+                } else {
+                    stringResource(R.string.settings_model_ready_unloaded, modelState.manifest.displayName)
+                },
+                modifier = live
+            )
+            is ModelState.Failed -> Text(
+                stringResource(R.string.settings_model_failed, modelState.message),
+                color = MaterialTheme.colorScheme.error,
+                modifier = live
+            )
+        }
+
+        catalog.forEach { manifest ->
+            val isInstalled = ready?.manifest?.id == manifest.id || failed?.manifest?.id == manifest.id
+            val isDownloading = (modelState as? ModelState.Downloading)?.manifest?.id == manifest.id
+            val loaded = ready?.manifest?.id == manifest.id && ready.loaded
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(manifest.displayName, style = MaterialTheme.typography.titleSmall)
+                if (manifest.id == recommended?.id) {
+                    Text(
+                        stringResource(R.string.settings_model_recommended),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Text(
+                    stringResource(
+                        R.string.settings_model_details,
+                        manifest.quantization,
+                        Formatter.formatShortFileSize(context, manifest.sizeBytes)
+                    ),
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    stringResource(R.string.settings_model_meta, manifest.minimumTier.label, manifest.license),
+                    style = MaterialTheme.typography.bodySmall
+                )
+                if (!manifest.supports(deviceTier)) {
+                    Text(
+                        stringResource(R.string.settings_model_unsupported),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                when {
+                    isDownloading -> OutlinedButton(onClick = onCancelModel, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.settings_model_cancel))
+                    }
+                    loaded -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = onUnloadModel) { Text(stringResource(R.string.settings_model_unload)) }
+                        OutlinedButton(onClick = { confirmDeleteModel = true }) { Text(stringResource(R.string.settings_model_delete)) }
+                    }
+                    ready?.manifest?.id == manifest.id -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = onLoadModel) { Text(stringResource(R.string.settings_model_load)) }
+                        OutlinedButton(onClick = { confirmDeleteModel = true }) { Text(stringResource(R.string.settings_model_delete)) }
+                    }
+                    isInstalled -> OutlinedButton(onClick = { confirmDeleteModel = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.settings_model_delete))
+                    }
+                    else -> Button(
+                        onClick = { onDownloadModel(manifest.id) },
+                        enabled = manifest.supports(deviceTier) && !busy,
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(stringResource(R.string.settings_model_download)) }
+                }
+            }
+        }
+
+        OutlinedButton(
+            onClick = { importer.launch(arrayOf("application/octet-stream", "*/*")) },
+            enabled = !busy,
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(stringResource(R.string.settings_model_import)) }
+        Text(
+            stringResource(R.string.settings_model_import_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
         OutlinedButton(onClick = { exporter.launch("ashura-tutor-export.json") }, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.settings_export))
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-        OutlinedButton(onClick = { confirm = true }, modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(onClick = { confirmDeleteAll = true }, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.settings_delete_all))
         }
     }
-    if (confirm) {
+    if (confirmDeleteAll) {
         AlertDialog(
-            onDismissRequest = { confirm = false },
+            onDismissRequest = { confirmDeleteAll = false },
             title = { Text(stringResource(R.string.settings_delete_title)) },
             text = { Text(stringResource(R.string.settings_delete_body)) },
-            confirmButton = { TextButton(onClick = { confirm = false; onDeleteAll() }) { Text(stringResource(R.string.action_delete)) } },
-            dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.action_cancel)) } }
+            confirmButton = { TextButton(onClick = { confirmDeleteAll = false; onDeleteAll() }) { Text(stringResource(R.string.action_delete)) } },
+            dismissButton = { TextButton(onClick = { confirmDeleteAll = false }) { Text(stringResource(R.string.action_cancel)) } }
+        )
+    }
+    if (confirmDeleteModel) {
+        val name = (ready?.manifest ?: failed?.manifest)?.displayName ?: stringResource(R.string.settings_model_heading)
+        AlertDialog(
+            onDismissRequest = { confirmDeleteModel = false },
+            title = { Text(stringResource(R.string.settings_model_delete_title)) },
+            text = { Text(stringResource(R.string.settings_model_delete_body, name)) },
+            confirmButton = { TextButton(onClick = { confirmDeleteModel = false; onDeleteModel() }) { Text(stringResource(R.string.action_delete)) } },
+            dismissButton = { TextButton(onClick = { confirmDeleteModel = false }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 }
