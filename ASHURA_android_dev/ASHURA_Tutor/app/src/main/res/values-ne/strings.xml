@@ -206,4 +206,13 @@
     <string name="settings_clear_chat">च्याट इतिहास मेटाउनुहोस्</string>
     <string name="settings_clear_chat_title">च्याट इतिहास मेटाउने?</string>
     <string name="settings_clear_chat_body">यसले सबै ट्युटर कुराकानी हटाउँछ। तपाईंका नोट, प्रगति र सेटिङ रहन्छन्।</string>
+    <string name="tutor_history">च्याट इतिहास</string>
+    <string name="tutor_history_empty">अहिलेसम्म कुनै सेभ गरिएको च्याट छैन।</string>
+    <string name="tutor_history_untitled">शीर्षकविहीन च्याट</string>
+    <string name="action_close">बन्द गर्नुहोस्</string>
+    <string name="mistake_explain">मेरो गल्ती बुझाउनुहोस्</string>
+    <string name="mistake_hide">व्याख्या लुकाउनुहोस्</string>
+    <string name="mistake_why">किन: %1$s</string>
+    <string name="mistake_method">विधि: %1$s</string>
+    <string name="tutor_regenerate">फेरि जवाफ बनाउनुहोस्</string>
 </resources>

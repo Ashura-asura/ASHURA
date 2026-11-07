@@ -19,6 +19,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -50,6 +52,8 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -105,6 +109,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.ashura.tutor.R
+import com.ashura.tutor.data.ConversationEntity
 import com.ashura.tutor.data.model.ModelState
 import com.ashura.tutor.data.profile.LearnerProfile
 import com.ashura.tutor.domain.LearnerLevel
@@ -215,7 +220,11 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                         topics = viewModel.topics, recommendedId = progress.recommendedTopicId,
                         onQuestionChange = viewModel::updateQuestion, onAsk = viewModel::ask,
                         onCancel = viewModel::cancelAsk, onStartTopic = viewModel::startTopic,
-                        onNewChat = viewModel::newChat
+                        onNewChat = viewModel::newChat,
+                        onRegenerate = viewModel::regenerate,
+                        conversations = viewModel.conversations.collectAsState().value,
+                        onOpenConversation = viewModel::openConversation,
+                        onDeleteConversation = viewModel::deleteConversation
                     )
                 }
                 Destination.LIBRARY -> LibraryScreen(
@@ -320,8 +329,12 @@ private fun TutorScreen(
     style: TutorStyle, onToggleStyle: () -> Unit,
     topics: List<TopicSummary>, recommendedId: String?,
     onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit,
-    onStartTopic: (String) -> Unit, onNewChat: () -> Unit
+    onStartTopic: (String) -> Unit, onNewChat: () -> Unit,
+    onRegenerate: () -> Unit,
+    conversations: List<ConversationEntity>,
+    onOpenConversation: (String) -> Unit, onDeleteConversation: (String) -> Unit
 ) {
+    var showHistory by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     // Follow the stream only while the learner is already at the newest message, so reading earlier
@@ -347,10 +360,46 @@ private fun TutorScreen(
         }
     }
 
+    if (showHistory) {
+        AlertDialog(
+            onDismissRequest = { showHistory = false },
+            title = { Text(stringResource(R.string.tutor_history)) },
+            text = {
+                if (conversations.isEmpty()) {
+                    Text(stringResource(R.string.tutor_history_empty))
+                } else {
+                    LazyColumn(Modifier.heightIn(max = 360.dp)) {
+                        items(conversations, key = { it.id }) { c ->
+                            Row(
+                                Modifier.fillMaxWidth()
+                                    .clickable { showHistory = false; onOpenConversation(c.id) }
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    c.title.ifBlank { stringResource(R.string.tutor_history_untitled) },
+                                    modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                IconButton(onClick = { onDeleteConversation(c.id) }) {
+                                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete))
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showHistory = false }) { Text(stringResource(R.string.action_close)) }
+            }
+        )
+    }
+
     Column(Modifier.fillMaxSize().imePadding()) {
         ChatTopBar(
             modelLoaded = modelLoaded, style = style,
-            onToggleStyle = onToggleStyle, onNewChat = onNewChat
+            onToggleStyle = onToggleStyle, onNewChat = onNewChat,
+            onHistory = { showHistory = true }
         )
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (messages.isEmpty()) {
@@ -366,7 +415,12 @@ private fun TutorScreen(
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    items(messages, key = { it.id }) { message -> ChatBubble(message) }
+                    items(messages, key = { it.id }) { message ->
+                        ChatBubble(
+                            message,
+                            onRegenerate = if (!isBusy && message.id == messages.lastOrNull()?.id) onRegenerate else null
+                        )
+                    }
                     error?.let { message ->
                         item {
                             Text(
@@ -423,7 +477,7 @@ private fun TutorScreen(
 @Composable
 private fun ChatTopBar(
     modelLoaded: Boolean, style: TutorStyle,
-    onToggleStyle: () -> Unit, onNewChat: () -> Unit
+    onToggleStyle: () -> Unit, onNewChat: () -> Unit, onHistory: () -> Unit
 ) {
     Row(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
@@ -470,6 +524,9 @@ private fun ChatTopBar(
                 ),
                 style = MaterialTheme.typography.labelMedium
             )
+        }
+        IconButton(onClick = onHistory) {
+            Icon(Icons.Default.History, contentDescription = stringResource(R.string.tutor_history))
         }
         IconButton(onClick = onNewChat) {
             Icon(Icons.Default.Add, contentDescription = stringResource(R.string.tutor_new_chat))
@@ -638,7 +695,7 @@ private fun ChatComposer(
 }
 
 @Composable
-private fun ChatBubble(message: ChatMessage) {
+private fun ChatBubble(message: ChatMessage, onRegenerate: (() -> Unit)? = null) {
     if (message.role == ChatRole.USER) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             Surface(
@@ -655,7 +712,7 @@ private fun ChatBubble(message: ChatMessage) {
             }
         }
     } else {
-        AssistantMessage(message)
+        AssistantMessage(message, onRegenerate)
     }
 }
 
@@ -664,7 +721,7 @@ private fun ChatBubble(message: ChatMessage) {
  * no second speech bubble. Actions sit quietly underneath the answer.
  */
 @Composable
-private fun AssistantMessage(message: ChatMessage) {
+private fun AssistantMessage(message: ChatMessage, onRegenerate: (() -> Unit)? = null) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Surface(
             shape = CircleShape,
@@ -739,7 +796,21 @@ private fun AssistantMessage(message: ChatMessage) {
                         )
                     }
                 }
-                CopyAnswerButton(message.text)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CopyAnswerButton(message.text)
+                    if (onRegenerate != null) {
+                        TextButton(
+                            onClick = onRegenerate,
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Text(
+                                stringResource(R.string.tutor_regenerate),
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                }
             }
         }
     }

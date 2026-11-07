@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ashura.tutor.application.PracticeService
 import com.ashura.tutor.data.ChunkHit
+import com.ashura.tutor.data.ConversationEntity
 import com.ashura.tutor.data.DocumentReader
 import com.ashura.tutor.data.LibraryItemEntity
 import com.ashura.tutor.data.ReadResult
@@ -164,6 +165,10 @@ class TutorViewModel(
         recommendedTitle = pack.nextRecommended(emptyMap())?.title))
 
     val libraryItems: StateFlow<List<LibraryItemEntity>> = repository.libraryItems()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Past tutor conversations, newest first, for the history list. */
+    val conversations: StateFlow<List<ConversationEntity>> = repository.conversations()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // Local model state is owned by the application-scoped manager so a download or load survives
@@ -448,7 +453,7 @@ class TutorViewModel(
         }
         askJob = viewModelScope.launch {
             try {
-                val id = conversationId ?: repository.createConversation("Study session").also { conversationId = it }
+                val id = conversationId ?: repository.createConversation(question.replace("\n", " ").take(48)).also { conversationId = it }
                 repository.appendMessage(id, "user", question)
                 // Retrieval is best-effort: a search failure must never block the answer.
                 val grounded = try {
@@ -529,6 +534,63 @@ class TutorViewModel(
                     ) else message
                 }
             )
+        }
+    }
+
+    /** Re-asks the last question: drops the last answer (and its question bubble) and runs the request again. */
+    fun regenerate() {
+        val s = _state.value
+        if (s.isBusy) return
+        val lastAssistant = s.messages.lastOrNull()?.takeIf { it.role == ChatRole.ASSISTANT } ?: return
+        val lastUser = s.messages.dropLast(1).lastOrNull()?.takeIf { it.role == ChatRole.USER } ?: return
+        _state.update { it.copy(messages = it.messages.dropLast(2), question = lastUser.text, error = null) }
+        ask()
+    }
+
+    /** Re-opens a stored conversation (text only: source citations are not persisted per message). */
+    fun openConversation(id: String) {
+        viewModelScope.launch {
+            try {
+                askJob?.cancel(); askJob = null
+                val stored = repository.loadConversation(id)
+                conversationId = id
+                _state.update {
+                    it.copy(
+                        messages = stored.map { m ->
+                            ChatMessage(
+                                id = m.id,
+                                role = if (m.role == "user") ChatRole.USER else ChatRole.ASSISTANT,
+                                text = m.content,
+                                // Per-message citations are not persisted, so a reopened model answer
+                                // must not claim a confidence label it can no longer support. Only the
+                                // deterministic marker is safe to restore.
+                                mode = m.source
+                                    ?.let { s -> ResponseMode.values().firstOrNull { r -> r.name == s } }
+                                    ?.takeIf { it == ResponseMode.DETERMINISTIC }
+                            )
+                        },
+                        question = "", answer = null, limitation = null, citations = emptyList(),
+                        isBusy = false, error = null, mode = null
+                    )
+                }
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _state.update { it.copy(error = "Could not open this chat: ${e.message}") }
+            }
+        }
+    }
+
+    fun deleteConversation(id: String) {
+        viewModelScope.launch {
+            try {
+                if (id == conversationId) newChat()
+                repository.deleteConversation(id)
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _state.update { it.copy(error = "Could not delete this chat: ${e.message}") }
+            }
         }
     }
 

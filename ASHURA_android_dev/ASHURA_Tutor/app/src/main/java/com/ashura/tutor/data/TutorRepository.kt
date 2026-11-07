@@ -40,6 +40,15 @@ class TutorRepository(private val db: AppDatabase) {
         }
     }
 
+    suspend fun loadConversation(id: String): List<MessageEntity> = db.messages().listForConversation(id)
+
+    suspend fun deleteConversation(id: String) {
+        db.withTransaction {
+            db.messages().deleteForConversation(id)
+            db.conversations().delete(id)
+        }
+    }
+
     /** Spec §15.3: erase conversations only; notes, progress and attempts are kept. */
     suspend fun clearChatHistory() {
         db.withTransaction {

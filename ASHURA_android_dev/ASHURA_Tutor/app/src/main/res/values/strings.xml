@@ -214,4 +214,13 @@
     <string name="settings_clear_chat">Clear chat history</string>
     <string name="settings_clear_chat_title">Clear chat history?</string>
     <string name="settings_clear_chat_body">This removes all tutor conversations. Your notes, progress and settings are kept.</string>
+    <string name="tutor_history">Chat history</string>
+    <string name="tutor_history_empty">No saved chats yet.</string>
+    <string name="tutor_history_untitled">Untitled chat</string>
+    <string name="action_close">Close</string>
+    <string name="mistake_explain">Explain my mistake</string>
+    <string name="mistake_hide">Hide explanation</string>
+    <string name="mistake_why">Why: %1$s</string>
+    <string name="mistake_method">Method: %1$s</string>
+    <string name="tutor_regenerate">Regenerate</string>
 </resources>

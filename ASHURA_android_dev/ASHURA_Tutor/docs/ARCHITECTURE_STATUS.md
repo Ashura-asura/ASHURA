@@ -13,7 +13,7 @@ Legend:
 - **Not implemented** — do not advertise as available.
 
 Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
-**173 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
+**182 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
 hardware-dependent claim below is device-pending, not proven.
 
 ## Implemented and verified on the JVM
@@ -48,6 +48,9 @@ hardware-dependent claim below is device-pending, not proven.
 | Honest-confidence labels derived from answer mode and retrieved citations (§12.4) | Verified (JVM) | `ConfidenceLabelTest` |
 | Hint ladder / stuck detection with a guaranteed path to the worked solution (§3.3) | Verified (JVM) | `HintLadderTest` |
 | “Just tell me” overrides Socratic style for that one answer without changing the saved preference (§1.2C) | Verified (JVM) | `HintLadderTest`, `TutorViewModel.ask` |
+| Deterministic explain-my-mistake: comparison, known misconception or provable numeric pattern, method, next step (§3.4) | Verified (JVM) | `MistakeExplainerTest` |
+| Chat history: conversations listed newest-first, reopened, individually deleted; titles from first question (§15.3) | Written | `TutorViewModel.openConversation`, `deleteConversation`, `TutorRepository.loadConversation` |
+| Regenerate the latest answer in place; the previous turn stays in stored history (§3.3) | Written | `TutorViewModel.regenerate` |
 | Nepali UI strings for the core screens (§1.4) | Written | `values-ne/strings.xml`; native review still needed |
 
 ## Written and wired, device-pending
@@ -76,9 +79,9 @@ hardware-dependent claim below is device-pending, not proven.
 | Verification (§12) | Deterministic calculator, exact answer checker, source citations, honest-confidence labels | No claim-level evidence-coverage check that every statement is supported; no independent rubric; no code-execution sandbox |
 | Teaching engine (§7) | Lesson planner, Socratic/direct prompt styles, hint ladder, stuck detection, direct-answer override, misconceptions recorded | Adaptive explanation is prompt-driven, not a full misconception taxonomy per topic |
 | Curriculum (§8) | 4 maths topics + 200 bundled study notes | No broad multi-subject curriculum graph with objectives/prerequisites per subject |
-| Assessment (§12.2) | Topic quiz, document quiz, self-assessed explanations, spaced review, hint assistance tracking | No diagnostic exam, exam simulation, transfer-question generator or delayed-recall scheduling beyond the current scheduler |
+| Assessment (§12.2) | Topic quiz, document quiz, self-assessed explanations, spaced review, hint assistance tracking, deterministic explain-my-mistake | No diagnostic exam, exam simulation, transfer-question generator or delayed-recall scheduling beyond the current scheduler |
 | Data model (§19) | Conversations, messages, library items, chunks, concepts, learning state, attempts, misconceptions | No stored original file, no `file_hash`/`storage_uri`, no separate `Document`/`DocumentChunk` metadata columns for heading path or extraction method |
-| Data controls (§15.3) | Export JSON, delete one note, clear all chat history, delete all data | No per-conversation retention policy UI, no selective export, no encrypted database |
+| Data controls (§15.3) | Export JSON, delete one note, clear all chat history, delete one conversation, delete all data | No automatic retention/expiry policy, no selective export, no encrypted database |
 | Resource management (§16) | Device tiers, one-model rule, caps, memory-pressure handling removed in favour of user control | Device benchmarks and thermal measurements are unrun; no GPU backend exercised |
 | Accessibility (§3.6) | Content descriptions, headings, live regions, large touch targets | No dedicated TalkBack pass, font-scale stress test or switch-access review |
 
@@ -93,7 +96,7 @@ hardware-dependent claim below is device-pending, not proven.
 | Programming engine / code sandbox (§11.3) | None. No code execution, no compiler, no sandbox. |
 | Science specialist engines (§11.2) | None beyond the calculator/unit converter and the model's own text. |
 | Original-file storage and hashes (§9.2, §19) | Imported originals are not retained; there is no `file_hash` or `storage_uri`, only the extracted text. |
-| Per-conversation retention policy (§15.3) | Only clear-all chat history exists; individual conversations cannot be retained/expired separately. |
+| Automatic conversation retention/expiry (§15.3) | Individual conversations can be deleted from the history list, but nothing expires them on a schedule. |
 | Encrypted database or files (§18.3) | Room and imported text rely on the Android app sandbox, not app-level encryption. |
 | Claim-level evidence coverage (§12.1, §12.4) | Confidence labels describe the answer source; they do not verify every statement against retrieved passages. |
 | 125-question benchmark and learning-effectiveness study (§21.2, §21.4) | No versioned benchmark set or pre/post/delayed-recall evaluation has been run. |

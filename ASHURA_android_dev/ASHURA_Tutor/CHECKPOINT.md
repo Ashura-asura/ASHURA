@@ -317,3 +317,40 @@ Artifact: `dist/ASHURA_Tutor-v0.5.3-dev-debug.apk` (~99 MB), SHA-256
 Still open and recorded in `docs/ARCHITECTURE_STATUS.md`: claim-level evidence coverage, explain-my-mistake,
 import status/original-file storage, broader assessment types, speech, plotting, code sandbox, online
 research, semantic retrieval, encrypted storage and all device benchmarks.
+
+---
+
+# Checkpoint 10 — chat history, regenerate, explain-my-mistake (v0.5.4)
+
+Scope: integrated the second external “gap-closing” update (`ASHURA_Tutor_updated (1).zip`) into the v0.5.3
+tree. The zip was based on v0.5.3, so its document/OCR work was already present and was not overwritten.
+
+Added:
+- **Chat history** — a History button in the chat header opens a list of saved conversations, newest first.
+  Tapping a row reopens it; the bin icon deletes that conversation and its messages only. New chats are
+  titled from the first question (48 characters). Reopened chats restore text and answer mode; per-message
+  citations were never stored, so the list is intentionally not reconstructed.
+- **Regenerate** — the latest assistant answer has a Regenerate action. It drops the last question/answer
+  pair from the visible transcript, re-asks the same question, and leaves the previous turn in stored
+  history.
+- **Explain my mistake** — after an incorrect machine-checked practice answer, a button reveals what the
+  learner wrote versus the expected answer, a deterministic reason (known misconception tag, wrong sign,
+  decimal point off by a factor of ten, value too large/small), the question’s method, and a next step.
+  It never claims to find the first incorrect step, because the app does not capture working.
+
+Fixes made during integration:
+- Kept the v0.5.2 document/OCR pipeline, CSV/TSV extractor, per-page OCR isolation and editable OCR text.
+- Moved the hint-ladder nudge inside the `!done` branch so a correct answer never shows a “stuck” tip.
+- Snapshot the submitted answer against the answer-check result, so editing the field after a wrong answer
+  does not change the explanation text.
+- Reopened chats restore only the deterministic answer marker. Per-message citations were never stored, so
+  restoring a “model-only” or “based on notes” confidence label would be an unverifiable claim.
+- Imported the new classes in the project’s normal import order and added EN + NE strings.
+
+Tests: **182 JVM tests, 0 failures** (173 + 9 mistake-explainer). `lintDebug` and `assembleDebug` pass.
+
+Artifact: `dist/ASHURA_Tutor-v0.5.4-dev-debug.apk` (~99 MB), SHA-256
+`f33e485bb94bc224a82052325f79fd303aa9b5bb9bebe428a83399f2cd4256e3`.
+
+Still open: import status UI, edit message, claim-level evidence coverage, semantic retrieval, speech,
+plotting, code sandbox, online research, encrypted storage and all device benchmarks.

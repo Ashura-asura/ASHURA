@@ -2,9 +2,10 @@
 
 Offline-first, Android-first adaptive learning platform.
 
-**Status:** v0.5.3 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
-richer mixed test sets from imported PDF/Office/CSV/image notes, on-device OCR with editable text, honest
-confidence labels, a hint ladder, and 200 bundled open-licensed study sets.
+**Status:** v0.5.4 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
+chat history with reopen/delete, regenerate, richer mixed test sets from imported PDF/Office/CSV/image notes,
+on-device OCR with editable text, honest confidence labels, a hint ladder, explain-my-mistake, and 200 bundled
+open-licensed study sets.
 See `CHECKPOINT.md`, `docs/ARCHITECTURE_STATUS.md` and `docs/RUNTIME_INTEGRATION.md`.
 **Spec:** `docs/PRODUCT_SPEC.md` (architecture v5.0).  
 **Target:** 4 GB RAM Android phones (primary), 6 GB (standard), 8 GB+ (enhanced).
@@ -28,10 +29,13 @@ study scaffold.
 
 - **Chat tutor** — the Tutor tab is a full-height conversation with bubbles, streaming text, stop, citations and a pinned
   composer. Suggested topics appear on an empty conversation. Every answer carries an honest confidence label
-  (verified by calculation / based on your notes / model-only / insufficient evidence), and Settings can clear chat
-  history without touching notes or progress.
+  (verified by calculation / based on your notes / model-only / insufficient evidence), the latest answer can be
+  regenerated, and the history button reopens or deletes past chats. Settings can clear all chat history without
+  touching notes or progress.
 - **Practice** — a hint ladder notices repeated wrong attempts and offers the next hint, then the worked solution;
-  saying “just tell me” in Socratic mode switches that answer to a direct explanation.
+  saying “just tell me” in Socratic mode switches that answer to a direct explanation. After a wrong answer,
+  *Explain my mistake* compares what you wrote with the correct answer and gives the reason, the method and a next
+  step from deterministic rules.
 - **Documents** — import Markdown/text, CSV/TSV, PDF, DOCX, XLSX, PPTX and PNG/JPEG/WebP. Text PDFs use embedded
   text; thin or scanned pages and photos use bundled ML Kit Latin + Devanagari OCR with orientation retry. Each passage
   keeps its page, slide or sheet label for citations, spreadsheets keep `A1` cell references and formulas, and OCR text

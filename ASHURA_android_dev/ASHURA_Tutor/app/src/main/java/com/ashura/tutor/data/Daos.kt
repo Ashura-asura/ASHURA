@@ -22,6 +22,8 @@ interface ConversationDao {
     suspend fun touch(id: String, updatedAt: Long)
     @Query("DELETE FROM conversations")
     suspend fun deleteAll()
+    @Query("DELETE FROM conversations WHERE id = :id")
+    suspend fun delete(id: String)
 }
 
 @Dao
@@ -34,6 +36,10 @@ interface MessageDao {
     suspend fun insert(message: MessageEntity)
     @Query("DELETE FROM messages")
     suspend fun deleteAll()
+    @Query("SELECT * FROM messages WHERE conversationId = :conversationId ORDER BY createdAt ASC")
+    suspend fun listForConversation(conversationId: String): List<MessageEntity>
+    @Query("DELETE FROM messages WHERE conversationId = :conversationId")
+    suspend fun deleteForConversation(conversationId: String)
 }
 
 @Dao

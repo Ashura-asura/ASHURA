@@ -2,8 +2,10 @@ package com.ashura.tutor.ui
 
 import com.ashura.tutor.domain.assessment.HintLadder
 import com.ashura.tutor.domain.assessment.LadderStep
+import com.ashura.tutor.domain.assessment.MistakeExplainer
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,10 +26,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,6 +63,8 @@ fun PracticeScreen(
     var answer by rememberSaveable(question.id) { mutableStateOf("") }
     var selfOutcome by rememberSaveable(question.id) { mutableStateOf<String?>(null) }
     val done = state.finished
+    var showExplain by remember(state.check) { mutableStateOf(false) }
+    val submittedAnswer = remember(state.check) { answer }
 
     Scaffold(
         topBar = {
@@ -148,17 +154,20 @@ fun PracticeScreen(
                             }
                         }
                     }
-                }
-                val ladder = HintLadder.nextStep(question.hints.size, state.hintsShown, state.wrongAttempts, state.solutionShown)
-                if (ladder != LadderStep.NONE) {
-                    item {
-                        Text(
-                            stringResource(
-                                if (ladder == LadderStep.SUGGEST_HINT) R.string.practice_stuck_hint else R.string.practice_stuck_solution
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    val ladder = HintLadder.nextStep(
+                        question.hints.size, state.hintsShown, state.wrongAttempts, state.solutionShown
+                    )
+                    if (ladder != LadderStep.NONE) {
+                        item {
+                            Text(
+                                stringResource(
+                                    if (ladder == LadderStep.SUGGEST_HINT) R.string.practice_stuck_hint
+                                    else R.string.practice_stuck_solution
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
                 items(state.hintsShown) { index ->
@@ -189,6 +198,25 @@ fun PracticeScreen(
                         color = if (check.verdict == Verdict.CORRECT) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.error
                     )
+                }
+                val explanation = if (question.selfAssessed) null
+                    else MistakeExplainer.explain(question, submittedAnswer, check)
+                if (explanation != null) {
+                    item {
+                        TextButton(onClick = { showExplain = !showExplain }) {
+                            Text(stringResource(if (showExplain) R.string.mistake_hide else R.string.mistake_explain))
+                        }
+                    }
+                    if (showExplain) {
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(explanation.comparison)
+                                explanation.why?.let { Text(stringResource(R.string.mistake_why, it)) }
+                                explanation.method?.let { Text(stringResource(R.string.mistake_method, it)) }
+                                Text(explanation.next, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
                 }
             }
             state.error?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error) } }
