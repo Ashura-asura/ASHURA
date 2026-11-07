@@ -47,6 +47,8 @@ interface LibraryDao {
     suspend fun insert(item: LibraryItemEntity)
     @Query("SELECT COUNT(*) FROM library_items WHERE title = :title")
     suspend fun countByTitle(title: String): Int
+    @Query("UPDATE library_items SET body = :body, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateBody(id: String, body: String, updatedAt: Long)
     @Query("DELETE FROM library_items WHERE id = :id")
     suspend fun delete(id: String)
 }

@@ -238,3 +238,47 @@ Hardware rendering, IME resize, scroll feel and copy behaviour still need the ph
 
 Artifact: `dist/ASHURA_Tutor-v0.5.1-dev-debug.apk` (~99 MB), SHA-256
 `fd2159bf6c40cdec35b522530cc5c412b7b950640eb89577d59116400842f37f`.
+
+---
+
+# Checkpoint 8 — document-intelligence correctness pass and honest status (v0.5.2)
+
+Scope: the v5.0 spec claims and the earlier status file did not match the build. This pass fixed real
+document/OCR defects, added the missing CSV path and OCR correction, and rewrote the status document so
+unimplemented features are no longer implied to exist.
+
+Fixed defects:
+- **XLSX provenance was silently broken.** Sheets were emitted as `[Marks]`, while `TextChunker` and
+  `SectionLabel` only recognise `[Sheet: Marks]`. Every spreadsheet passage therefore lost its sheet
+  citation. XLSX now emits `[Sheet: Name]`, each cell keeps its coordinate (`A2: Alice`) and formulas keep
+  both the displayed value and the expression (`C2: 84 [=B2*2]`).
+- **CSV was advertised but unsupported.** New `CsvExtractor` handles quoted fields, escaped quotes,
+  newlines inside quotes, `,`/`;`/tab delimiters, a 20 000-row/100-column cap, `[Sheet: CSV]` and `A1`
+  references. `TextChunker.Kind.CSV`, strict UTF-8 decoding, `.csv`/`.tsv` MIME + extension detection, and
+  the Library picker filters were wired through.
+- **OCR skipped pages with a speck of text.** Any embedded character count above zero suppressed OCR.
+  Pages with fewer than 24 embedded characters are now OCR'd too; when the embedded layer is thin, both
+  layers are kept and the OCR block is labelled.
+- **One bad page aborted a whole scan.** Per-page OCR failures are isolated (`failedPages`) and disclosed
+  in the imported text; the 24-page OCR cap is disclosed separately.
+- **Sideways phone photos failed.** When the first OCR pass finds fewer than 12 characters, 90/180/270°
+  rotations are tried and the richest result wins.
+
+Added:
+- **Editable OCR text**: Library → edit opens the imported text. Saving normalises it, replaces the body and
+  re-chunks/re-indexes its passages atomically, so later search, citations and quizzes use the correction.
+- **Truthful architecture status**: `docs/ARCHITECTURE_STATUS.md` now has three tables (verified, device-
+  pending, partial) and an explicit "not implemented — do not advertise" table covering online research,
+  speech, vision beyond OCR, plotting/simulations, code sandbox, science/programming engines, semantic
+  retrieval, evidence-coverage verification, broad curriculum, original-file storage and device benchmarks.
+  README carries the same short limitation notice.
+- **Tests**: `CsvExtractorTest` (quoted fields, TSV, semicolon, caps, blank rows, provenance, column
+  rollover) plus CSV cases in `TextChunkerTest`. **158 JVM tests pass**; `lintDebug` and `assembleDebug`
+  pass.
+
+Artifact: `dist/ASHURA_Tutor-v0.5.2-dev-debug.apk` (~99 MB), SHA-256
+`648e23f4943cdfb0e4200a64183843fee39c8fc7352cf667f6eeef5376b6152c`.
+
+Verification: compile, JVM tests and lint pass here. Still device-pending: OCR accuracy/speed on real
+scans, Compose editing of a long OCR body, spreadsheet/PDF extraction quality, model residency, and
+memory/thermal behaviour.

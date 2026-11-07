@@ -184,6 +184,9 @@
     <string name="library_passage">%1$s · passage %2$d</string>
     <string name="library_delete_title">Delete this note?</string>
     <string name="library_delete_body">“%1$s” and its passages will be removed from this device.</string>
+    <string name="library_edit_cd">Edit text of %1$s</string>
+    <string name="library_edit_title">Edit imported text</string>
+    <string name="library_edit_body">Correct any OCR mistakes in “%1$s”. Saving rebuilds its searchable passages, so later answers and quizzes use the corrected wording.</string>
     <string name="study_sets_title">Built-in study sets</string>
     <string name="study_sets_intro">%1$d offline notes from Wikipedia (CC BY-SA 4.0). Add a set, then tap “Quiz me” to build a mixed test.</string>
     <string name="study_sets_loading">Loading study sets…</string>
@@ -197,6 +200,7 @@
     <string name="splash_credit">Powered and built by Bishal Bhandari from Nepal</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
     <string name="action_back_to_tutor">Back to tutor</string>
     <string name="action_back_to_lesson">Back to lesson</string>
 

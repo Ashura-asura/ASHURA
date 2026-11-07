@@ -79,12 +79,13 @@ class OoxmlExtractorTest {
         )
         assertTrue(result.toString(), result is OoxmlExtractor.Result.Success)
         val text = (result as OoxmlExtractor.Result.Success).text
-        assertTrue(text.contains("[Marks]"))
+        assertTrue(text.contains("[Sheet: Marks]"))
         assertTrue(text.contains("Name"))
         assertTrue(text.contains("Score"))
         assertTrue(text.contains("Alice"))
-        assertTrue(text.contains("42"))
-        assertTrue(text.contains("=B2*2"))
+        assertTrue(text.contains("A2: Alice"))
+        assertTrue(text.contains("B2: 42"))
+        assertTrue(text.contains("C2: 84 [=B2*2]"))
     }
 
     @Test fun pptxExtractsSlidesInNumericOrderWithNotes() {

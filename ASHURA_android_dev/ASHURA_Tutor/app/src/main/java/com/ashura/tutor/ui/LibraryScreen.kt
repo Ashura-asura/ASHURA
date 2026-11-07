@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -53,11 +55,14 @@ fun LibraryScreen(
     onQueryChange: (String) -> Unit,
     onDelete: (String) -> Unit,
     onQuiz: (String, String) -> Unit,
+    onEditText: (String, String, String) -> Unit,
     onAddStudySet: (StudySet) -> Unit,
     onAddStudySubject: (StudySubject) -> Unit
 ) {
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(onImport) }
     var pendingDelete by remember { mutableStateOf<LibraryItemEntity?>(null) }
+    var editing by remember { mutableStateOf<LibraryItemEntity?>(null) }
+    var editText by remember { mutableStateOf("") }
     var expandedSubject by rememberSaveable { mutableStateOf<String?>(null) }
 
     LazyColumn(
@@ -73,6 +78,7 @@ fun LibraryScreen(
                     picker.launch(
                         arrayOf(
                             "text/plain", "text/markdown", "text/x-markdown",
+                            "text/csv", "text/comma-separated-values", "text/tab-separated-values",
                             "application/pdf", "image/png", "image/jpeg", "image/webp",
                             "application/msword",
                             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -224,6 +230,9 @@ fun LibraryScreen(
                     )
                 }
                 TextButton(onClick = { onQuiz(item.id, item.title) }) { Text(stringResource(R.string.library_quiz)) }
+                IconButton(onClick = { editText = item.body; editing = item }) {
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.library_edit_cd, item.title))
+                }
                 IconButton(onClick = { pendingDelete = item }) {
                     Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.library_delete_cd, item.title))
                 }
@@ -243,6 +252,37 @@ fun LibraryScreen(
             },
             dismissButton = {
                 TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) }
+            }
+        )
+    }
+
+    editing?.let { item ->
+        AlertDialog(
+            onDismissRequest = { editing = null },
+            title = { Text(stringResource(R.string.library_edit_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.library_edit_body, item.title), style = MaterialTheme.typography.bodySmall)
+                    OutlinedTextField(
+                        value = editText,
+                        onValueChange = { editText = it },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp),
+                        maxLines = 12
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val current = item
+                        editing = null
+                        if (editText.isNotBlank()) onEditText(current.id, current.title, editText)
+                    },
+                    enabled = editText.isNotBlank()
+                ) { Text(stringResource(R.string.action_save)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { editing = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }

@@ -205,7 +205,9 @@ object OoxmlExtractor {
         sheets.forEachIndexed { index, path ->
             if (sink.truncated) return@forEachIndexed
             if (index > 0) sink.blankLine()
-            sink.append("[${names[path] ?: "Sheet ${index + 1}"}]\n")
+            // The "[Sheet: Name]" form is required by TextChunker and SectionLabel; "[Name]" was
+            // silently treated as ordinary text, so spreadsheet citations lost their sheet.
+            sink.append("[Sheet: ${names[path] ?: "Sheet ${index + 1}"}]\n")
             parseSheet(parts.getValue(path), shared, sink)
         }
         return finish(sink)
@@ -236,6 +238,9 @@ object OoxmlExtractor {
 
     private fun parseSheet(bytes: ByteArray, shared: List<String>, sink: Sink) {
         var type: String? = null
+        var cellRef: String? = null
+        var rowIndex = 0
+        var columnIndex = 0
         var inValue = false
         var inFormula = false
         var inInlineText = false
@@ -247,8 +252,14 @@ object OoxmlExtractor {
         walk(bytes) { event, parser ->
             when (event) {
                 XmlPullParser.START_TAG -> when (parser.name) {
+                    "row" -> {
+                        rowIndex = attribute(parser, "r")?.toIntOrNull() ?: (rowIndex + 1)
+                        columnIndex = 0
+                    }
                     "c" -> {
                         type = attribute(parser, "t")
+                        cellRef = attribute(parser, "r")
+                        columnIndex++
                         value.setLength(0)
                         formula.setLength(0)
                         inline.setLength(0)
@@ -270,8 +281,22 @@ object OoxmlExtractor {
                     "t" -> inInlineText = false
                     "is" -> if (inlineDepth > 0) inlineDepth--
                     "c" -> {
-                        sink.append(cellText(type, value, formula, inline, shared))
-                        sink.append('\t')
+                        // Keep coordinates, the displayed value and the formula separately. Flattening
+                        // the workbook into unlabelled paragraphs made sheet questions unanswerable.
+                        val ref = cellRef ?: (columnName(columnIndex) + rowIndex.coerceAtLeast(1))
+                        val displayed = cellText(type, value, inline, shared).trim()
+                        val expression = formula.toString().trim()
+                        if (displayed.isNotEmpty() || expression.isNotEmpty()) {
+                            sink.append(ref)
+                            sink.append(": ")
+                            sink.append(displayed)
+                            if (expression.isNotEmpty()) {
+                                sink.append(if (displayed.isEmpty()) "=" else " [=")
+                                sink.append(expression)
+                                if (displayed.isNotEmpty()) sink.append("]")
+                            }
+                            sink.append('\t')
+                        }
                     }
                     "row" -> sink.append('\n')
                 }
@@ -282,17 +307,25 @@ object OoxmlExtractor {
     private fun cellText(
         type: String?,
         value: StringBuilder,
-        formula: StringBuilder,
         inline: StringBuilder,
         shared: List<String>
-    ): String {
-        if (formula.isNotEmpty()) return "=${formula.toString().trim()}"
-        return when (type) {
-            "s" -> value.toString().trim().toIntOrNull()?.let { shared.getOrNull(it) }.orEmpty()
-            "inlineStr" -> inline.toString()
-            "b" -> if (value.toString().trim() == "1") "TRUE" else "FALSE"
-            else -> value.toString()
+    ): String = when (type) {
+        "s" -> value.toString().trim().toIntOrNull()?.let { shared.getOrNull(it) }.orEmpty()
+        "inlineStr" -> inline.toString()
+        "b" -> if (value.toString().trim() == "1") "TRUE" else "FALSE"
+        else -> value.toString()
+    }
+
+    /** 1 -> A, 26 -> Z, 27 -> AA. */
+    private fun columnName(index: Int): String {
+        var n = index
+        val out = StringBuilder()
+        while (n > 0) {
+            val remainder = (n - 1) % 26
+            out.append(('A' + remainder))
+            n = (n - 1) / 26
         }
+        return if (out.isEmpty()) "A" else out.reverse().toString()
     }
 
     /** Maps worksheet part paths to their workbook sheet names; falls back to numeric labels. */

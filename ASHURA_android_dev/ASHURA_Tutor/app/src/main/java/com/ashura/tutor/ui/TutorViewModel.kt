@@ -408,6 +408,25 @@ class TutorViewModel(
         }
     }
 
+    /**
+     * Saves a learner's corrections to imported text (spec §9.3). OCR output is always shown as
+     * editable because a scanned page may misread names and numbers; correcting it re-indexes the
+     * passages so later searches, citations and quizzes use the corrected wording.
+     */
+    fun updateLibraryText(id: String, title: String, text: String) {
+        viewModelScope.launch {
+            try {
+                val chunks = repository.replaceLibraryText(id, text)
+                _library.update { it.copy(message = "Saved corrections to \"$title\" as $chunks passages.") }
+                updateLibraryQuery(_library.value.query)
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _library.update { it.copy(message = "Could not save this note: ${e.message ?: "unknown error"}") }
+            }
+        }
+    }
+
     private var conversationId: String? = null
     private var askJob: Job? = null
 

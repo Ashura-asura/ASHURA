@@ -28,10 +28,11 @@ object TextChunker {
     private val provenanceLine = Regex("\\n\\[(?:Page \\d+|Slide \\d+|Sheet: [^]\\n]{1,60}|Image(?: \\d+)?)]\\s*\\n")
 
     /** Import formats supported by the current build. OOXML containers are unpacked in memory. */
-    enum class Kind { TEXT, DOCX, XLSX, PPTX, PDF, IMAGE }
+    enum class Kind { TEXT, CSV, DOCX, XLSX, PPTX, PDF, IMAGE }
 
     private val extensionKinds = mapOf(
         "txt" to Kind.TEXT, "md" to Kind.TEXT, "markdown" to Kind.TEXT,
+        "csv" to Kind.CSV, "tsv" to Kind.CSV,
         "docx" to Kind.DOCX, "xlsx" to Kind.XLSX, "pptx" to Kind.PPTX,
         "pdf" to Kind.PDF,
         "png" to Kind.IMAGE, "jpg" to Kind.IMAGE, "jpeg" to Kind.IMAGE, "webp" to Kind.IMAGE
@@ -49,6 +50,7 @@ object TextChunker {
         val mime = mimeType.orEmpty().lowercase()
         return when {
             mime in allowedMime -> Kind.TEXT
+            mime == "text/csv" || mime == "text/comma-separated-values" || mime == "text/tab-separated-values" -> Kind.CSV
             mime == DOCX_MIME -> Kind.DOCX
             mime == XLSX_MIME -> Kind.XLSX
             mime == PPTX_MIME -> Kind.PPTX
@@ -60,6 +62,7 @@ object TextChunker {
 
     fun mimeFor(kind: Kind): String = when (kind) {
         Kind.TEXT -> "text/plain"
+        Kind.CSV -> "text/csv"
         Kind.DOCX -> DOCX_MIME
         Kind.XLSX -> XLSX_MIME
         Kind.PPTX -> PPTX_MIME
@@ -82,7 +85,7 @@ object TextChunker {
         }
         // Extension wins (providers often report generic MIME types); MIME is the fallback when there is no name.
         val kind = detectKind(mimeType, displayName)
-            ?: return ImportCheck.Rejected("Only .txt, .md, .pdf, .docx, .xlsx, .pptx and image files are supported.")
+            ?: return ImportCheck.Rejected("Only .txt, .md, .csv, .pdf, .docx, .xlsx, .pptx and image files are supported.")
         val max = maxBytesFor(kind)
         if (sizeBytes != null && sizeBytes > max) return ImportCheck.Rejected("File is larger than ${max / (1024 * 1024)} MB.")
         if (sizeBytes != null && sizeBytes == 0L) return ImportCheck.Rejected("File is empty.")

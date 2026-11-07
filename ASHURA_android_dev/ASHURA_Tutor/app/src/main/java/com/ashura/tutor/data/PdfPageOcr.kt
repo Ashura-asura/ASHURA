@@ -20,7 +20,11 @@ class PdfPageOcr(private val ocr: DocumentOcr) {
     data class PageOcr(val pageNumber: Int, val text: String)
 
     sealed interface Result {
-        data class Success(val pages: List<PageOcr>, val skippedPages: Int) : Result
+        data class Success(
+            val pages: List<PageOcr>,
+            val skippedPages: Int,
+            val failedPages: Int = 0
+        ) : Result
         data class Failure(val reason: String) : Result
     }
 
@@ -34,18 +38,24 @@ class PdfPageOcr(private val ocr: DocumentOcr) {
             descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
             renderer = PdfRenderer(descriptor)
             val results = ArrayList<PageOcr>(wanted.size)
+            var failed = 0
             for (number in wanted) {
                 val index = number - 1
                 if (index !in 0 until renderer.pageCount) continue
-                val bitmap = renderPage(renderer, index)
+                // One damaged page must not discard the rest of a scanned document.
                 try {
-                    val text = ocr.recognize(bitmap).text.trim()
-                    if (text.isNotEmpty()) results.add(PageOcr(number, text))
-                } finally {
-                    bitmap.recycle()
+                    val bitmap = renderPage(renderer, index)
+                    try {
+                        val text = ocr.recognize(bitmap).text.trim()
+                        if (text.isNotEmpty()) results.add(PageOcr(number, text))
+                    } finally {
+                        bitmap.recycle()
+                    }
+                } catch (e: Exception) {
+                    failed++
                 }
             }
-            Result.Success(results, skipped)
+            Result.Success(results, skipped, failed)
         } catch (e: IOException) {
             Result.Failure("Could not read the scanned pages: ${e.message ?: "I/O error"}")
         } catch (e: OutOfMemoryError) {

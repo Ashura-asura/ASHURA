@@ -76,6 +76,9 @@ interface ChunkDao {
     @Query("SELECT * FROM library_chunks WHERE itemId = :itemId ORDER BY ordinal")
     suspend fun forItem(itemId: String): List<LibraryChunkEntity>
 
+    @Query("DELETE FROM library_chunks WHERE itemId = :itemId")
+    suspend fun deleteForItem(itemId: String)
+
     /** FTS5 query built in the repository; user text is only a bound argument. */
     @RawQuery
     suspend fun searchRaw(query: SupportSQLiteQuery): List<ChunkHit>

@@ -1,57 +1,113 @@
 # Architecture status
 
-Legend: **Verified** = compiled with the Gradle Android toolchain and covered by JVM tests (or logic tests).
-**Written, device-pending** = compiles, but behaviour that depends on Android/native services or hardware is unverified.
-**Not implemented** = do not advertise as available.
+This file is the honest, current state of the implementation against `docs/PRODUCT_SPEC.md` (v5.0).
+It replaces earlier versions that wrongly listed PDF and OCR as "Not implemented" after they had
+already been built.
 
-Last build: `:app:assembleDebug`, `:app:lintDebug` and `:app:testDebugUnitTest` pass; 139 tests, 0 failures. No physical
-device or emulator has run this build.
+Legend:
 
-## Implemented
+- **Verified (JVM)** — compiles with the Android toolchain and is covered by JVM tests or pure-logic tests.
+- **Written, device-pending** — compiles and has tests for the logic, but the behaviour depends on Android
+  services, native code or hardware that has not been exercised here.
+- **Partial** — a real, usable subset exists, but the spec asks for more.
+- **Not implemented** — do not advertise as available.
+
+Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
+**158 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
+hardware-dependent claim below is device-pending, not proven.
+
+## Implemented and verified on the JVM
+
+| Area (spec §) | State | Evidence |
+|---|---|---|
+| Expression evaluator: precedence, parentheses, unary minus, `^`, `%`, sqrt/abs, exact decimals, resource limits (§11.1) | Verified (JVM) | `ExpressionEvaluatorTest` |
+| Unit conversion: length, mass, time, volume, speed, temperature (§11.2) | Verified (JVM) | `UnitConverterTest` |
+| Deterministic calculator routing before the model (§5.2) | Verified (JVM) | `CalculatorToolTest`, `TaskControllerTest` |
+| Answer checking: exact/numeric/unit/fraction forms, Devanagari digits, unreadable-answer handling (§12.3) | Verified (JVM) | `AnswerCheckerTest` |
+| Curriculum graph: validated prerequisites, cycle/unknown detection, mastery-based recommendation (§8) | Verified (JVM) | `CurriculumTest` |
+| Seed curriculum: 4 school-mathematics topics, answers re-computed in tests (§8.2) | Verified (JVM) | `CurriculumTest`, `SpacingSchedulerTest` |
+| Lesson planner and spaced-repetition scheduler (§7.2, §7.5) | Verified (JVM) | `LessonPlannerTest`, `SpacingSchedulerTest` |
+| Room schema v1→v4 with committed schema JSON and migration tests (§19) | Verified (JVM) | `MigrationTest`, `schemas/` |
+| FTS5 passage search with LIKE fallback; quoted query builder (§10.1) | Verified (JVM) | `GroundingTest`, `FtsQuery` tests |
+| Grounding policy: bounded passages, per-source cap, de-duplication, section-aware citations (§10.2) | Verified (JVM) | `DocumentQuizTest` |
+| Text / Markdown import, strict UTF-8, control stripping, linear normalisation (§9.1, §9.4) | Verified (JVM) | `TextChunkerTest` |
+| CSV / TSV import with quoted fields, delimiter detection, `[Sheet: CSV]` and `A1` cell references (§9.1, §9.6) | Verified (JVM) | `CsvExtractorTest` |
+| DOCX extraction incl. tables as tab-separated cells (§9.2) | Verified (JVM) | `OoxmlExtractorTest` |
+| XLSX extraction: sheet names as `[Sheet: Name]`, cell coordinates, displayed value + formula (§9.2, §9.6) | Verified (JVM) | `OoxmlExtractorTest` |
+| PPTX extraction: slide text and speaker notes with `[Slide N]` / `[Notes]` markers (§9.2) | Verified (JVM) | `OoxmlExtractorTest` |
+| PDF embedded-text extraction via PdfBox-Android, page cap, encrypted-PDF refusal (§9.2) | Verified (JVM) | `PdfTextExtractorTest` (Robolectric) |
+| Provenance-preserving chunking: page/slide/sheet labels start a new chunk (§9.4) | Verified (JVM) | `TextChunkerTest`, `DocumentQuizTest` |
+| Deterministic mixed quiz builder: up to 20 items, ≤12 cloze, ≤6 definitions, explanation prompts (§9.5, §8) | Verified (JVM) | `DocumentQuizTest`, `ExportAndQuizTest` |
+| Study packs: 200 assets, 10 subjects × 20 notes, manifest with URL/licence/size/SHA-256, checksum verification (§8, Phase 8) | Verified (JVM) | `StudyPackRepositoryTest` |
+| Structured `ANSWER:` / `STEPS:` / `CHECK:` parsing with plain-text fallback (§5, §7) | Verified (JVM) | `StructuredAnswerTest` |
+| Streaming contract: one `Complete` by default, deltas before completion, no delta after completion (§5.3, §25) | Verified (JVM) | `StreamingTest`, `LiteRtLmRuntimeContractTest` |
+| Model catalog pinning, size/SHA-256 manifest, `.part` download + atomic rename, one-model rule (§6, §17) | Verified (JVM) | `ModelCatalogTest`, `ModelRuntimeContractTest` |
+| Learner profile persistence (level, style, language) with safe enum/language fallbacks (§1.4, §15) | Verified (JVM) | `LearnerProfileStoreTest` |
+| Export to JSON and delete-all controls (§15.3) | Verified (JVM) | `ExportAndQuizTest` |
+| Nepali UI strings for the core screens (§1.4) | Written | `values-ne/strings.xml`; native review still needed |
+
+## Written and wired, device-pending
+
+| Area (spec §) | State | What is unverified |
+|---|---|---|
+| LiteRT-LM 0.19.1 runtime, CPU backend, single mutex-guarded engine, one model slot (§6, §16) | Written, device-pending | Load time, first-token latency, tokens/s, cancellation latency, peak memory, thermal throttling |
+| Automatic load of an already-verified model at app start; no timed auto-unload (§17.1) | Written, device-pending | Whether the process stays resident under real Android memory pressure |
+| Bundled ML Kit OCR (Latin + Devanagari), orientation fallback 90/180/270, bounded page rendering (§9.3) | Written, device-pending | Real OCR accuracy on phone photos and scanned PDFs |
+| Scanned-PDF path: pages with `< 24` embedded chars are OCR'd, thin embedded text + OCR both kept, per-page failures isolated, 24-page cap disclosed (§9.2, §9.3) | Written, device-pending | Quality and speed on a real multi-page scan |
+| Editable imported text: Library → edit → normalise → re-chunk → re-index in one transaction (§9.3) | Written, device-pending | Compose text-field behaviour with a long OCR body |
+| Chat surface: streaming, stop, copy, citations, New chat, follow-if-at-bottom, jump-to-latest (§3.3) | Written, device-pending | IME resize, scroll feel, rendering |
+| PDF/DOCX/XLSX/PPTX/CSV import through the SAF picker (§9.1) | Written, device-pending | Vendor file-provider quirks and real-world files |
+| Study-pack import of all 200 assets with checksum verification (§8, Phase 8) | Written, device-pending | Import time and storage use on the phone |
+| Model download/import with pinned SHA-256 (§6, §17) | Written, device-pending | Both pinned artifacts have not been re-downloaded and re-hashed in this environment |
+
+## Partial — real subset, spec asks for more
+
+| Area (spec §) | What exists | What is missing |
+|---|---|---|
+| Document import (§9) | TXT, MD, CSV/TSV, PDF, DOCX, XLSX, PPTX, PNG/JPEG/WebP | Legacy `.doc/.xls/.ppt` are deliberately rejected; no EPUB, ODT, RTF, HTML or audio/video notes |
+| OCR (§9.3) | On-device Latin + Devanagari, orientation retry, per-page isolation, editable output, OCR-labelled passages | Confidence scores are not surfaced; no language-pack picker; no manual page-region selection; no image clean-up/pre-processing |
+| Document questions (§9.5) | Cloze recall, definitions, explanation prompts, page/slide/sheet spread | No multiple-choice distractors, no table/number reasoning questions, no answer-key extraction from the document |
+| Spreadsheet behaviour (§9.6) | Sheet + `A1` coordinates, displayed value and formula | No range selection, no column-type summaries, no chart/image references |
+| Retrieval (§10) | SQLite FTS5 (BM25), LIKE fallback, per-document diversity, provenance | No embeddings or hybrid semantic retrieval; no retrieval evaluation set; no query expansion |
+| Verification (§12) | Deterministic calculator, exact answer checker, source citations | No evidence-coverage check that every claim is supported; no independent rubric; no code-execution sandbox |
+| Teaching engine (§7) | Lesson planner, Socratic/direct prompt styles, misconceptions recorded | Adaptive explanation is prompt-driven, not a full misconception taxonomy per topic |
+| Curriculum (§8) | 4 maths topics + 200 bundled study notes | No broad multi-subject curriculum graph with objectives/prerequisites per subject |
+| Assessment (§12.2) | Topic quiz, document quiz, self-assessed explanations, spaced review | No diagnostic exam, exam simulation, transfer-question generator or delayed-recall scheduling beyond the current scheduler |
+| Data model (§19) | Conversations, messages, library items, chunks, concepts, learning state, attempts, misconceptions | No stored original file, no `file_hash`/`storage_uri`, no separate `Document`/`DocumentChunk` metadata columns for heading path or extraction method |
+| Data controls (§15.3) | Export JSON, delete one note, delete all data | No per-conversation retention policy UI, no selective export, no encrypted database |
+| Resource management (§16) | Device tiers, one-model rule, caps, memory-pressure handling removed in favour of user control | Device benchmarks and thermal measurements are unrun; no GPU backend exercised |
+| Accessibility (§3.6) | Content descriptions, headings, live regions, large touch targets | No dedicated TalkBack pass, font-scale stress test or switch-access review |
+
+## Not implemented — do not advertise
+
 | Area (spec §) | State |
 |---|---|
-| Expression evaluator: precedence, parentheses, unary minus, `^`, `%`, sqrt/abs, exact decimals, resource limits (§11.1) | Verified |
-| Unit conversion: length, mass, time, volume, speed, temperature (§11.2) | Verified |
-| Calculator tool routing (§5.2) | Verified |
-| Curriculum pack with validated prerequisite graph, cycle/unknown-prerequisite detection, recommendation by mastery (§8) | Verified |
-| Seed pack: 4 school-maths topics; every answer and every misconception answer is re-computed in tests (§8.2) | Verified |
-| Deterministic answer checker: exact rationals, lowest-terms, misconception detection (§12.3, §7.3) | Verified |
-| Lesson planner from pack; generic topics clearly labelled as scaffolds (§7.1) | Verified |
-| Spaced-repetition scheduler (§7.5) | Verified |
-| Resource policy, RAM tiers, model-manifest validation (§16, §6.3) | Verified |
-| Prompt builder: ChatML plus template-free system/user parts, untrusted-evidence delimiting, control-token stripping, context trimming (§18.1) | Verified |
-| FTS5 query sanitiser incl. Devanagari (§10.1) | Verified |
-| Task controller calls the model through `ModelRuntime` with bounded context, falls back honestly on failure (§5) | Verified |
-| Room v4: attempts, misconceptions, persisted interval, library chunks, FTS5 indexes + triggers, LIKE fallback (§19, §10) | Verified (schemas 1–4 committed; migration test) |
-| Text, Markdown and OOXML (`.docx`, `.xlsx`, `.pptx`) import: validation, normalisation, chunking, size caps, Nepali danda boundary (§10.1) | Verified (logic); SAF path device-pending |
-| Library storage, import/search/delete UI, FTS5 + fallback (§10, §15.3) | Verified (build); device-pending |
-| Question → keyword extraction → OR/BM25 retrieval; grounding policy, extractive cited answers, honest "nothing found", citations, prompt asks for [n] citations (§10.3, §18.1) | Verified |
-| LiteRT-LM 0.19.1 runtime: single mutex-guarded engine, streaming, cancellation, CPU backend, verified load, unload-during-generation (§6.2) | Verified (refusal paths); device-pending (native load/generate) |
-| Real token streaming: `channelFlow` native deltas, deterministic tools emit one exact event, bounded context, model failure degrades to the offline scaffold (§6.2, §25 step 4) | Verified (logic); device-pending (native chunk cadence) |
-| Structured answers: tolerant `ANSWER`/`STEPS`/`CHECK` parser, sectioned Tutor UI, plain-text fallback when a small model ignores the format (§1.3, §3.3) | Verified |
-| Learner profile: level, direct/Socratic style and English/Nepali answer language persisted in SharedPreferences and applied to prompts (§1.2 C, §1.4) | Verified (Robolectric) |
-| Runtime diagnostics: measured load time, first-token latency, approximate tokens/s, Java heap and free storage shown in Settings (§16.5) | Verified (logic); device-pending (real timings) |
-| Pinned model catalog: Qwen2.5-1.5B Q8 and Qwen3-0.6B INT4, exact revision/size/SHA-256, RAM-tier gating (§6.1, §6.3, §16.1) | Verified |
-| Model install: HTTPS-only download with progress/cancel, SAF import, checksum + size verification, `.part` + atomic rename, 1 GB reserve, one-model slot (§6.3) | Verified (logic); device-pending |
-| Settings UI: tier, catalog, download/import/load/unload/delete, progress, delete confirmation, privacy disclosure | Verified (build); device-pending |
-| Tutor UI: response-mode label, no-model hint, cancellation, citations, hints, answer checking | Verified (build); device-pending |
-| Note quiz (cloze), JSON export (SAF), delete-all-data, backup/transfer exclusion rules, English/Nepali strings | Verified (logic); SAF/UI device-pending |
-| Release hardening: R8, ABI filters, external keystore (`keystore.properties` / `ASHURA_KEYSTORE_*`), lint `abortOnError` | Verified (debug build); release signing not configured here |
+| Online research and freshness (§13) | None. The app has no web-search client, no source-quality ranking and no fetch/cache pipeline. `INTERNET` exists only for explicit model download. |
+| Speech input / output (§14.1, §14.2) | None. No `SpeechRecognizer`, no `TextToSpeech`, no audio permissions. |
+| Vision beyond OCR (§14.3) | Only text recognition in images. No diagram, chart or handwriting understanding. |
+| Plotting and simulations (§11.4) | None. |
+| Programming engine / code sandbox (§11.3) | None. No code execution, no compiler, no sandbox. |
+| Science specialist engines (§11.2) | None beyond the calculator/unit converter and the model's own text. |
+| Optional SFT / training pipeline (§17.2–§17.5) | None. Weights are never trained or bundled. |
+| Multi-module `core/feature/engine` layout (§20) | Not done. The checkout is still one `app` module; the spec's layout is a target, not current fact. |
+| Device/release benchmarks and release signing (§16.5, §21.5, Phase 12) | Debug builds only; release signing needs external `keystore.properties` or `ASHURA_KEYSTORE_*`; no device benchmark has been recorded. |
 
-## Not implemented — do not advertise as available
-- PDF parsing and OCR (text, Markdown and OOXML only). No semantic/embedding retrieval (keyword BM25 only; paraphrased
-  questions can miss). No check that a model's answer is actually supported by its cited passages.
-- On-device validation of model download/import/load/generation, cancellation under load, memory, latency, thermal behaviour
-  and the GPU backend. CPU is the default.
-- Online research, speech, sandboxed code execution, plotting.
-- Native-speaker review of Nepali UI strings; on-device accessibility audit; signed release artifact.
-- Curriculum beyond the 4-topic seed pack.
+## Known correctness fixes in this pass
 
-## Rules
-1. Imported documents and web pages are untrusted evidence, never instructions.
-2. Never upload private study material without explicit user action and disclosure.
-3. One model, one engine. Model runtime must support cancellation and explicit unload.
-4. Never load an unverified model file; verify size and SHA-256 against the pinned catalog.
-5. Never execute generated code in the app process.
-6. Run CPU-heavy parsing/inference off the main thread.
-7. Add explicit database migrations; never use destructive migration fallback.
+- XLSX used `[Marks]`, but the chunker and citation code only recognise `[Sheet: Marks]`, so spreadsheet
+  provenance silently failed. XLSX now emits `[Sheet: Name]`, `A2: Alice`, `C2: 84 [=B2*2]`.
+- CSV was advertised in the capability map but not implemented. `CsvExtractor` now parses quoted fields,
+  escaped quotes, embedded newlines, `,`/`;`/tab delimiters, and keeps `[Sheet: CSV]` plus `A1` references.
+- OCR skipped any page with even a few embedded characters. Pages with fewer than 24 embedded characters
+  are now OCR'd as well, and both layers are kept when the embedded layer is too thin.
+- One bad page aborted a whole scanned PDF. Per-page OCR failures are now isolated and disclosed.
+- OCR never corrected for sideways phone photos. A 90/180/270 fallback now runs when the first pass finds
+  fewer than 12 characters.
+
+## Rules for future status updates
+
+1. Do not mark a hardware-dependent feature "verified" without a recorded device run.
+2. Do not list a format, tool or engine in README/spec-facing copy unless it is in the tables above.
+3. Update this file in the same commit as the code, not in a later documentation pass.
+4. Keep imported content untrusted: parsers read text only, never execute macros/formulas/embedded objects.
+5. Model weights stay out of the repository and are loaded only after an explicit user action.

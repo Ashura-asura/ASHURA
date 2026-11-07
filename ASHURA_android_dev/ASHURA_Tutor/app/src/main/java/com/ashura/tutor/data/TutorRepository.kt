@@ -66,6 +66,27 @@ class TutorRepository(private val db: AppDatabase) {
 
     suspend fun deleteLibraryItem(id: String) = db.library().delete(id) // chunks and FTS rows follow via cascade/triggers
 
+    /**
+     * Replaces a note's text and re-chunks it atomically (spec §9.3: OCR output must stay editable).
+     * Old chunk rows are deleted so the FTS triggers remove their index entries; new rows are then
+     * inserted, keeping passage search and citations consistent with the corrected text.
+     */
+    suspend fun replaceLibraryText(id: String, text: String): Int {
+        val normalizedText = TextChunker.normalize(text)
+        require(normalizedText.isNotBlank()) { "The note would be empty" }
+        val chunking = TextChunker.chunk(normalizedText)
+        require(chunking.chunks.isNotEmpty()) { "The note has no readable text" }
+        val now = System.currentTimeMillis()
+        db.withTransaction {
+            db.library().updateBody(id, normalizedText, now)
+            db.chunks().deleteForItem(id)
+            db.chunks().insertAll(chunking.chunks.map {
+                LibraryChunkEntity(UUID.randomUUID().toString(), id, it.ordinal, it.text, it.startOffset, it.endOffset)
+            })
+        }
+        return chunking.chunks.size
+    }
+
     /** True when a note with the same title is already present (used to avoid duplicate study-pack imports). */
     suspend fun hasLibraryTitle(title: String): Boolean = db.library().countByTitle(title.trim()) > 0
 

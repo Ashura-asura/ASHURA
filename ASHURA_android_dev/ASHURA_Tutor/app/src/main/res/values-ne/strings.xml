@@ -179,6 +179,9 @@
     <string name="library_passage">%1$s · अंश %2$d</string>
     <string name="library_delete_title">यो नोट मेटाउने?</string>
     <string name="library_delete_body">“%1$s” र यसका अंशहरू यो उपकरणबाट हटाइनेछन्।</string>
+    <string name="library_edit_cd">%1$s को पाठ सम्पादन गर्नुहोस्</string>
+    <string name="library_edit_title">आयातित पाठ सम्पादन गर्नुहोस्</string>
+    <string name="library_edit_body">“%1$s” मा OCR का गल्तीहरू सुधार्नुहोस्। सुरक्षित गर्दा खोजीनीय अंशहरू पुनः बनाइन्छन्, त्यसैले पछिका उत्तर र प्रश्नहरूमा सुधारिएको पाठ प्रयोग हुन्छ।</string>
     <string name="study_sets_title">अन्तर्निहित अध्ययन सेटहरू</string>
     <string name="study_sets_intro">विकिपिडियाबाट %1$d अफलाइन नोटहरू (CC BY-SA 4.0)। एउटा सेट थप्नुहोस्, त्यसपछि मिश्रित परीक्षा बनाउन “मलाई प्रश्न सोध्नुहोस्” थिच्नुहोस्।</string>
     <string name="study_sets_loading">अध्ययन सेटहरू लोड हुँदै…</string>
@@ -191,6 +194,7 @@
     <string name="splash_credit">बिशाल भण्डारी, नेपालद्वारा निर्मित र सञ्चालित</string>
     <string name="action_delete">मेटाउनुहोस्</string>
     <string name="action_cancel">रद्द गर्नुहोस्</string>
+    <string name="action_save">सुरक्षित गर्नुहोस्</string>
     <string name="action_back_to_tutor">शिक्षकमा फर्कनुहोस्</string>
     <string name="action_back_to_lesson">पाठमा फर्कनुहोस्</string>
 </resources>

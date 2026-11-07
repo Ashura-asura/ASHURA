@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.OpenableColumns
+import com.ashura.tutor.domain.library.CsvExtractor
 import com.ashura.tutor.domain.library.ImportCheck
 import com.ashura.tutor.domain.library.OoxmlExtractor
 import com.ashura.tutor.domain.library.TextChunker
@@ -77,6 +78,7 @@ class DocumentReader(
         return try {
             when (kind) {
                 TextChunker.Kind.TEXT -> readText(uri, name, kind)
+                TextChunker.Kind.CSV -> readCsv(uri, name, kind)
                 TextChunker.Kind.DOCX, TextChunker.Kind.XLSX, TextChunker.Kind.PPTX ->
                     readOoxml(uri, name, kind)
                 TextChunker.Kind.PDF -> readPdf(uri, name, ocr)
@@ -95,19 +97,31 @@ class DocumentReader(
 
     private fun readText(uri: Uri, name: String?, kind: TextChunker.Kind): ReadResult {
         val bytes = readBytes(uri, TextChunker.maxBytesFor(kind))
-        val decoded = try {
-            Charsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT)
-                .decode(ByteBuffer.wrap(bytes)).toString()
-        } catch (_: CharacterCodingException) {
-            return ReadResult.Failure("This file is not valid UTF-8 text.")
-        }
+        val decoded = decodeUtf8(bytes) ?: return ReadResult.Failure("This file is not valid UTF-8 text.")
         if (!TextChunker.looksLikeText(decoded.take(4096))) {
             return ReadResult.Failure("This file does not look like text.")
         }
         val text = TextChunker.normalize(decoded)
         if (text.isBlank()) return ReadResult.Failure("File has no readable text.")
         return ReadResult.Document(titleFor(name, "Imported note"), text, TextChunker.mimeFor(kind))
+    }
+
+    /** CSV/TSV is kept as a labelled grid (sheet + A1 references), never flattened into prose. */
+    private fun readCsv(uri: Uri, name: String?, kind: TextChunker.Kind): ReadResult {
+        val bytes = readBytes(uri, TextChunker.maxBytesFor(kind))
+        val decoded = decodeUtf8(bytes) ?: return ReadResult.Failure("This file is not valid UTF-8 text.")
+        val extracted = CsvExtractor.extract(decoded)
+        val text = TextChunker.normalize(extracted.text)
+        if (text.isBlank()) return ReadResult.Failure("This spreadsheet has no readable cells.")
+        return ReadResult.Document(titleFor(name, "Imported spreadsheet"), text, TextChunker.mimeFor(kind))
+    }
+
+    private fun decodeUtf8(bytes: ByteArray): String? = try {
+        Charsets.UTF_8.newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT)
+            .decode(ByteBuffer.wrap(bytes)).toString()
+    } catch (_: CharacterCodingException) {
+        null
     }
 
     private fun readOoxml(uri: Uri, name: String?, kind: TextChunker.Kind): ReadResult {
@@ -134,13 +148,21 @@ class DocumentReader(
                 is PdfTextExtractor.Result.Success -> result
             }
             val normalized = extracted.pages.map { it.pageNumber to TextChunker.normalize(it.text) }
-            val blankPages = normalized.filter { it.second.isBlank() }.map { it.first }
-            val ocrPages = if (blankPages.isEmpty()) {
+            // A page with only a stray header or page number is effectively a scan. OCR those too,
+            // otherwise a scanned PDF with a tiny embedded layer would skip OCR entirely.
+            val ocrCandidates = normalized.filter { it.second.length < MIN_EMBEDDED_CHARS }.map { it.first }
+            var skippedOcrPages = 0
+            var failedOcrPages = 0
+            val ocrPages = if (ocrCandidates.isEmpty()) {
                 emptyMap()
             } else {
-                when (val result = PdfPageOcr(ocr).recognize(file, blankPages)) {
+                when (val result = PdfPageOcr(ocr).recognize(file, ocrCandidates)) {
                     is PdfPageOcr.Result.Failure -> return ReadResult.Failure(result.reason)
-                    is PdfPageOcr.Result.Success -> result.pages.associate { it.pageNumber to TextChunker.normalize(it.text) }
+                    is PdfPageOcr.Result.Success -> {
+                        skippedOcrPages = result.skippedPages
+                        failedOcrPages = result.failedPages
+                        result.pages.associate { it.pageNumber to TextChunker.normalize(it.text) }
+                    }
                 }
             }
             val byPage = normalized.toMap()
@@ -149,6 +171,15 @@ class DocumentReader(
                     val embedded = byPage[page.pageNumber].orEmpty()
                     val recognised = ocrPages[page.pageNumber].orEmpty()
                     when {
+                        embedded.isNotBlank() && recognised.isNotBlank() &&
+                            (embedded.length < MIN_EMBEDDED_CHARS || recognised.length > embedded.length * 2) -> {
+                            // The embedded layer is too thin to be the page; keep both and mark the OCR.
+                            appendLine("[Page ${page.pageNumber}]")
+                            appendLine(embedded)
+                            appendLine("[Page ${page.pageNumber} · OCR: check against the original scan]")
+                            appendLine(recognised)
+                            appendLine()
+                        }
                         embedded.isNotBlank() -> {
                             appendLine("[Page ${page.pageNumber}]")
                             appendLine(embedded)
@@ -168,6 +199,12 @@ class DocumentReader(
                 }
                 if (extracted.truncated) {
                     appendLine("[Only the first ${extracted.pages.size} of ${extracted.totalPages} pages were read.]")
+                }
+                if (skippedOcrPages > 0) {
+                    appendLine("[OCR stopped after ${PdfPageOcr.MAX_OCR_PAGES} pages; $skippedOcrPages scanned page(s) were not recognised.]")
+                }
+                if (failedOcrPages > 0) {
+                    appendLine("[OCR failed on $failedOcrPages page(s); those pages may be missing from the text below.]")
                 }
             }.trim()
             if (text.isBlank()) {
@@ -316,5 +353,7 @@ class DocumentReader(
 
     companion object {
         private const val MAX_IMAGE_DIMENSION = 2_048
+        /** Below this many embedded characters a PDF page is treated as a scan and OCR'd. */
+        private const val MIN_EMBEDDED_CHARS = 24
     }
 }

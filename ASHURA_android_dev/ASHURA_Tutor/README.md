@@ -2,8 +2,9 @@
 
 Offline-first, Android-first adaptive learning platform.
 
-**Status:** v0.5.1 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
-richer mixed test sets from imported PDF/Office/image notes, on-device OCR, and 200 bundled open-licensed study sets.
+**Status:** v0.5.2 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
+richer mixed test sets from imported PDF/Office/CSV/image notes, on-device OCR with editable text, and 200 bundled
+open-licensed study sets.
 See `CHECKPOINT.md`, `docs/ARCHITECTURE_STATUS.md` and `docs/RUNTIME_INTEGRATION.md`.
 **Spec:** `docs/PRODUCT_SPEC.md` (architecture v5.0).  
 **Target:** 4 GB RAM Android phones (primary), 6 GB (standard), 8 GB+ (enhanced).
@@ -27,8 +28,10 @@ study scaffold.
 
 - **Chat tutor** — the Tutor tab is a full-height conversation with bubbles, streaming text, stop, citations and a pinned
   composer. Suggested topics appear on an empty conversation.
-- **Documents** — import Markdown/text, PDF, DOCX, XLSX, PPTX and PNG/JPEG/WebP. Text PDFs use embedded text; scanned pages
-  and photos use bundled ML Kit Latin + Devanagari OCR. Each passage keeps its page, slide or sheet label for citations.
+- **Documents** — import Markdown/text, CSV/TSV, PDF, DOCX, XLSX, PPTX and PNG/JPEG/WebP. Text PDFs use embedded
+  text; thin or scanned pages and photos use bundled ML Kit Latin + Devanagari OCR with orientation retry. Each passage
+  keeps its page, slide or sheet label for citations, spreadsheets keep `A1` cell references and formulas, and OCR text
+  can be corrected in Library → edit, which re-indexes the passages.
 - **Mixed test sets** — importing a document and tapping *Quiz me* builds up to 20 questions: recall cloze plus definition
   and explanation prompts, spread across pages/slides/sheets. It is deterministic and works without a model.
 - **Bundled study sets** — 200 offline Markdown notes (20 each for mathematics, general science, physics, chemistry,
@@ -36,6 +39,15 @@ study scaffold.
   CC BY-SA 4.0. The Library lists them by subject; add one or a whole subject, then tap *Quiz me*. The manifest records the
   exact source URL and a SHA-256 checksum for every note, and the app verifies it before import. Rebuild with
   `python tools/fetch_study_sets.py` (network is needed only for rebuilding, never at app runtime).
+
+## Not implemented yet
+
+The v5.0 spec is broader than this build. These are deliberately absent and should not be advertised:
+online research/web search, speech input or text-to-speech, diagram/chart understanding beyond OCR, plotting
+and simulations, a code-execution sandbox, science/programming specialist engines, semantic or hybrid
+retrieval, evidence-coverage verification, a multi-subject curriculum graph beyond the 4 topic seed pack,
+original-file storage with hashes, and device benchmarks. See `docs/ARCHITECTURE_STATUS.md` for the
+section-by-section gap matrix.
 
 ## Current implementation layout
 

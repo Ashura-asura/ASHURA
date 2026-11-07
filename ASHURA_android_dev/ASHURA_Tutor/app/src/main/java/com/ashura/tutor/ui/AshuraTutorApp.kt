@@ -221,6 +221,7 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                     libraryItems = libraryItems, state = libraryState, studyLibrary = studyLibrary,
                     onImport = viewModel::importDocument, onQueryChange = viewModel::updateLibraryQuery,
                     onDelete = viewModel::deleteLibraryItem, onQuiz = viewModel::startNoteQuiz,
+                    onEditText = viewModel::updateLibraryText,
                     onAddStudySet = viewModel::importStudySet,
                     onAddStudySubject = viewModel::importStudySubject
                 )

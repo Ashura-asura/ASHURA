@@ -39,12 +39,27 @@ class DocumentOcr(private val language: String) {
     /** Nepali is the only Devanagari UI language; everything else uses the Latin recogniser. */
     fun preferredScript(): Script = if (language.lowercase() == "ne") Script.DEVANAGARI else Script.LATIN
 
-    suspend fun recognize(bitmap: Bitmap, script: Script = preferredScript()): Result {
+    /**
+     * Recognises [bitmap] with the preferred script. When [autoRotate] is set and the first pass finds
+     * almost nothing, the other three quarter-turns are tried and the richest result wins: phone photos
+     * of textbook pages are frequently sideways and ML Kit does not detect that on its own.
+     */
+    suspend fun recognize(
+        bitmap: Bitmap,
+        script: Script = preferredScript(),
+        autoRotate: Boolean = true
+    ): Result {
         val primary = recognizerFor(script)
-        val text = primary.awaitText(bitmap).trim()
-        if (text.isNotEmpty() || script != Script.DEVANAGARI) return Result(text, script)
+        var bestText = primary.awaitText(bitmap, 0).trim()
+        if (autoRotate && bestText.length < ROTATION_MIN_CHARS) {
+            for (rotation in ROTATIONS) {
+                val candidate = primary.awaitText(bitmap, rotation).trim()
+                if (candidate.length > bestText.length) bestText = candidate
+            }
+        }
+        if (bestText.isNotEmpty() || script != Script.DEVANAGARI) return Result(bestText, script)
         // A Devanagari document may still contain Latin names/terms; try the other recogniser once.
-        val fallback = latin().awaitText(bitmap).trim()
+        val fallback = latin().awaitText(bitmap, 0).trim()
         return Result(fallback, Script.LATIN)
     }
 
@@ -58,8 +73,8 @@ class DocumentOcr(private val language: String) {
     private fun recognizerFor(script: Script): TextRecognizer =
         if (script == Script.DEVANAGARI) devanagari() else latin()
 
-    private suspend fun TextRecognizer.awaitText(bitmap: Bitmap): String {
-        val image = InputImage.fromBitmap(bitmap, 0)
+    private suspend fun TextRecognizer.awaitText(bitmap: Bitmap, rotationDegrees: Int): String {
+        val image = InputImage.fromBitmap(bitmap, rotationDegrees)
         return process(image).await().text
     }
 
@@ -67,5 +82,10 @@ class DocumentOcr(private val language: String) {
         addOnSuccessListener { value -> if (continuation.isActive) continuation.resume(value) }
         addOnFailureListener { error -> if (continuation.isActive) continuation.resumeWithException(error) }
         addOnCanceledListener { if (continuation.isActive) continuation.cancel() }
+    }
+
+    private companion object {
+        const val ROTATION_MIN_CHARS = 12
+        val ROTATIONS = intArrayOf(90, 180, 270)
     }
 }
