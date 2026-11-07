@@ -1,8 +1,17 @@
 package com.ashura.tutor.data
 
+import android.util.Log
 import androidx.room.withTransaction
+import androidx.sqlite.db.SimpleSQLiteQuery
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
+import com.ashura.tutor.domain.export.Json
+import com.ashura.tutor.domain.library.TextChunk
+import com.ashura.tutor.domain.library.TextChunker
 import java.util.UUID
+
+data class ImportResult(val itemId: String, val chunkCount: Int, val truncated: Boolean)
 
 class TutorRepository(private val db: AppDatabase) {
     fun conversations(): Flow<List<ConversationEntity>> = db.conversations().observeAll()
@@ -10,6 +19,8 @@ class TutorRepository(private val db: AppDatabase) {
     fun recentStudyEvents(): Flow<List<StudyEventEntity>> = db.studyEvents().observeRecent()
     fun messages(id: String): Flow<List<MessageEntity>> = db.messages().observeForConversation(id)
     fun concepts(subject: String): Flow<List<ConceptEntity>> = db.concepts().listBySubject(subject)
+    fun learningStates(): Flow<List<LearningStateEntity>> = db.learningState().observeDue()
+    fun unresolvedMisconceptions(): Flow<List<MisconceptionEntity>> = db.misconceptions().observeUnresolved()
 
     suspend fun createConversation(title: String = "New study session"): String {
         val now = System.currentTimeMillis()
@@ -37,9 +48,70 @@ class TutorRepository(private val db: AppDatabase) {
         return id
     }
 
+    /** Stores a normalised text document and its passages atomically. */
+    suspend fun importText(title: String, normalizedText: String, mimeType: String): ImportResult {
+        require(title.isNotBlank() && normalizedText.isNotBlank())
+        val chunking = TextChunker.chunk(normalizedText)
+        require(chunking.chunks.isNotEmpty()) { "Document has no readable text" }
+        val now = System.currentTimeMillis()
+        val itemId = UUID.randomUUID().toString()
+        db.withTransaction {
+            db.library().insert(LibraryItemEntity(itemId, title.trim().take(200), normalizedText, mimeType, null, now, now))
+            db.chunks().insertAll(chunking.chunks.map {
+                LibraryChunkEntity(UUID.randomUUID().toString(), itemId, it.ordinal, it.text, it.startOffset, it.endOffset)
+            })
+        }
+        return ImportResult(itemId, chunking.chunks.size, chunking.truncated)
+    }
+
+    suspend fun deleteLibraryItem(id: String) = db.library().delete(id) // chunks and FTS rows follow via cascade/triggers
+
+    /** Ranked passage search with provenance (all words must match); falls back to LIKE if FTS5 is missing. */
+    suspend fun searchPassages(query: String): List<ChunkHit> {
+        val term = query.trim()
+        val match = FtsQuery.build(term) ?: return emptyList()
+        return passageQuery(match, 20, term)
+    }
+
+    /** Retrieval for a natural-language question: distinctive words OR-ed, best BM25 first, bounded. */
+    suspend fun searchPassagesForQuestion(question: String, limit: Int = 8): List<ChunkHit> {
+        val match = FtsQuery.forQuestion(question) ?: return emptyList()
+        val longest = FtsQuery.keywords(question).maxByOrNull { it.length } ?: return emptyList()
+        return passageQuery(match, limit, longest)
+    }
+
+    private suspend fun passageQuery(match: String, limit: Int, likeTerm: String): List<ChunkHit> = try {
+        db.chunks().searchRaw(
+            SimpleSQLiteQuery(
+                "SELECT c.id AS chunkId, c.itemId AS itemId, li.title AS title, c.ordinal AS ordinal, " +
+                    "c.text AS text, c.startOffset AS startOffset FROM library_chunks c " +
+                    "JOIN chunks_fts ON c.rowid = chunks_fts.rowid JOIN library_items li ON li.id = c.itemId " +
+                    "WHERE chunks_fts MATCH ? ORDER BY bm25(chunks_fts) LIMIT ?",
+                arrayOf<Any>(match, limit)
+            )
+        )
+    } catch (e: Exception) {
+        Log.w("TutorRepository", "Passage FTS failed, using LIKE fallback", e)
+        db.chunks().searchLike(likeTerm.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_"), limit)
+    }
+
+    /** FTS5 ranked search (spec §10.1) with an automatic LIKE fallback if FTS5 is unavailable on this device. */
     suspend fun searchLibrary(query: String): List<LibraryItemEntity> {
         val term = query.trim()
-        return if (term.isEmpty()) emptyList() else db.library().search(term)
+        if (term.isEmpty()) return emptyList()
+        val match = FtsQuery.build(term) ?: return emptyList()
+        return try {
+            db.library().searchRaw(
+                SimpleSQLiteQuery(
+                    "SELECT li.* FROM library_items li JOIN library_fts ON li.rowid = library_fts.rowid " +
+                        "WHERE library_fts MATCH ? ORDER BY bm25(library_fts) LIMIT 30",
+                    arrayOf<Any>(match)
+                )
+            )
+        } catch (e: Exception) {
+            Log.w("TutorRepository", "FTS search failed, using LIKE fallback", e)
+            db.library().search(term)
+        }
     }
 
     suspend fun recordStudyEvent(topicId: String, eventType: String, score: Double? = null) {
@@ -48,10 +120,11 @@ class TutorRepository(private val db: AppDatabase) {
         db.studyEvents().insert(StudyEventEntity(UUID.randomUUID().toString(), topicId, eventType, score, System.currentTimeMillis()))
     }
 
+    /** Deterministic id so saving the same concept twice does not create duplicates. */
     suspend fun saveConcept(subject: String, topic: String, level: String): String {
         require(subject.isNotBlank() && topic.isNotBlank())
-        val id = UUID.randomUUID().toString()
-        db.concepts().upsert(ConceptEntity(id, subject, topic, level, System.currentTimeMillis()))
+        val id = "${subject.trim().lowercase()}:${topic.trim().lowercase()}"
+        db.concepts().upsert(ConceptEntity(id, subject.trim(), topic.trim(), level, System.currentTimeMillis()))
         return id
     }
 
@@ -61,8 +134,76 @@ class TutorRepository(private val db: AppDatabase) {
         conceptId: String,
         masteryEstimate: Double,
         confidence: Double,
-        nextReviewAt: Long
+        nextReviewAt: Long,
+        intervalDays: Int = 1
     ) {
-        db.learningState().upsert(LearningStateEntity(conceptId, masteryEstimate, confidence, nextReviewAt))
+        db.learningState().upsert(LearningStateEntity(conceptId, masteryEstimate, confidence, nextReviewAt, intervalDays))
     }
+
+    suspend fun attemptCount(conceptId: String): Int = db.attempts().countForConcept(conceptId)
+
+    /**
+     * Persists one attempt, its learning-state update and misconception evidence atomically (spec §19).
+     * Teaching decisions (mastery, interval, which tags to resolve) are made by the caller, not here.
+     */
+    suspend fun commitAttempt(
+        attempt: AttemptEntity,
+        state: LearningStateEntity,
+        recurringMisconceptionTag: String?,
+        resolvedMisconceptionTags: List<String>
+    ) {
+        db.withTransaction {
+            db.attempts().insert(attempt)
+            db.learningState().upsert(state)
+            if (recurringMisconceptionTag != null) {
+                val id = "${attempt.conceptId}|$recurringMisconceptionTag"
+                val existing = db.misconceptions().get(id)
+                db.misconceptions().upsert(
+                    MisconceptionEntity(
+                        id = id, conceptId = attempt.conceptId, tag = recurringMisconceptionTag,
+                        evidenceCount = (existing?.evidenceCount ?: 0) + 1,
+                        lastSeenAt = attempt.occurredAt, resolvedAt = null
+                    )
+                )
+            }
+            if (resolvedMisconceptionTags.isNotEmpty()) {
+                db.misconceptions().resolve(attempt.conceptId, resolvedMisconceptionTags, attempt.occurredAt)
+            }
+            db.studyEvents().insert(
+                StudyEventEntity(
+                    UUID.randomUUID().toString(), attempt.conceptId, "attempt_${attempt.verdict.lowercase()}",
+                    if (attempt.verdict == "CORRECT") 1.0 else 0.0, attempt.occurredAt
+                )
+            )
+        }
+    }
+
+    suspend fun chunksForItem(itemId: String): List<TextChunk> =
+        db.chunks().forItem(itemId).map { TextChunk(it.ordinal, it.text, it.startOffset, it.endOffset) }
+
+    /**
+     * Complete, human-readable export of everything stored about the learner (spec §15.3 data portability).
+     * Read inside one transaction so the file is a consistent snapshot. Contains private notes and answers:
+     * the caller chooses where the file is saved.
+     */
+    suspend fun exportAllJson(): String = withContext(Dispatchers.IO) {
+        db.withTransaction {
+            val doc = mapOf(
+                "format" to "ashura-tutor-export",
+                "version" to 1,
+                "exportedAt" to System.currentTimeMillis(),
+                "conversations" to db.conversations().all().map { mapOf("id" to it.id, "title" to it.title, "createdAt" to it.createdAt, "updatedAt" to it.updatedAt) },
+                "messages" to db.messages().all().map { mapOf("id" to it.id, "conversationId" to it.conversationId, "role" to it.role, "content" to it.content, "createdAt" to it.createdAt, "source" to it.source) },
+                "libraryItems" to db.library().all().map { mapOf("id" to it.id, "title" to it.title, "text" to it.body, "mimeType" to it.mimeType, "createdAt" to it.createdAt, "updatedAt" to it.updatedAt) },
+                "learningState" to db.learningState().all().map { mapOf("conceptId" to it.conceptId, "masteryEstimate" to it.masteryEstimate, "confidence" to it.confidence, "nextReviewAt" to it.nextReviewAt, "intervalDays" to it.intervalDays) },
+                "attempts" to db.attempts().all().map { mapOf("id" to it.id, "conceptId" to it.conceptId, "questionId" to it.questionId, "answer" to it.answer, "verdict" to it.verdict, "hintsUsed" to it.hintsUsed, "misconceptionTag" to it.misconceptionTag, "occurredAt" to it.occurredAt) },
+                "misconceptions" to db.misconceptions().all().map { mapOf("conceptId" to it.conceptId, "tag" to it.tag, "evidenceCount" to it.evidenceCount, "lastSeenAt" to it.lastSeenAt, "resolvedAt" to it.resolvedAt) },
+                "studyEvents" to db.studyEvents().all().map { mapOf("id" to it.id, "topicId" to it.topicId, "eventType" to it.eventType, "score" to it.score, "occurredAt" to it.occurredAt) }
+            )
+            Json.write(doc)
+        }
+    }
+
+    /** Erases all learner data (spec §15.3). Triggers keep the FTS index consistent. */
+    suspend fun deleteAllData() = withContext(Dispatchers.IO) { db.clearAllTables() }
 }

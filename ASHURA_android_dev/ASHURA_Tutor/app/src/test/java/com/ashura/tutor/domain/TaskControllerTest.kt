@@ -27,7 +27,7 @@ class TaskControllerTest {
     @Test fun nonArithmeticFallsBackOfflineWhenModelUnavailable() = runTest {
         val controller = TaskController(NoModel(), mapOf("calculator" to CalculatorTool()))
         val plan = controller.route("Explain photosynthesis")
-        assertEquals(emptyList(), plan.tools)
+        assertTrue(plan.tools.isEmpty())
         assertEquals("offline_fallback", plan.modelRole)
     }
 

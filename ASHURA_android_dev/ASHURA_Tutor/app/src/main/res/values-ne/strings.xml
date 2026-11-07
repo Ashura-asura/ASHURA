@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Nepali (ne) UI translation, first pass. A native-speaker review is required before
+  release (see docs/AUDIT.md, open item O5). Curriculum and tutor-generated study text
+  remain English until translated content packs exist.
+-->
+<resources>
+    <string name="app_name">ASHURA Tutor</string>
+    <string name="nav_home">गृह</string>
+    <string name="nav_tutor">शिक्षक</string>
+    <string name="nav_library">पुस्तकालय</string>
+    <string name="nav_progress">प्रगति</string>
+    <string name="nav_settings">सेटिङ</string>
+
+    <string name="home_tagline">बुझेर सिक्नुहोस्, रटेर होइन।</string>
+    <string name="home_description">अफलाइन-पहिलो अध्ययन स्थान। तपाईंका नोट र अध्ययन इतिहास यही उपकरणमा रहन्छन्।</string>
+    <string name="home_next_lesson">अर्को पाठ: %1$s</string>
+    <string name="home_all_mastered">तपाईंले हालको प्याकका सबै विषयमा दक्षता हासिल गर्नुभयो। अभ्यास जारी राख्न शिक्षक प्रयोग गर्नुहोस्।</string>
+    <plurals name="home_due">
+        <item quantity="one">%1$d विषय दोहोर्याउने समय भयो — प्रगति खोल्नुहोस्।</item>
+        <item quantity="other">%1$d विषय दोहोर्याउने समय भयो — प्रगति खोल्नुहोस्।</item>
+    </plurals>
+    <string name="home_ask">प्रश्न सोध्नुहोस्</string>
+
+    <string name="tutor_title">शिक्षक</string>
+    <string name="tutor_intro">यो संस्करणले अंकगणित र एकाइ रूपान्तरण ठ्याक्कै गणना गर्छ र अन्य प्रश्नका लागि इमानदार अफलाइन अध्ययन ढाँचा दिन्छ। अझै भाषा मोडेल स्थापना गरिएको छैन।</string>
+    <string name="tutor_question_label">तपाईं के बुझ्न चाहनुहुन्छ?</string>
+    <string name="tutor_ask">सोध्नुहोस्</string>
+    <string name="tutor_working">काम गर्दै…</string>
+    <string name="tutor_cancel">रद्द गर्नुहोस्</string>
+    <string name="tutor_response">जवाफ</string>
+    <string name="tutor_sources">तपाईंका नोटबाट स्रोतहरू</string>
+    <string name="tutor_lessons">पाठहरू</string>
+    <string name="tutor_recommended_suffix">  — अर्को सिफारिस</string>
+    <string name="tutor_builds_on">आधारित: %1$s</string>
+
+    <string name="progress_title">तपाईंको प्रगति</string>
+    <string name="progress_explainer">दक्षता तपाईंका प्रयासहरूबाट गरिएको अनुमान हो, अंक होइन।</string>
+    <string name="progress_empty">अझै अभ्यास रेकर्ड गरिएको छैन। प्रगति हेर्न एउटा अभ्यास प्रश्न पूरा गर्नुहोस्।</string>
+    <string name="progress_line">दक्षता %1$d%% · प्रमाण %2$d%% · %3$s</string>
+    <string name="progress_review_due">दोहोर्याउने समय</string>
+    <string name="progress_next_review">अर्को दोहोर्याउने %1$s</string>
+    <string name="progress_misconceptions">दोहोरिने गलत बुझाइहरू</string>
+
+    <string name="settings_title">सेटिङ</string>
+    <string name="settings_intro">कुनै खाता, विश्लेषण, विज्ञापन, API कुञ्जी वा अनिवार्य क्लाउड सेवा समावेश छैन। स्थानीय मोडेल नियन्त्रण रनटाइम एकीकरणसँगै आउनेछ।</string>
+    <string name="settings_export">मेरो डाटा निर्यात गर्नुहोस् (JSON)</string>
+    <string name="settings_delete_all">मेरो सबै डाटा मेटाउनुहोस्</string>
+    <string name="settings_delete_title">सबै डाटा मेटाउने?</string>
+    <string name="settings_delete_body">यसले तपाईंका कुराकानी, पुस्तकालय नोट, प्रगति र अभ्यास प्रयासहरू यो उपकरणबाट स्थायी रूपमा मेटाउनेछ।</string>
+
+    <string name="lesson_none_title">कुनै पाठ चयन गरिएको छैन</string>
+    <string name="lesson_open_hint">पाठ सुरु गर्न कुनै विषय खोल्नुहोस्।</string>
+    <string name="lesson_back">पछाडि</string>
+    <string name="lesson_generic_warning">यो विषयका लागि अझै पाठ्यक्रम सामग्री छैन, त्यसैले यो स्व-मूल्याङ्कन अभ्याससहितको अध्ययन ढाँचा मात्र हो।</string>
+    <string name="lesson_objectives">उद्देश्यहरू</string>
+    <string name="lesson_key_words">मुख्य शब्दहरू</string>
+    <string name="lesson_outline">रूपरेखा</string>
+    <string name="lesson_worked_example">समाधान गरिएको उदाहरण</string>
+    <string name="lesson_common_mistakes">सामान्य गल्तीहरू</string>
+    <string name="lesson_practice">अभ्यास</string>
+    <string name="lesson_source">स्रोत: %1$s</string>
+    <string name="lesson_title_format">%1$s · %2$s</string>
+    <string name="lesson_bullet">• %1$s</string>
+
+    <string name="practice_title">अभ्यास</string>
+    <string name="practice_your_answer_review">तपाईंको जवाफ (आफ्नै समीक्षाका लागि)</string>
+    <string name="practice_self_assess_hint">पाठका उद्देश्यसँग तुलना गर्नुहोस्, त्यसपछि इमानदारीपूर्वक आफ्नो मूल्याङ्कन गर्नुहोस्।</string>
+    <string name="practice_record">प्रयास रेकर्ड गर्नुहोस्</string>
+    <string name="practice_your_answer">तपाईंको जवाफ</string>
+    <string name="practice_checking">जाँच्दै…</string>
+    <string name="practice_check">जवाफ जाँच्नुहोस्</string>
+    <string name="practice_hint">सङ्केत (%1$d/%2$d)</string>
+    <string name="practice_show_solution">समाधान देखाउनुहोस्</string>
+    <string name="practice_hint_n">सङ्केत %1$d: %2$s</string>
+    <string name="practice_answer">जवाफ: %1$s</string>
+    <string name="practice_solution_note">पहिले समाधान हेर्दा सही जवाफ सहायता-सहित मानिन्छ।</string>
+    <plurals name="practice_schedule">
+        <item quantity="one">दक्षता अनुमान %1$d%% · अर्को दोहोर्याउने %2$d दिनमा।</item>
+        <item quantity="other">दक्षता अनुमान %1$d%% · अर्को दोहोर्याउने %2$d दिनमा।</item>
+    </plurals>
+    <plurals name="practice_next">
+        <item quantity="one">अर्को प्रश्न (%1$d बाँकी)</item>
+        <item quantity="other">अर्को प्रश्न (%1$d बाँकी)</item>
+    </plurals>
+    <string name="practice_done">सम्पन्न</string>
+    <string name="review_incorrect">गलत</string>
+    <string name="review_correct_with_help">सहायतासहित सही</string>
+    <string name="review_correct_independently">स्वतन्त्र रूपमा सही</string>
+
+    <string name="library_title">तपाईंको पुस्तकालय</string>
+    <string name="library_intro">.txt, .md, .docx, .xlsx वा .pptx नोट आयात गर्नुहोस्। ती यही उपकरणमा रहन्छन् र अफलाइन खोजिन्छन्। PDF र फोटो (OCR) आयात अझै बनेको छैन।</string>
+    <string name="library_import">नोट आयात गर्नुहोस्</string>
+    <string name="library_importing">आयात गर्दै…</string>
+    <string name="library_search_label">तपाईंका नोट खोज्नुहोस्</string>
+    <string name="library_no_matches">मिल्ने अंश भेटिएन।</string>
+    <string name="library_imported_count">आयातित नोट (%1$d)</string>
+    <string name="library_empty">अझै केही आयात गरिएको छैन।</string>
+    <string name="library_quiz">मलाई प्रश्न सोध्नुहोस्</string>
+    <string name="library_delete_cd">%1$s मेटाउनुहोस्</string>
+    <plurals name="library_chars">
+        <item quantity="one">%1$d अक्षर</item>
+        <item quantity="other">%1$d अक्षर</item>
+    </plurals>
+    <string name="library_passage">%1$s · अंश %2$d</string>
+    <string name="library_delete_title">यो नोट मेटाउने?</string>
+    <string name="library_delete_body">“%1$s” र यसका अंशहरू यो उपकरणबाट हटाइनेछन्।</string>
+
+    <string name="action_delete">मेटाउनुहोस्</string>
+    <string name="action_cancel">रद्द गर्नुहोस्</string>
+    <string name="action_back_to_tutor">शिक्षकमा फर्कनुहोस्</string>
+    <string name="action_back_to_lesson">पाठमा फर्कनुहोस्</string>
+</resources>

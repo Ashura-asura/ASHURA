@@ -66,3 +66,17 @@ class CalculatorToolTest {
         assertTrue(result.answer.contains("undefined"))
     }
 }
+
+class CalculatorToolRoutingTest {
+    @Test fun recognisesExpressionsAndConversionsButNotProse() {
+        val tool = CalculatorTool()
+        assertTrue(tool.handles("3 + 4 * 2"))
+        assertTrue(tool.handles("what is (3+4)*2?"))
+        assertTrue(tool.handles("sqrt(16) + 1"))
+        assertTrue(tool.handles("convert 5 km to m"))
+        assertTrue(!tool.handles("5"))
+        assertTrue(!tool.handles("Explain photosynthesis"))
+        assertTrue(!tool.handles("what is 2 apples"))
+        assertTrue(!tool.handles("1999"))
+    }
+}

@@ -4,12 +4,16 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.sqlite.db.SupportSQLiteQuery
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ConversationDao {
     @Query("SELECT * FROM conversations ORDER BY updatedAt DESC")
     fun observeAll(): Flow<List<ConversationEntity>>
+    @Query("SELECT * FROM conversations ORDER BY createdAt")
+    suspend fun all(): List<ConversationEntity>
     @Query("SELECT * FROM conversations WHERE id = :id LIMIT 1")
     suspend fun get(id: String): ConversationEntity?
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -22,6 +26,8 @@ interface ConversationDao {
 interface MessageDao {
     @Query("SELECT * FROM messages WHERE conversationId = :conversationId ORDER BY createdAt ASC")
     fun observeForConversation(conversationId: String): Flow<List<MessageEntity>>
+    @Query("SELECT * FROM messages ORDER BY createdAt")
+    suspend fun all(): List<MessageEntity>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(message: MessageEntity)
 }
@@ -30,8 +36,13 @@ interface MessageDao {
 interface LibraryDao {
     @Query("SELECT * FROM library_items ORDER BY updatedAt DESC")
     fun observeAll(): Flow<List<LibraryItemEntity>>
+    @Query("SELECT * FROM library_items ORDER BY createdAt")
+    suspend fun all(): List<LibraryItemEntity>
     @Query("SELECT * FROM library_items WHERE title LIKE '%' || :query || '%' OR body LIKE '%' || :query || '%' ORDER BY updatedAt DESC LIMIT :limit")
     suspend fun search(query: String, limit: Int = 30): List<LibraryItemEntity>
+    /** Full-text query built by [FtsQuery]; the SQL is fixed in the repository, user text is only a bound argument. */
+    @RawQuery
+    suspend fun searchRaw(query: SupportSQLiteQuery): List<LibraryItemEntity>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(item: LibraryItemEntity)
     @Query("DELETE FROM library_items WHERE id = :id")
@@ -44,4 +55,6 @@ interface StudyEventDao {
     suspend fun insert(event: StudyEventEntity)
     @Query("SELECT * FROM study_events ORDER BY occurredAt DESC LIMIT :limit")
     fun observeRecent(limit: Int = 100): Flow<List<StudyEventEntity>>
+    @Query("SELECT * FROM study_events ORDER BY occurredAt")
+    suspend fun all(): List<StudyEventEntity>
 }

@@ -1,13 +1,13 @@
 package com.ashura.tutor.ui
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.School
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -18,7 +18,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.ashura.tutor.R
 import com.ashura.tutor.domain.Lesson
 import com.ashura.tutor.domain.PracticeQuestion
 
@@ -29,92 +32,83 @@ fun LessonScreen(
     onStartPractice: (PracticeQuestion) -> Unit,
     onNavigateHome: () -> Unit
 ) {
-    if (lesson == null) {
-        EmptyState("No lesson selected", "Open a topic to begin a lesson.", onNavigateHome)
-        return
-    }
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("${lesson.subject} · ${lesson.topic}") },
+                title = {
+                    Text(
+                        if (lesson == null) stringResource(R.string.lesson_none_title)
+                        else stringResource(R.string.lesson_title_format, lesson.subject, lesson.topic),
+                        maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateHome) {
-                        Icon(imageVector = School, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back_to_tutor))
                     }
                 }
             )
         }
     ) { paddingValues ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Text(lesson.topic, style = MaterialTheme.typography.headlineMedium)
-            Text(lesson.subject, style = MaterialTheme.typography.titleMedium)
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
-            Text("Objectives", style = MaterialTheme.typography.titleLarge)
-            lesson.objectives.forEach { objective ->
-                Text(text = "• $objective")
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(4.dp))
-            }
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
-            Text("Outline", style = MaterialTheme.typography.titleLarge)
-            lesson.explanationOutline.forEach { step ->
-                Text(text = "• $step")
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(4.dp))
-            }
-            lesson.workedExample?.takeIf { it.isNotBlank() }?.let {
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
-                Text("Worked example", style = MaterialTheme.typography.titleLarge)
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
-                Text(it)
-            }
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
-            Text("Practice", style = MaterialTheme.typography.titleLarge)
-            lesson.practiceQuestions.forEach { question ->
-                Button(
-                    onClick = { onStartPractice(question) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = question.prompt)
+        if (lesson == null) {
+            LazyColumn(
+                Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item { Text(stringResource(R.string.lesson_open_hint)) }
+                item {
+                    Button(onClick = onNavigateHome, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.lesson_back))
+                    }
                 }
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
             }
+            return@Scaffold
         }
-    }
-}
 
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun EmptyState(title: String, description: String, onNavigateHome: () -> Unit) {
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text(title) }, navigationIcon = {
-                androidx.compose.material3.IconButton(onClick = onNavigateHome) {
-                    androidx.compose.material3.Icon(
-                        imageVector = androidx.compose.material.icons.filled.ArrowBack,
-                        contentDescription = null
+        LazyColumn(
+            Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item { ScreenHeading(lesson.topic) }
+            if (lesson.isGenericScaffold) {
+                item { Text(stringResource(R.string.lesson_generic_warning), color = MaterialTheme.colorScheme.error) }
+            }
+
+            item { SectionHeading(stringResource(R.string.lesson_objectives)) }
+            items(lesson.objectives) { Text(stringResource(R.string.lesson_bullet, it)) }
+
+            if (lesson.keyVocabulary.isNotEmpty()) {
+                item { SectionHeading(stringResource(R.string.lesson_key_words)) }
+                items(lesson.keyVocabulary) { Text(stringResource(R.string.lesson_bullet, it)) }
+            }
+
+            item { SectionHeading(stringResource(R.string.lesson_outline)) }
+            items(lesson.explanationOutline) { Text(stringResource(R.string.lesson_bullet, it)) }
+
+            lesson.workedExample?.takeIf { it.isNotBlank() }?.let { example ->
+                item { SectionHeading(stringResource(R.string.lesson_worked_example)) }
+                item { Text(example) }
+            }
+
+            if (lesson.misconceptions.isNotEmpty()) {
+                item { SectionHeading(stringResource(R.string.lesson_common_mistakes)) }
+                items(lesson.misconceptions) { Text(stringResource(R.string.lesson_bullet, it)) }
+            }
+
+            item { SectionHeading(stringResource(R.string.lesson_practice)) }
+            items(lesson.practiceQuestions, key = { it.id }) { question ->
+                Button(onClick = { onStartPractice(question) }, modifier = Modifier.fillMaxWidth()) {
+                    Text(question.prompt)
+                }
+            }
+
+            if (lesson.sourceRefs.isNotEmpty()) {
+                item {
+                    Text(
+                        stringResource(R.string.lesson_source, lesson.sourceRefs.joinToString()),
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
-            })
-        }
-    ) { paddingValues ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Text(title, style = MaterialTheme.typography.headlineMedium)
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
-            Text(description)
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(24.dp))
-            Button(onClick = onNavigateHome, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Home")
             }
         }
     }

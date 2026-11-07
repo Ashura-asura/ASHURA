@@ -4,7 +4,9 @@ data class TutorRequest(
     val question: String,
     val learnerLevel: LearnerLevel = LearnerLevel.UNKNOWN,
     val language: String = "en",
-    val retrievedContext: List<ContextSnippet> = emptyList()
+    val retrievedContext: List<ContextSnippet> = emptyList(),
+    /** True when the learner's imported notes were searched for this request (so "nothing found" is meaningful). */
+    val notesSearched: Boolean = false
 )
 enum class LearnerLevel { SCHOOL, BACHELOR, MASTER, UNKNOWN }
 data class ContextSnippet(val title: String, val text: String, val sourceLabel: String)

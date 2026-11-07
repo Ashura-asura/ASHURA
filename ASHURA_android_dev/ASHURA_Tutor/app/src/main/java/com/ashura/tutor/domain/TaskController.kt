@@ -2,6 +2,8 @@ package com.ashura.tutor.domain
 
 import com.ashura.tutor.domain.runtime.GenerationLimits
 import com.ashura.tutor.domain.runtime.ModelRuntime
+import com.ashura.tutor.domain.runtime.PromptBuilder
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Task controller: decides which evidence/tools are needed and builds a bounded
@@ -74,33 +76,73 @@ class TaskController(
         return fallthrough(request)
     }
 
-    private fun fallthrough(request: TutorRequest): TutorResponse {
-        return if (modelRuntime.isAvailable) {
-            // One bounded model call; no self-reflection loop.
-            TutorResponse(
-                answer = "Local model path not yet wired for this request.",
-                mode = ResponseMode.OFFLINE_FALLBACK,
-                limitation = "Model runtime integration is pending."
+    private suspend fun fallthrough(request: TutorRequest): TutorResponse {
+        if (modelRuntime.isAvailable) {
+            // One bounded model call; no self-reflection loop (spec §5.4). Evidence is trimmed and sanitised.
+            val bounded = request.copy(
+                retrievedContext = PromptBuilder.trimContext(request.retrievedContext, limits.maxContextCharacters / 2)
             )
-        } else {
-            TutorResponse(
+            try {
+                val generated = modelRuntime.generate(bounded, limits)
+                return generated.copy(
+                    mode = ResponseMode.LOCAL_MODEL,
+                    citations = generated.citations.ifEmpty { citationsFor(bounded) },
+                    limitation = generated.limitation
+                        ?: "Model-generated explanation; not independently verified."
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                return offlineScaffold(request, "The local model failed (${e.message ?: "unknown error"}); showing a study scaffold instead.")
+            }
+        }
+        return offlineScaffold(request, "This is a study scaffold, not a generated expert explanation.")
+    }
+
+    private fun citationsFor(request: TutorRequest): List<String> =
+        request.retrievedContext.mapIndexed { i, c -> "[${i + 1}] ${c.sourceLabel}" }
+
+    private fun offlineScaffold(request: TutorRequest, limitation: String): TutorResponse {
+        val passages = request.retrievedContext
+        if (passages.isNotEmpty()) {
+            // Extractive answer: show the learner's own notes, clearly labelled. No generated claims.
+            return TutorResponse(
                 answer = buildString {
-                    appendLine("Let's work through this carefully.")
+                    appendLine("I found these passages in your notes that may help with: ${request.question}")
                     appendLine()
-                    appendLine("**Your question:** ${request.question}")
-                    appendLine()
-                    appendLine("**Study method**")
-                    appendLine("1. Identify the key concept and define unfamiliar terms.")
-                    appendLine("2. List what is known and what must be explained.")
-                    appendLine("3. Break the task into smaller steps and justify each step.")
-                    appendLine("4. Check the result independently.")
-                    appendLine()
-                    append("No local language model is configured, so I won't invent a subject-specific explanation.")
+                    passages.forEachIndexed { i, p ->
+                        appendLine("[${i + 1}] ${p.sourceLabel}")
+                        appendLine(p.text)
+                        appendLine()
+                    }
+                    append("These are copied from your notes, not explained by a model. Read them, then try to restate the idea in your own words.")
                 },
                 mode = ResponseMode.OFFLINE_FALLBACK,
-                limitation = "This is a study scaffold, not a generated expert explanation."
+                citations = citationsFor(request),
+                limitation = "Extractive: passages from your notes, not a generated explanation."
             )
         }
+        return TutorResponse(
+            answer = buildString {
+                if (request.notesSearched) {
+                    appendLine("I searched your imported notes and found nothing relevant to this question.")
+                    appendLine()
+                }
+                appendLine("Let's work through this carefully.")
+                appendLine()
+                appendLine("**Your question:** ${request.question}")
+                appendLine()
+                appendLine("**Study method**")
+                appendLine("1. Identify the key concept and define unfamiliar terms.")
+                appendLine("2. List what is known and what must be explained.")
+                appendLine("3. Break the task into smaller steps and justify each step.")
+                appendLine("4. Check the result independently.")
+                appendLine()
+                append("No local language model is configured, so I won't invent a subject-specific explanation.")
+            },
+            mode = ResponseMode.OFFLINE_FALLBACK,
+            limitation = limitation
+        )
     }
 
     private fun ToolResult.Unhandled.toResponse(): TutorResponse =

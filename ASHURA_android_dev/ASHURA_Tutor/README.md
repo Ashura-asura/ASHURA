@@ -2,7 +2,7 @@
 
 Offline-first, Android-first adaptive learning platform.
 
-**Status:** Proposed implementation — scaffolding in progress.  
+**Status:** Checkpoint 1 — offline learning core (curriculum, assessment, tools, persistence). See `CHECKPOINT.md` and `docs/ARCHITECTURE_STATUS.md`.  
 **Spec:** `docs/PRODUCT_SPEC.md` (architecture v5.0).  
 **Target:** 4 GB RAM Android phones (primary), 6 GB (standard), 8 GB+ (enhanced).
 

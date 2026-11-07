@@ -3,11 +3,27 @@ package com.ashura.tutor.domain.runtime
 import com.ashura.tutor.domain.TutorRequest
 import com.ashura.tutor.domain.TutorResponse
 
+/**
+ * Replaceable local-inference boundary (spec §6.2). Cancellation is cooperative: callers cancel
+ * the coroutine running [generate]; implementations must stop native work promptly when it is cancelled.
+ * Default implementations keep simple fakes and the "no model" runtime trivial.
+ */
 interface ModelRuntime {
     val isAvailable: Boolean
     suspend fun generate(request: TutorRequest, limits: GenerationLimits): TutorResponse
     fun unload()
+    /** Loads (or verifies) the model described by [manifest] under [budget]. Default: not supported. */
+    suspend fun load(manifest: ModelManifest, budget: ResourceBudget): LoadResult =
+        LoadResult.Failed("This runtime cannot load models.")
+    fun health(): RuntimeHealth = RuntimeHealth(loaded = isAvailable, detail = null)
 }
+
+sealed interface LoadResult {
+    data object Loaded : LoadResult
+    data class Failed(val reason: String) : LoadResult
+}
+
+data class RuntimeHealth(val loaded: Boolean, val detail: String?)
 
 data class GenerationLimits(
     val maxOutputTokens: Int = 384,

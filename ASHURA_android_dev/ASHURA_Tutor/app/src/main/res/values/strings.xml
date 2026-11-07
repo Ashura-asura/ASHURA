@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App / navigation -->
+    <string name="app_name">ASHURA Tutor</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_tutor">Tutor</string>
+    <string name="nav_library">Library</string>
+    <string name="nav_progress">Progress</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home -->
+    <string name="home_tagline">Learn with understanding, not memorisation.</string>
+    <string name="home_description">An offline-first study space. Your notes and study history stay on this device.</string>
+    <string name="home_next_lesson">Next lesson: %1$s</string>
+    <string name="home_all_mastered">You have mastered every topic in the current pack. Use the tutor to keep practising.</string>
+    <plurals name="home_due">
+        <item quantity="one">%1$d topic due for review — open Progress.</item>
+        <item quantity="other">%1$d topics due for review — open Progress.</item>
+    </plurals>
+    <string name="home_ask">Ask a question</string>
+
+    <!-- Tutor -->
+    <string name="tutor_title">Tutor</string>
+    <string name="tutor_intro">This build computes arithmetic and unit conversions exactly and gives an honest offline study scaffold for other questions. No language model is installed yet.</string>
+    <string name="tutor_question_label">What would you like to understand?</string>
+    <string name="tutor_ask">Ask</string>
+    <string name="tutor_working">Working…</string>
+    <string name="tutor_cancel">Cancel</string>
+    <string name="tutor_response">Response</string>
+    <string name="tutor_sources">Sources from your notes</string>
+    <string name="tutor_lessons">Lessons</string>
+    <string name="tutor_recommended_suffix">  — recommended next</string>
+    <string name="tutor_builds_on">Builds on: %1$s</string>
+
+    <!-- Progress -->
+    <string name="progress_title">Your Progress</string>
+    <string name="progress_explainer">Mastery is an estimate from your recorded attempts, not a grade.</string>
+    <string name="progress_empty">No practice recorded yet. Finish a practice question to see progress here.</string>
+    <string name="progress_line">Mastery %1$d%% · evidence %2$d%% · %3$s</string>
+    <string name="progress_review_due">review due</string>
+    <string name="progress_next_review">next review %1$s</string>
+    <string name="progress_misconceptions">Recurring misunderstandings</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_intro">No account, analytics, advertising, API key, or mandatory cloud service is included. Local model controls will arrive with runtime integration.</string>
+    <string name="settings_export">Export my data (JSON)</string>
+    <string name="settings_delete_all">Delete all my data</string>
+    <string name="settings_delete_title">Delete all data?</string>
+    <string name="settings_delete_body">This permanently erases your conversations, library notes, progress and practice attempts from this device.</string>
+
+    <!-- Lesson -->
+    <string name="lesson_none_title">No lesson selected</string>
+    <string name="lesson_open_hint">Open a topic to begin a lesson.</string>
+    <string name="lesson_back">Back</string>
+    <string name="lesson_generic_warning">No curriculum content exists for this topic yet, so this is only a study scaffold with self-assessed practice.</string>
+    <string name="lesson_objectives">Objectives</string>
+    <string name="lesson_key_words">Key words</string>
+    <string name="lesson_outline">Outline</string>
+    <string name="lesson_worked_example">Worked example</string>
+    <string name="lesson_common_mistakes">Common mistakes</string>
+    <string name="lesson_practice">Practice</string>
+    <string name="lesson_source">Source: %1$s</string>
+    <string name="lesson_title_format">%1$s · %2$s</string>
+    <string name="lesson_bullet">• %1$s</string>
+
+    <!-- Practice -->
+    <string name="practice_title">Practice</string>
+    <string name="practice_your_answer_review">Your answer (for your own review)</string>
+    <string name="practice_self_assess_hint">Compare with the lesson objectives, then rate yourself honestly.</string>
+    <string name="practice_record">Record attempt</string>
+    <string name="practice_your_answer">Your answer</string>
+    <string name="practice_checking">Checking…</string>
+    <string name="practice_check">Check answer</string>
+    <string name="practice_hint">Hint (%1$d/%2$d)</string>
+    <string name="practice_show_solution">Show solution</string>
+    <string name="practice_hint_n">Hint %1$d: %2$s</string>
+    <string name="practice_answer">Answer: %1$s</string>
+    <string name="practice_solution_note">Viewing the solution first means a correct answer counts as help-assisted.</string>
+    <plurals name="practice_schedule">
+        <item quantity="one">Mastery estimate %1$d%% · next review in %2$d day.</item>
+        <item quantity="other">Mastery estimate %1$d%% · next review in %2$d days.</item>
+    </plurals>
+    <plurals name="practice_next">
+        <item quantity="one">Next question (%1$d left)</item>
+        <item quantity="other">Next question (%1$d left)</item>
+    </plurals>
+    <string name="practice_done">Done</string>
+    <string name="review_incorrect">Incorrect</string>
+    <string name="review_correct_with_help">Correct with help</string>
+    <string name="review_correct_independently">Correct independently</string>
+
+    <!-- Library -->
+    <string name="library_title">Your Library</string>
+    <string name="library_intro">Import .txt, .md, .docx, .xlsx or .pptx notes. They stay on this device and are searched offline. PDF and photo (OCR) import are not built yet.</string>
+    <string name="library_import">Import a note</string>
+    <string name="library_importing">Importing…</string>
+    <string name="library_search_label">Search your notes</string>
+    <string name="library_no_matches">No matching passages.</string>
+    <string name="library_imported_count">Imported notes (%1$d)</string>
+    <string name="library_empty">Nothing imported yet.</string>
+    <string name="library_quiz">Quiz me</string>
+    <string name="library_delete_cd">Delete %1$s</string>
+    <plurals name="library_chars">
+        <item quantity="one">%1$d character</item>
+        <item quantity="other">%1$d characters</item>
+    </plurals>
+    <string name="library_passage">%1$s · passage %2$d</string>
+    <string name="library_delete_title">Delete this note?</string>
+    <string name="library_delete_body">“%1$s” and its passages will be removed from this device.</string>
+
+    <!-- Shared actions -->
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_back_to_tutor">Back to tutor</string>
+    <string name="action_back_to_lesson">Back to lesson</string>
+
+    <!-- Accessibility content descriptions -->
+</resources>
