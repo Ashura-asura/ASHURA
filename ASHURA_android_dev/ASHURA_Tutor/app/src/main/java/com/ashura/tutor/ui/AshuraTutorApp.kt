@@ -228,7 +228,8 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                     )
                 }
                 Destination.LIBRARY -> LibraryScreen(
-                    libraryItems = libraryItems, state = libraryState, studyLibrary = studyLibrary,
+                    libraryItems = libraryItems, chunkCounts = viewModel.chunkCounts.collectAsState().value,
+                    onReindex = viewModel::reindexLibraryItem, state = libraryState, studyLibrary = studyLibrary,
                     onImport = viewModel::importDocument, onQueryChange = viewModel::updateLibraryQuery,
                     onDelete = viewModel::deleteLibraryItem, onQuiz = viewModel::startNoteQuiz,
                     onEditText = viewModel::updateLibraryText,

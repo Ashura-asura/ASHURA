@@ -167,6 +167,10 @@ class TutorViewModel(
     val libraryItems: StateFlow<List<LibraryItemEntity>> = repository.libraryItems()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Null until the first database read, so the Library never flashes a false "not indexed". */
+    val chunkCounts: StateFlow<Map<String, Int>?> = repository.chunkCounts()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     /** Past tutor conversations, newest first, for the history list. */
     val conversations: StateFlow<List<ConversationEntity>> = repository.conversations()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -433,6 +437,21 @@ class TutorViewModel(
         }
     }
 
+    /** Spec §9.4: rebuild passages for an item that has stored text but no searchable chunks. */
+    fun reindexLibraryItem(id: String, title: String) {
+        viewModelScope.launch {
+            try {
+                val passages = repository.reindexLibraryItem(id)
+                _library.update { it.copy(message = "Re-indexed \"$title\": $passages passages.") }
+                updateLibraryQuery(_library.value.query)
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _library.update { it.copy(message = "Could not re-index this note: ${e.message ?: "unknown error"}") }
+            }
+        }
+    }
+
     private var conversationId: String? = null
     private var askJob: Job? = null
 
@@ -508,7 +527,13 @@ class TutorViewModel(
                 }
             } catch (timeout: TimeoutCancellationException) {
                 failAssistant(assistantId)
-                _state.update { it.copy(isBusy = false, error = "This request took too long. Try a shorter question.") }
+                _state.update {
+                    it.copy(
+                        isBusy = false,
+                        error = "The model ran out of time before finishing. Try again, or ask for the " +
+                            "derivation one step at a time."
+                    )
+                }
             } catch (cancelled: CancellationException) {
                 finishStopped(assistantId)
                 _state.update { it.copy(isBusy = false) }

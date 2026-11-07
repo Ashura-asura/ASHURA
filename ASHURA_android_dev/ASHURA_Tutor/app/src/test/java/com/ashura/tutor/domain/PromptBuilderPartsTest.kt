@@ -80,6 +80,8 @@ class PromptBuilderPartsTest {
         assertTrue(parts.systemInstruction.contains("ANSWER:"))
         assertTrue(parts.systemInstruction.contains("STEPS:"))
         assertTrue(parts.systemInstruction.contains("CHECK:"))
+        assertTrue(parts.systemInstruction.contains("full derivation"))
+        assertTrue(parts.systemInstruction.contains("too long"))
         assertTrue(!parts.systemInstruction.contains("Socratically"))
     }
 

@@ -215,4 +215,7 @@
     <string name="mistake_why">किन: %1$s</string>
     <string name="mistake_method">विधि: %1$s</string>
     <string name="tutor_regenerate">फेरि जवाफ बनाउनुहोस्</string>
+    <string name="library_status_indexed">%1$s · %2$d अंश · %3$s मा थपिएको</string>
+    <string name="library_status_not_indexed">%1$s · सूचीकृत छैन (खोजले भेट्दैन) · %2$s मा थपिएको</string>
+    <string name="library_reindex">पुनः सूचीकृत गर्नुहोस्</string>
 </resources>

@@ -59,6 +59,8 @@ interface LibraryDao {
     suspend fun countByTitle(title: String): Int
     @Query("UPDATE library_items SET body = :body, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateBody(id: String, body: String, updatedAt: Long)
+    @Query("SELECT body FROM library_items WHERE id = :id LIMIT 1")
+    suspend fun bodyOf(id: String): String?
     @Query("DELETE FROM library_items WHERE id = :id")
     suspend fun delete(id: String)
 }

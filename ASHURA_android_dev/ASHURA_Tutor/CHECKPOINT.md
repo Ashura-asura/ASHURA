@@ -354,3 +354,62 @@ Artifact: `dist/ASHURA_Tutor-v0.5.4-dev-debug.apk` (~99 MB), SHA-256
 
 Still open: import status UI, edit message, claim-level evidence coverage, semantic retrieval, speech,
 plotting, code sandbox, online research, encrypted storage and all device benchmarks.
+
+---
+
+# Checkpoint 11 — full derivations no longer hit the 45-second wall (v0.5.5)
+
+Reported: a full-derivation question could still end with “This request took too long. Try a shorter
+question.”
+
+Cause: `GenerationLimits` allowed 384 output tokens and only 45 s of wall-clock time. A 1.5B Q8 model on
+a phone runs at roughly 4–8 tokens/s, so a multi-step derivation needed 50–100 s and was cut off. The
+error text then blamed the learner’s question, which was misleading.
+
+Changed:
+- Output budget 384 → **512 tokens**; total answer budget 45 s → **120 s** (the runtime’s allowed
+  maximum). The prompt now asks for 2–8 numbered steps for a direct answer.
+- The direct-answer prompt explicitly says: if the learner asks for a full derivation, show every
+  algebra step and finish it; never reply that the question is too long or ask them to shorten it.
+- Socratic override now also recognises “full derivation”, “complete solution”, “show all steps” and
+  similar phrases, so those requests switch that one answer to direct style.
+- Timeout message is accurate: “The model ran out of time before finishing. Try again, or ask for the
+  derivation one step at a time.” It no longer tells the learner their question was too long.
+
+Tests: **184 JVM tests, 0 failures** (182 + prompt assertion + derivation-phrase test + limits guard).
+`lintDebug` and `assembleDebug` pass.
+
+Artifact: `dist/ASHURA_Tutor-v0.5.5-dev-debug.apk`, SHA-256
+`3a2c7d03758bb2afd49ff423b1b95ca6d961dadd8792498684f08c887012aa12`.
+
+Still device-pending: actual tokens/s on the user’s phone. If a 512-token answer still reaches 120 s,
+the next fix should be a per-token idle timeout instead of a total timeout.
+
+---
+
+# Checkpoint 12 — Library import status and re-index (v0.5.6)
+
+Scope: integrated the only genuinely new feature from the second Claude handoff (`ASHURA_v0.5.4_batch2.patch`
+/ `ASHURA_Tutor_v0.5.4_source.zip`). The rest of that batch — chat history, Regenerate, Explain my mistake —
+was already integrated and verified in v0.5.4, so it was not re-applied. The timeout/derivation fix from
+checkpoint 11 is included in this build as well.
+
+Added:
+- **Library import status** — every imported item shows a size proxy (chars/k/M), passage count and date
+  added. An item whose text has no searchable passages is labelled *not indexed (search cannot find it)*
+  and gets a **Re-index** action. `ImportStatus` formats the labels, `ChunkDao.observeCounts` supplies the
+  counts as a flow, and `TutorRepository.reindexLibraryItem` rebuilds passages from the stored text in one
+  transaction.
+- The status line falls back to the old character count until the first database read completes
+  (`chunkCounts` starts as `null`), avoiding a false “not indexed” flash.
+- Re-indexing a genuinely empty note is refused by the existing text normaliser and reported in the
+  Library message line rather than silently creating zero passages.
+
+Tests: **190 JVM tests, 0 failures** (184 + 6 import-status). `lintDebug` and `assembleDebug` pass.
+
+Artifact: `dist/ASHURA_Tutor-v0.5.6-dev-debug.apk` (~99 MB), SHA-256
+`b632dbaff067757d7e5c171503e1c485399d9576da362bef95c15614c0471355`.
+
+Device checks for the user: every imported item should show a passage count; Re-index should appear only
+on a genuinely unindexed item and should populate the count without changing the text. Also re-check a
+full-derivation chat question against the 120 s budget.

@@ -1,7 +1,7 @@
 # Session changes (gap-closing pass)
 
 Integrated into the main tree and verified here with `./gradlew :app:testDebugUnitTest :app:lintDebug
-:app:assembleDebug` (182 JVM tests, 0 failures; lint and APK assembly pass).
+:app:assembleDebug` (190 JVM tests, 0 failures; lint and APK assembly pass).
 
 1. Honest confidence labels (spec §12): `domain/ConfidenceLabel.kt`, shown under every tutor answer (EN + NE strings).
    Wording deliberately says individual claims are not checked: claim-level verification (§12.4) is still missing.
@@ -19,7 +19,16 @@ Integrated into the main tree and verified here with `./gradlew :app:testDebugUn
    Deterministic only: it does not find the "first incorrect step" because working is not captured.
 7. Regenerate: button on the latest tutor answer re-asks the last question. The old answer stays in stored history
    (the question is saved twice).
+8. Library import status: each imported item shows character size, passage count and date added;
+   `ImportStatus` and `ChunkDao.observeCounts` drive a “not indexed” state with a Re-index button
+   (`TutorRepository.reindexLibraryItem`). Before the first database read the old character count is shown,
+   so there is no false “not indexed” flash.
+9. Full derivations: the answer budget is now 512 tokens / 120 s instead of 384 / 45 s, the direct prompt
+   requires the whole derivation and forbids “the question is too long”, and derivation phrases switch
+   Socratic mode to a direct answer.
 
-Tests added: `MistakeExplainerTest`, `ConfidenceLabelTest`, `HintLadderTest`.
+Tests added: `ImportStatusTest`, `MistakeExplainerTest`, `GenerationLimitsTest`, `ConfidenceLabelTest`,
+`HintLadderTest`.
 
-Not done: import status UI, edit message, everything else in the audit.
+Not done: edit message, semantic search, OCR confidence/region selection, programming sandbox, everything
+hardware-dependent.

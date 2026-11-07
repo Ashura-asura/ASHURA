@@ -76,6 +76,9 @@ interface ChunkDao {
     @Query("SELECT * FROM library_chunks WHERE itemId = :itemId ORDER BY ordinal")
     suspend fun forItem(itemId: String): List<LibraryChunkEntity>
 
+    @Query("SELECT itemId AS itemId, COUNT(*) AS passages FROM library_chunks GROUP BY itemId")
+    fun observeCounts(): Flow<List<ChunkCount>>
+
     @Query("DELETE FROM library_chunks WHERE itemId = :itemId")
     suspend fun deleteForItem(itemId: String)
 
@@ -90,3 +93,6 @@ interface ChunkDao {
     )
     suspend fun searchLike(query: String, limit: Int): List<ChunkHit>
 }
+
+/** Passage count per imported item, used for the Library's indexed-state line. */
+data class ChunkCount(val itemId: String, val passages: Int)

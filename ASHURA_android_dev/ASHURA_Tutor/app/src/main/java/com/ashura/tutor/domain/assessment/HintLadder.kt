@@ -39,7 +39,11 @@ object HintLadder {
     /** Heuristic for a chat message that asks to stop being guided and just get the answer. */
     fun asksForDirectAnswer(message: String): Boolean {
         val t = message.lowercase()
-        return listOf("just tell me", "just give me the answer", "give me the answer", "i give up", "stop asking", "tell me the answer")
-            .any { it in t }
+        return listOf(
+            "just tell me", "just give me the answer", "give me the answer", "i give up", "stop asking",
+            "tell me the answer", "full derivation", "complete derivation", "derive it fully", "derive fully",
+            "full solution", "complete solution", "show me the derivation", "show the derivation",
+            "show all steps", "show every step", "don't guide me", "dont guide me"
+        ).any { it in t }
     }
 }

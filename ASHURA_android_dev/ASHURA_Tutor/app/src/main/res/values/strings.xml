@@ -223,4 +223,7 @@
     <string name="mistake_why">Why: %1$s</string>
     <string name="mistake_method">Method: %1$s</string>
     <string name="tutor_regenerate">Regenerate</string>
+    <string name="library_status_indexed">%1$s · %2$d passages · added %3$s</string>
+    <string name="library_status_not_indexed">%1$s · not indexed (search cannot find it) · added %2$s</string>
+    <string name="library_reindex">Re-index</string>
 </resources>

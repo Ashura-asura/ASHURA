@@ -13,7 +13,7 @@ Legend:
 - **Not implemented** — do not advertise as available.
 
 Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
-**182 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
+**190 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
 hardware-dependent claim below is device-pending, not proven.
 
 ## Implemented and verified on the JVM
@@ -62,6 +62,7 @@ hardware-dependent claim below is device-pending, not proven.
 | Bundled ML Kit OCR (Latin + Devanagari), orientation fallback 90/180/270, bounded page rendering (§9.3) | Written, device-pending | Real OCR accuracy on phone photos and scanned PDFs |
 | Scanned-PDF path: pages with `< 24` embedded chars are OCR'd, thin embedded text + OCR both kept, per-page failures isolated, 24-page cap disclosed (§9.2, §9.3) | Written, device-pending | Quality and speed on a real multi-page scan |
 | Editable imported text: Library → edit → normalise → re-chunk → re-index in one transaction (§9.3) | Written, device-pending | Compose text-field behaviour with a long OCR body |
+| Library import status: character size, passage count, date added, “not indexed” state and Re-index (§9.4) | Written, device-pending | Wording/layout on narrow screens; re-indexing a genuinely empty note is refused |
 | Chat surface: streaming, stop, copy, citations, New chat, follow-if-at-bottom, jump-to-latest (§3.3) | Written, device-pending | IME resize, scroll feel, rendering |
 | PDF/DOCX/XLSX/PPTX/CSV import through the SAF picker (§9.1) | Written, device-pending | Vendor file-provider quirks and real-world files |
 | Study-pack import of all 200 assets with checksum verification (§8, Phase 8) | Written, device-pending | Import time and storage use on the phone |

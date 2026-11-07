@@ -44,11 +44,14 @@ import com.ashura.tutor.data.LibraryItemEntity
 import com.ashura.tutor.data.StudyLibrary
 import com.ashura.tutor.data.StudySet
 import com.ashura.tutor.data.StudySubject
+import com.ashura.tutor.domain.library.ImportStatus
 
 /** Import notes, search their passages, delete them. Imported text is only ever shown as plain text. */
 @Composable
 fun LibraryScreen(
     libraryItems: List<LibraryItemEntity>,
+    chunkCounts: Map<String, Int>?,
+    onReindex: (String, String) -> Unit,
     state: LibraryUiState,
     studyLibrary: StudyLibrary?,
     onImport: (android.net.Uri) -> Unit,
@@ -224,10 +227,31 @@ fun LibraryScreen(
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(
-                        pluralStringResource(R.plurals.library_chars, item.body.length, item.body.length),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    if (chunkCounts == null) {
+                        // First database read not finished: show the old character count rather than
+                        // flashing a false "not indexed".
+                        Text(
+                            pluralStringResource(R.plurals.library_chars, item.body.length, item.body.length),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    } else {
+                        val status = ImportStatus.of(item.body.length, chunkCounts[item.id] ?: 0)
+                        val added = java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM)
+                            .format(java.util.Date(item.createdAt))
+                        Text(
+                            if (status.indexed) {
+                                stringResource(R.string.library_status_indexed, status.sizeLabel, status.passages, added)
+                            } else {
+                                stringResource(R.string.library_status_not_indexed, status.sizeLabel, added)
+                            },
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+                if (chunkCounts != null && (chunkCounts[item.id] ?: 0) == 0) {
+                    TextButton(onClick = { onReindex(item.id, item.title) }) {
+                        Text(stringResource(R.string.library_reindex))
+                    }
                 }
                 TextButton(onClick = { onQuiz(item.id, item.title) }) { Text(stringResource(R.string.library_quiz)) }
                 IconButton(onClick = { editText = item.body; editing = item }) {

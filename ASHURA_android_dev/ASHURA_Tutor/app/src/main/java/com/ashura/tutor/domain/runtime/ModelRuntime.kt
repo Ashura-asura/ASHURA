@@ -37,8 +37,17 @@ sealed interface LoadResult {
 data class RuntimeHealth(val loaded: Boolean, val detail: String?)
 
 data class GenerationLimits(
-    val maxOutputTokens: Int = 384,
-    val timeoutMillis: Long = 45_000,
+    /**
+     * Room for a full derivation, not just a one-line answer. The old 384-token cap could stop a
+     * multi-step solution mid-way; 512 still fits a phone-friendly response.
+     */
+    val maxOutputTokens: Int = 512,
+    /**
+     * Total wall-clock budget for one answer. At the ~4-8 tokens/s a 1.5B model reaches on a phone,
+     * 45 s was often too short for a derivation; 120 s covers the slow end while still bounding the
+     * worst case. The UI keeps streaming and never blocks input on it.
+     */
+    val timeoutMillis: Long = 120_000,
     val maxContextCharacters: Int = 12_000
 ) {
     init {

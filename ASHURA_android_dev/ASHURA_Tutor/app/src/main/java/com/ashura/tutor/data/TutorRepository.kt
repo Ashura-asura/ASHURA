@@ -5,6 +5,7 @@ import androidx.room.withTransaction
 import androidx.sqlite.db.SimpleSQLiteQuery
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import com.ashura.tutor.domain.export.Json
 import com.ashura.tutor.domain.library.TextChunk
@@ -79,6 +80,16 @@ class TutorRepository(private val db: AppDatabase) {
             })
         }
         return ImportResult(itemId, chunking.chunks.size, chunking.truncated)
+    }
+
+    /** Passage count per item; an item with none is not searchable until re-indexed. */
+    fun chunkCounts(): Flow<Map<String, Int>> =
+        db.chunks().observeCounts().map { rows -> rows.associate { it.itemId to it.passages } }
+
+    /** Rebuilds an item's passages from its stored text (spec §9.4 re-index). Returns the new passage count. */
+    suspend fun reindexLibraryItem(id: String): Int {
+        val body = db.library().bodyOf(id) ?: error("This note no longer exists")
+        return replaceLibraryText(id, body)
     }
 
     suspend fun deleteLibraryItem(id: String) = db.library().delete(id) // chunks and FTS rows follow via cascade/triggers

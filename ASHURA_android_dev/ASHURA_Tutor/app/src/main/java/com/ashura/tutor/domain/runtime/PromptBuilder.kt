@@ -55,8 +55,12 @@ object PromptBuilder {
             if (request.style == TutorStyle.DIRECT) {
                 append("Use exactly this plain-text structure with each label at the start of its own line: ")
                 append("ANSWER: one or two sentences that directly answer the question. ")
-                append("STEPS: 2 to 5 numbered steps, one per line. ")
-                append("CHECK: one short question the learner should answer next.")
+                append("STEPS: the solution as 2 to 8 numbered steps, one per line. ")
+                append("CHECK: one short question the learner should answer next. ")
+                // Small models sometimes refuse long problems with “the question is too long”.
+                // That is never an acceptable tutor answer: derive it, or state a concrete missing fact.
+                append("If the learner asks for a full derivation, show every algebra step in order and finish it. ")
+                append("Never reply that the question is too long or ask the learner to shorten it.")
             } else {
                 append("Use exactly this plain-text structure: ANSWER: one guiding question. ")
                 append("STEPS: at most two short hints. CHECK: what the learner should try now.")

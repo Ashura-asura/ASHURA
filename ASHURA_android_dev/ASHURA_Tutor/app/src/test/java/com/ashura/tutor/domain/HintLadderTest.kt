@@ -33,4 +33,11 @@ class HintLadderTest {
         assertTrue(HintLadder.asksForDirectAnswer("Please just tell me the answer"))
         assertFalse(HintLadder.asksForDirectAnswer("How do I factor this?"))
     }
+
+    @Test fun detectsFullDerivationRequests() {
+        assertTrue(HintLadder.asksForDirectAnswer("Show the full derivation of the quadratic formula"))
+        assertTrue(HintLadder.asksForDirectAnswer("Please give me the complete solution"))
+        assertTrue(HintLadder.asksForDirectAnswer("show all steps"))
+        assertFalse(HintLadder.asksForDirectAnswer("What is the derivative of x squared?"))
+    }
 }
