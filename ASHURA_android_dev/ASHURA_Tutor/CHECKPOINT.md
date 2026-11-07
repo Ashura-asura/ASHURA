@@ -206,3 +206,35 @@ Next: install `dist/ASHURA_Tutor-v0.5.0-dev-debug.apk` on the phone and verify (
 question; the model must remain loaded; (2) chat streaming/stop/scroll; (3) import a text PDF, a scanned PDF/photo, a PPTX
 and a DOCX, then run Quiz me and confirm the mixed set and page/slide citations; (4) Library → add a subject and confirm
 the study sets and their checksums import; (5) record actual timings and any OCR/extraction failures before the next change.
+
+---
+
+# Checkpoint 7 — chat surface rebuilt to match ChatGPT/Claude (v0.5.1)
+
+The first v0.5.0 chat still looked like a form: tinted header, coloured assistant bubble, bordered
+text field and an external send button. Rebuilt the Tutor tab as a conversation surface:
+
+- **Neutral canvas** — white/near-black background with quiet grey surfaces; the indigo accent is now
+  reserved for the avatar and send button. User messages are light-grey rounded bubbles; assistant
+  turns are full-width prose with no bubble, matching ChatGPT/Claude.
+- **Slim header** — avatar, product name, live model-status dot and text, compact Socratic/Direct
+  toggle, and a New chat action. No toolbar divider or oversized title.
+- **Composer** — one rounded, hairline-bordered capsule with an inline `BasicTextField` and a circular
+  send/stop button inside it, plus a one-line "can make mistakes" disclaimer.
+- **Transcript behaviour** — streaming caret, animated three-dot thinking state, auto-follow only when
+  the learner is at the newest message, and a jump-to-latest button when they scroll back.
+- **Message actions** — copy answer with a transient "Copied" confirmation; citations and mode labels
+  remain as quiet metadata.
+- **New chat** — clears the visible transcript and starts a fresh stored conversation without deleting
+  the previous one.
+- **Welcome state** — centred avatar and greeting with a 2×2 grid of suggestion cards instead of
+  full-width outlined buttons.
+- **Theme** — explicit light/dark neutral palette (background, surface, surfaceVariant, outline
+  variants) so Material defaults no longer leak a purple tint into the chat; bottom navigation is
+  white/black with a hairline divider.
+
+Verification: `:app:compileDebugKotlin`, 151 JVM tests, `:app:lintDebug` and `:app:assembleDebug` pass.
+Hardware rendering, IME resize, scroll feel and copy behaviour still need the phone.
+
+Artifact: `dist/ASHURA_Tutor-v0.5.1-dev-debug.apk` (~99 MB), SHA-256
+`fd2159bf6c40cdec35b522530cc5c412b7b950640eb89577d59116400842f37f`.

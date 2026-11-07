@@ -53,6 +53,12 @@
     <string name="tutor_composer_hint">ASHURA लाई लेख्नुहोस्…</string>
     <string name="tutor_send">पठाउनुहोस्</string>
     <string name="tutor_thinking">सोच्दै…</string>
+    <string name="tutor_new_chat">नयाँ कुराकानी</string>
+    <string name="tutor_scroll_to_latest">पछिल्लो सन्देशमा जानुहोस्</string>
+    <string name="tutor_suggestion_start">सुरु गर्नुहोस्</string>
+    <string name="tutor_copy">प्रतिलिपि गर्नुहोस्</string>
+    <string name="tutor_copied">प्रतिलिपि भयो</string>
+    <string name="tutor_disclaimer">ASHURA ले गल्ती गर्न सक्छ। महत्त्वपूर्ण तथ्य जाँच्नुहोस्।</string>
 
     <string name="progress_title">तपाईंको प्रगति</string>
     <string name="progress_explainer">दक्षता तपाईंका प्रयासहरूबाट गरिएको अनुमान हो, अंक होइन।</string>

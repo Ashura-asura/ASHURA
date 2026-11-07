@@ -507,6 +507,19 @@ class TutorViewModel(
         }
     }
 
+    /** Starts a fresh conversation without touching the stored history for the previous one. */
+    fun newChat() {
+        askJob?.cancel()
+        askJob = null
+        conversationId = null
+        _state.update {
+            it.copy(
+                messages = emptyList(), question = "", answer = null, limitation = null,
+                citations = emptyList(), isBusy = false, error = null, mode = null
+            )
+        }
+    }
+
     private fun updateAssistant(id: String, transform: (ChatMessage) -> ChatMessage) {
         _state.update { state ->
             state.copy(messages = state.messages.map { if (it.id == id) transform(it) else it })

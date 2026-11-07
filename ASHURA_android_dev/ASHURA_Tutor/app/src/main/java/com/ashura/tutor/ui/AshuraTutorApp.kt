@@ -1,14 +1,24 @@
 package com.ashura.tutor.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.text.format.Formatter
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,19 +33,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
@@ -46,12 +63,12 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -59,13 +76,17 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -96,6 +117,7 @@ import com.ashura.tutor.domain.runtime.RamTier
 import com.ashura.tutor.domain.runtime.RuntimeMetrics
 import com.ashura.tutor.domain.runtime.rank
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
 
@@ -135,14 +157,20 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
     Box(Modifier.fillMaxSize()) {
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                Destination.entries.forEach { item ->
-                    NavigationBarItem(
-                        selected = selected == item.name,
-                        onClick = { selected = item.name },
-                        icon = { Icon(item.icon, contentDescription = null) },
-                        label = { Text(stringResource(item.labelRes)) }
-                    )
+            Column {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 0.dp
+                ) {
+                    Destination.entries.forEach { item ->
+                        NavigationBarItem(
+                            selected = selected == item.name,
+                            onClick = { selected = item.name },
+                            icon = { Icon(item.icon, contentDescription = null) },
+                            label = { Text(stringResource(item.labelRes)) }
+                        )
+                    }
                 }
             }
         }
@@ -185,7 +213,8 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                         },
                         topics = viewModel.topics, recommendedId = progress.recommendedTopicId,
                         onQuestionChange = viewModel::updateQuestion, onAsk = viewModel::ask,
-                        onCancel = viewModel::cancelAsk, onStartTopic = viewModel::startTopic
+                        onCancel = viewModel::cancelAsk, onStartTopic = viewModel::startTopic,
+                        onNewChat = viewModel::newChat
                     )
                 }
                 Destination.LIBRARY -> LibraryScreen(
@@ -287,69 +316,87 @@ private fun TutorScreen(
     isBusy: Boolean, error: String?, modelLoaded: Boolean,
     style: TutorStyle, onToggleStyle: () -> Unit,
     topics: List<TopicSummary>, recommendedId: String?,
-    onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit, onStartTopic: (String) -> Unit
+    onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit,
+    onStartTopic: (String) -> Unit, onNewChat: () -> Unit
 ) {
     val listState = rememberLazyListState()
-    LaunchedEffect(messages.size, messages.lastOrNull()?.text) {
-        if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+    val scope = rememberCoroutineScope()
+    // Follow the stream only while the learner is already at the newest message, so reading earlier
+    // turns never fights the auto-scroll.
+    val atBottom by remember {
+        derivedStateOf {
+            val info = listState.layoutInfo
+            val last = info.visibleItemsInfo.lastOrNull() ?: return@derivedStateOf true
+            last.index >= info.totalItemsCount - 1 &&
+                last.offset + last.size <= info.viewportEndOffset + 24
+        }
+    }
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            val anchor = messages.size + if (error != null) 1 else 0
+            listState.animateScrollToItem(anchor)
+        }
+    }
+    LaunchedEffect(messages.lastOrNull()?.text) {
+        if (messages.isNotEmpty() && atBottom) {
+            val anchor = messages.size + if (error != null) 1 else 0
+            listState.scrollToItem(anchor)
+        }
     }
 
     Column(Modifier.fillMaxSize().imePadding()) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    stringResource(R.string.tutor_chat_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
+        ChatTopBar(
+            modelLoaded = modelLoaded, style = style,
+            onToggleStyle = onToggleStyle, onNewChat = onNewChat
+        )
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            if (messages.isEmpty()) {
+                WelcomeChat(
+                    topics = topics, recommendedId = recommendedId,
+                    modelLoaded = modelLoaded, onStartTopic = onStartTopic,
+                    modifier = Modifier.fillMaxSize()
                 )
-                Text(
-                    stringResource(if (modelLoaded) R.string.tutor_local_ready else R.string.tutor_offline_mode),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (modelLoaded) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            FilterChip(
-                selected = style == TutorStyle.SOCRATIC,
-                onClick = onToggleStyle,
-                label = {
-                    Text(
-                        stringResource(
-                            if (style == TutorStyle.SOCRATIC) R.string.tutor_style_socratic
-                            else R.string.tutor_style_direct
-                        )
-                    )
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    items(messages, key = { it.id }) { message -> ChatBubble(message) }
+                    error?.let { message ->
+                        item {
+                            Text(
+                                message,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(horizontal = 4.dp)
+                            )
+                        }
+                    }
+                    item(key = "end-anchor") { Spacer(Modifier.height(1.dp)) }
                 }
-            )
-        }
-        HorizontalDivider()
-
-        if (messages.isEmpty()) {
-            WelcomeChat(
-                topics = topics, recommendedId = recommendedId,
-                modelLoaded = modelLoaded, onStartTopic = onStartTopic,
-                modifier = Modifier.weight(1f)
-            )
-        } else {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(messages, key = { it.id }) { message -> ChatBubble(message) }
-                error?.let { message ->
-                    item {
-                        Text(
-                            message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
+                if (!atBottom) {
+                    Surface(
+                        onClick = {
+                            scope.launch {
+                                val anchor = messages.size + if (error != null) 1 else 0
+                                listState.animateScrollToItem(anchor)
+                            }
+                        },
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        shadowElevation = 3.dp,
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp).size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = stringResource(R.string.tutor_scroll_to_latest),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -359,14 +406,71 @@ private fun TutorScreen(
                 error,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
             )
         }
-
         ChatComposer(
             question = question, isBusy = isBusy,
             onQuestionChange = onQuestionChange, onAsk = onAsk, onCancel = onCancel
         )
+    }
+}
+
+/** Slim, ChatGPT-style header: assistant identity, live model status, style toggle and New chat. */
+@Composable
+private fun ChatTopBar(
+    modelLoaded: Boolean, style: TutorStyle,
+    onToggleStyle: () -> Unit, onNewChat: () -> Unit
+) {
+    Row(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(30.dp)) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    "A",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        Spacer(Modifier.size(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                stringResource(R.string.tutor_chat_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                Box(
+                    Modifier.size(6.dp).background(
+                        if (modelLoaded) Color(0xFF2E9E5B) else MaterialTheme.colorScheme.outline,
+                        CircleShape
+                    )
+                )
+                Text(
+                    stringResource(if (modelLoaded) R.string.tutor_local_ready else R.string.tutor_offline_mode),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        TextButton(onClick = onToggleStyle) {
+            Text(
+                stringResource(
+                    if (style == TutorStyle.SOCRATIC) R.string.tutor_style_socratic
+                    else R.string.tutor_style_direct
+                ),
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
+        IconButton(onClick = onNewChat) {
+            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.tutor_new_chat))
+        }
     }
 }
 
@@ -379,30 +483,32 @@ private fun WelcomeChat(
         .distinctBy { it.id }
         .take(4)
     Column(
-        modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 36.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(72.dp)
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(56.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
                     "A",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
+        Spacer(Modifier.height(18.dp))
         Text(
             stringResource(R.string.tutor_welcome_title),
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Bold
         )
+        Spacer(Modifier.height(8.dp))
         Text(
             stringResource(
                 if (modelLoaded) R.string.tutor_welcome_body_local
@@ -413,27 +519,55 @@ private fun WelcomeChat(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         if (suggestions.isNotEmpty()) {
-            Text(
-                stringResource(R.string.tutor_suggestions),
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-            )
-            suggestions.forEach { topic ->
-                OutlinedButton(
-                    onClick = { onStartTopic(topic.id) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(topic.title, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(28.dp))
+            suggestions.chunked(2).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    row.forEach { topic ->
+                        SuggestionCard(
+                            title = topic.title,
+                            onClick = { onStartTopic(topic.id) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    if (row.size == 1) Spacer(Modifier.weight(1f))
                 }
+                Spacer(Modifier.height(10.dp))
             }
         }
+        Spacer(Modifier.height(16.dp))
         Text(
             stringResource(R.string.tutor_privacy_note),
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 8.dp)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Composable
+private fun SuggestionCard(title: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 14.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                stringResource(R.string.tutor_suggestion_start),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
 
@@ -442,87 +576,117 @@ private fun ChatComposer(
     question: String, isBusy: Boolean,
     onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit
 ) {
-    Surface(tonalElevation = 3.dp, shadowElevation = 6.dp) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 6.dp, bottom = 8.dp)) {
+        Surface(
+            shape = RoundedCornerShape(26.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         ) {
-            OutlinedTextField(
-                value = question,
-                onValueChange = onQuestionChange,
-                modifier = Modifier.weight(1f),
-                placeholder = { Text(stringResource(R.string.tutor_composer_hint)) },
-                maxLines = 5,
-                shape = RoundedCornerShape(24.dp),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { if (question.isNotBlank() && !isBusy) onAsk() })
-            )
-            FilledIconButton(
-                onClick = { if (isBusy) onCancel() else onAsk() },
-                enabled = isBusy || question.isNotBlank(),
-                modifier = Modifier.size(48.dp)
+            Row(
+                Modifier.fillMaxWidth().padding(start = 18.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+                verticalAlignment = Alignment.Bottom
             ) {
-                Icon(
-                    if (isBusy) Icons.Default.Stop else Icons.AutoMirrored.Filled.Send,
-                    contentDescription = stringResource(
-                        if (isBusy) R.string.tutor_cancel else R.string.tutor_send
-                    )
+                BasicTextField(
+                    value = question,
+                    onValueChange = onQuestionChange,
+                    modifier = Modifier.weight(1f).padding(vertical = 10.dp),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    maxLines = 6,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { if (question.isNotBlank() && !isBusy) onAsk() }),
+                    decorationBox = { inner ->
+                        Box {
+                            if (question.isEmpty()) {
+                                Text(
+                                    stringResource(R.string.tutor_composer_hint),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            inner()
+                        }
+                    }
                 )
+                Spacer(Modifier.size(6.dp))
+                FilledIconButton(
+                    onClick = { if (isBusy) onCancel() else onAsk() },
+                    enabled = isBusy || question.isNotBlank(),
+                    modifier = Modifier.size(38.dp)
+                ) {
+                    Icon(
+                        if (isBusy) Icons.Default.Stop else Icons.AutoMirrored.Filled.Send,
+                        contentDescription = stringResource(
+                            if (isBusy) R.string.tutor_cancel else R.string.tutor_send
+                        ),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
+        Text(
+            stringResource(R.string.tutor_disclaimer),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+        )
     }
 }
 
 @Composable
 private fun ChatBubble(message: ChatMessage) {
-    val isUser = message.role == ChatRole.USER
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
-        verticalAlignment = Alignment.Top
-    ) {
-        if (!isUser) {
+    if (message.role == ChatRole.USER) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(30.dp)
+                shape = RoundedCornerShape(20.dp, 20.dp, 6.dp, 20.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.widthIn(max = 340.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        "A",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    message.text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 11.dp)
+                )
             }
-            Spacer(Modifier.size(8.dp))
         }
-        Column(
-            Modifier.fillMaxWidth(0.86f),
-            horizontalAlignment = if (isUser) Alignment.End else Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+    } else {
+        AssistantMessage(message)
+    }
+}
+
+/**
+ * Claude/ChatGPT-style assistant turn: avatar plus full-width prose on the page background,
+ * no second speech bubble. Actions sit quietly underneath the answer.
+ */
+@Composable
+private fun AssistantMessage(message: ChatMessage) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(28.dp)
         ) {
-            Surface(
-                shape = if (isUser) RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp)
-                else RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp),
-                color = if (isUser) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.surfaceVariant
-            ) {
-                Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                    when {
-                        isUser -> Text(
-                            message.text,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                        message.streaming && message.text.isBlank() -> TypingIndicator()
-                        else -> AssistantContent(message.text)
-                    }
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    "A",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        Spacer(Modifier.size(10.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            SelectionContainer {
+                if (message.streaming && message.text.isBlank()) {
+                    TypingIndicator()
+                } else {
+                    AssistantContent(message.text, message.streaming)
                 }
             }
-            if (!isUser && !message.streaming) {
+            if (!message.streaming) {
                 message.mode?.let { mode ->
                     Text(
                         stringResource(
@@ -533,41 +697,74 @@ private fun ChatBubble(message: ChatMessage) {
                             }
                         ),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 4.dp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 message.limitation?.let { limitation ->
                     Text(
                         limitation,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 4.dp)
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 if (message.citations.isNotEmpty()) {
                     Text(
                         stringResource(R.string.tutor_sources),
                         style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        fontWeight = FontWeight.Medium
                     )
                     message.citations.forEach { citation ->
                         Text(
                             citation,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 4.dp)
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
+                CopyAnswerButton(message.text)
             }
         }
-        if (isUser) Spacer(Modifier.size(4.dp))
     }
 }
 
 @Composable
-private fun AssistantContent(text: String) {
+private fun CopyAnswerButton(text: String) {
+    val context = LocalContext.current
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(1_500)
+            copied = false
+        }
+    }
+    TextButton(
+        onClick = {
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("ASHURA answer", text))
+            copied = true
+        },
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+        modifier = Modifier.height(30.dp)
+    ) {
+        if (copied) {
+            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
+            Spacer(Modifier.size(4.dp))
+        }
+        Text(
+            stringResource(if (copied) R.string.tutor_copied else R.string.tutor_copy),
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
+}
+
+@Composable
+private fun AssistantContent(text: String, streaming: Boolean = false) {
+    // While tokens arrive, show the raw text with a caret. Structure is applied once the answer is
+    // complete, so partial ANSWER:/STEPS: markers never flicker into half-built sections.
+    if (streaming) {
+        FormattedText(text, showCaret = true)
+        return
+    }
     val structured = StructuredAnswer.parse(text)
     if (structured.isStructured) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -602,8 +799,8 @@ private fun AssistantContent(text: String) {
 
 /** Minimal Markdown-lite rendering: **bold** and `inline code`, without pulling in a parser library. */
 @Composable
-private fun FormattedText(text: String, modifier: Modifier = Modifier) {
-    val annotated = remember(text) {
+private fun FormattedText(text: String, modifier: Modifier = Modifier, showCaret: Boolean = false) {
+    val annotated = remember(text, showCaret) {
         val pattern = Regex("\\*\\*(.+?)\\*\\*|`([^`]+)`")
         buildAnnotatedString {
             var last = 0
@@ -619,6 +816,7 @@ private fun FormattedText(text: String, modifier: Modifier = Modifier) {
                 last = match.range.last + 1
             }
             if (last < text.length) append(text.substring(last))
+            if (showCaret) append("▍")
         }
     }
     Text(annotated, style = MaterialTheme.typography.bodyLarge, modifier = modifier)
@@ -626,8 +824,26 @@ private fun FormattedText(text: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun TypingIndicator() {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+    val transition = rememberInfiniteTransition(label = "typing")
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        repeat(3) { index ->
+            val alpha by transition.animateFloat(
+                initialValue = 0.2f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 620, delayMillis = index * 140, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "dot$index"
+            )
+            Box(
+                Modifier.size(7.dp).background(
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
+                    CircleShape
+                )
+            )
+        }
+        Spacer(Modifier.size(8.dp))
         Text(
             stringResource(R.string.tutor_thinking),
             style = MaterialTheme.typography.bodyMedium,

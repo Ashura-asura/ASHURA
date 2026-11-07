@@ -51,6 +51,12 @@
     <string name="tutor_composer_hint">Message ASHURA…</string>
     <string name="tutor_send">Send</string>
     <string name="tutor_thinking">Thinking…</string>
+    <string name="tutor_new_chat">New chat</string>
+    <string name="tutor_scroll_to_latest">Scroll to the latest message</string>
+    <string name="tutor_suggestion_start">Start</string>
+    <string name="tutor_copy">Copy</string>
+    <string name="tutor_copied">Copied</string>
+    <string name="tutor_disclaimer">ASHURA can make mistakes. Check important facts.</string>
 
     <!-- Progress -->
     <string name="progress_title">Your Progress</string>
