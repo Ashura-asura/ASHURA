@@ -105,6 +105,15 @@ fun PracticeScreen(
                         enabled = selfOutcome != null && !done && !state.busy, modifier = Modifier.fillMaxWidth()
                     ) { Text(stringResource(R.string.practice_record)) }
                 }
+                if (done) {
+                    item {
+                        Text(
+                            stringResource(R.string.practice_model_answer, question.expectedAnswer),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    question.explanation?.let { explanation -> item { Text(explanation) } }
+                }
             } else {
                 item {
                     OutlinedTextField(

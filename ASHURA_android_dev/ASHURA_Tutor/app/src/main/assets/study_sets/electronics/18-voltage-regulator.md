@@ -1,0 +1,4 @@
+# Voltage regulator
+
+A voltage regulator is a system designed to automatically maintain a constant voltage. It may use a simple feed-forward design or may include negative feedback. It may use an electromechanical mechanism or electronic components. Depending on the design, it may be used to regulate one or more AC or DC voltages.
+Electronic voltage regulators are found in devices such as computer power supplies, where they stabilize the DC voltages used by the processor and other elements. In automobile alternators and central power station generator plants, voltage regulators control the output of the plant. In an electric power distribution system, voltage regulators may be installed at a substation or along distribution lines so that all customers receive steady voltage independent of how much power is drawn from the line.

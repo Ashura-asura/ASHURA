@@ -42,6 +42,17 @@
     <string name="tutor_lessons">पाठहरू</string>
     <string name="tutor_recommended_suffix">  — अर्को सिफारिस</string>
     <string name="tutor_builds_on">आधारित: %1$s</string>
+    <string name="tutor_chat_title">ASHURA शिक्षक</string>
+    <string name="tutor_local_ready">स्थानीय मोडेल तयार · जवाफ यही उपकरणमा रहन्छ</string>
+    <string name="tutor_offline_mode">अफलाइन अध्ययन मोड · मोडेल लोड छैन</string>
+    <string name="tutor_welcome_title">तपाईं के सिक्न चाहनुहुन्छ?</string>
+    <string name="tutor_welcome_body_local">कुनै पनि विषय वा आयातित नोटबारे सोध्नुहोस्। म चरणबद्ध व्याख्या गर्छु र स्रोत देखाउँछु।</string>
+    <string name="tutor_welcome_body_offline">अफलाइन अध्ययन विधि र ठ्याक्कै गणित काम गर्न सक्छु। पूरा विषय व्याख्याका लागि सेटिङमा स्थानीय मोडेल लोड गर्नुहोस्।</string>
+    <string name="tutor_suggestions">सुझावित विषय</string>
+    <string name="tutor_privacy_note">सबै प्रक्रिया यही उपकरणमा हुन्छ। केही पनि अपलोड हुँदैन।</string>
+    <string name="tutor_composer_hint">ASHURA लाई लेख्नुहोस्…</string>
+    <string name="tutor_send">पठाउनुहोस्</string>
+    <string name="tutor_thinking">सोच्दै…</string>
 
     <string name="progress_title">तपाईंको प्रगति</string>
     <string name="progress_explainer">दक्षता तपाईंका प्रयासहरूबाट गरिएको अनुमान हो, अंक होइन।</string>
@@ -129,6 +140,7 @@
     <string name="practice_show_solution">समाधान देखाउनुहोस्</string>
     <string name="practice_hint_n">सङ्केत %1$d: %2$s</string>
     <string name="practice_answer">जवाफ: %1$s</string>
+    <string name="practice_model_answer">नमुना जवाफ: %1$s</string>
     <string name="practice_solution_note">पहिले समाधान हेर्दा सही जवाफ सहायता-सहित मानिन्छ।</string>
     <plurals name="practice_schedule">
         <item quantity="one">दक्षता अनुमान %1$d%% · अर्को दोहोर्याउने %2$d दिनमा।</item>
@@ -144,9 +156,10 @@
     <string name="review_correct_independently">स्वतन्त्र रूपमा सही</string>
 
     <string name="library_title">तपाईंको पुस्तकालय</string>
-    <string name="library_intro">.txt, .md, .docx, .xlsx वा .pptx नोट आयात गर्नुहोस्। ती यही उपकरणमा रहन्छन् र अफलाइन खोजिन्छन्। PDF र फोटो (OCR) आयात अझै बनेको छैन।</string>
+    <string name="library_intro">पाठ, Markdown, PDF, फोटो, Word, Excel वा PowerPoint फाइल आयात गर्नुहोस्। आवश्यक परे PDF पृष्ठ र फोटो उपकरणमै OCR ले पढ्छ। तलका अन्तर्निहित अध्ययन सेट पनि थप्न सक्नुहुन्छ। सबै यही उपकरणमा रहन्छ र अफलाइन खोजिन्छ।</string>
     <string name="library_import">नोट आयात गर्नुहोस्</string>
     <string name="library_importing">आयात गर्दै…</string>
+    <string name="library_search_title">तपाईंका नोट खोज्नुहोस्</string>
     <string name="library_search_label">तपाईंका नोट खोज्नुहोस्</string>
     <string name="library_no_matches">मिल्ने अंश भेटिएन।</string>
     <string name="library_imported_count">आयातित नोट (%1$d)</string>
@@ -160,6 +173,14 @@
     <string name="library_passage">%1$s · अंश %2$d</string>
     <string name="library_delete_title">यो नोट मेटाउने?</string>
     <string name="library_delete_body">“%1$s” र यसका अंशहरू यो उपकरणबाट हटाइनेछन्।</string>
+    <string name="study_sets_title">अन्तर्निहित अध्ययन सेटहरू</string>
+    <string name="study_sets_intro">विकिपिडियाबाट %1$d अफलाइन नोटहरू (CC BY-SA 4.0)। एउटा सेट थप्नुहोस्, त्यसपछि मिश्रित परीक्षा बनाउन “मलाई प्रश्न सोध्नुहोस्” थिच्नुहोस्।</string>
+    <string name="study_sets_loading">अध्ययन सेटहरू लोड हुँदै…</string>
+    <string name="study_sets_level">%1$s · %2$d सेटहरू</string>
+    <string name="study_sets_add">थप्नुहोस्</string>
+    <string name="study_sets_add_all_cd">%1$s का सबै सेट थप्नुहोस्</string>
+    <string name="study_sets_meta">विकिपिडिया · %1$s</string>
+    <string name="study_sets_notice">नोटहरू %1$s इजाजतपत्र अन्तर्गत विकिपिडियाका संक्षिप्त अंश हुन्। स्रोत लिङ्क र चेकसम प्याक म्यानिफेस्टमा छन्। चल्ने बेला केही डाउनलोड हुँदैन।</string>
 
     <string name="splash_credit">बिशाल भण्डारी, नेपालद्वारा निर्मित र सञ्चालित</string>
     <string name="action_delete">मेटाउनुहोस्</string>

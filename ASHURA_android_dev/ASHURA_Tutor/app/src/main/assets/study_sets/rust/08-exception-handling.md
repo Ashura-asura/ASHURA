@@ -1,0 +1,4 @@
+# Exception handling
+
+In computing and computer programming, exception handling is the process of responding to the occurrence of exceptions – anomalous or exceptional conditions requiring special processing – during the execution of a program. In general, an exception breaks the normal flow of execution and executes a pre-registered exception handler; the details of how this is done depend on whether it is a hardware or software exception and how the software exception is implemented.
+Exceptions are defined by different layers of a computer system, and the typical layers are CPU-defined interrupts, operating system (OS)-defined signals, and programming language-defined exceptions. Each layer requires different ways of exception handling although they may be interrelated, e.g. a CPU interrupt could be turned into an OS signal. Some exceptions, especially hardware ones, may be handled so gracefully that execution can resume where it was interrupted.

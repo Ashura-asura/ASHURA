@@ -1,0 +1,6 @@
+# Struct (C programming language)
+
+In the C programming language, struct (referring to a structure) is the keyword used to define a composite, a.k.a. record, data type – a named set of values that occupy a block of memory. It allows for the different values to be accessed via a single identifier, often a pointer. A struct can contain other data types, so it is used for mixed-data-type records. For example, a bank customer struct might contain fields for the customer's name, address, telephone number, and balance.
+A struct occupies a contiguous block of memory, usually delimited (sized) by word-length boundaries.  It corresponds to the similarly named feature available in some assemblers for Intel processors. Being a block of contiguous memory, each field within a struct is located at a certain fixed offset from the start.
+The sizeof operator results in the number of bytes needed to store a particular struct, just as it does for a primitive data type. The alignment of particular fields in the struct (with respect to word boundaries) is implementation-specific and may include padding. Modern compilers typically support the #pragma pack directive, which sets the size in bytes for alignment.
+The C struct feature was derived from the same-named concept in ALGOL 68.

@@ -1,0 +1,3 @@
+# Solution (chemistry)
+
+In chemistry, a solution is defined by IUPAC as "A liquid or solid phase containing more than one substance, when for convenience one (or more) substance, which is called the solvent, is treated differently from the other substances, which are called solutes. When, as is often but not necessarily the case, the sum of the mole fractions of solutes is small compared with unity, the solution is called a dilute solution." One parameter of a solution is the concentration, which is a measure of the amount of solute in a given amount of solution or solvent. The term "aqueous solution" is used when one of the solvents is water.

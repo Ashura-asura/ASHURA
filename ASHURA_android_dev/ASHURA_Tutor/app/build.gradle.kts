@@ -36,8 +36,8 @@ android {
         applicationId = "com.ashura.tutor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.4.0"
+        versionCode = 5
+        versionName = "0.5.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += listOf("en", "ne")
 
@@ -119,6 +119,12 @@ dependencies {
     // On-device inference (spec §6.2). The AAR contains the native engine; model weights are never
     // bundled in the APK. The user downloads or imports a .litertlm file after explicit consent.
     implementation("com.google.ai.edge.litertlm:litertlm-android:0.19.1")
+
+    // Offline document intelligence (spec Phase 7). PdfBox extracts embedded text from text PDFs;
+    // ML Kit's bundled recognisers handle scanned pages and images without Play Services or network.
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")

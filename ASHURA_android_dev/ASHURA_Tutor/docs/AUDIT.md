@@ -82,3 +82,22 @@ New residual risks:
 - A small model may ignore the requested `ANSWER`/`STEPS`/`CHECK` structure; the parser then shows plain text rather than inventing sections.
 - Socratic mode is prompt-enforced, not guarantee-enforced; a model can still reveal the answer.
 
+
+## Document, chat and study-pack checkpoint (v0.5.0)
+| Check | Result |
+|---|---|
+| Build | `:app:assembleDebug`, `:app:lintDebug`, `:app:testDebugUnitTest` succeed |
+| Unit tests | 151/151 passing, adding `DocumentQuizTest`, `PdfTextExtractorTest`, `StudyPackRepositoryTest` and PDF/image cases in `TextChunkerTest` |
+| Model lifecycle | No automatic unload remains; startup `autoLoadInstalled()` loads a verified model, explicit unload only |
+| Chat | Streaming bubbles, stop, mode/citation footnotes, pinned composer, empty-state suggestions; legacy answer fields retained for compatibility |
+| Import | Text/Markdown, PDF (embedded text), PNG/JPEG/WebP (OCR), DOCX/XLSX/PPTX (in-memory OOXML); per-format caps and page/slide/sheet markers |
+| Provenance | Section labels flow into `PassageRef`, `GroundingPolicy` citations and quiz prompts; chunking starts a new chunk at every marker |
+| Quiz | Up to 20 mixed items: ≤12 cloze, ≤6 definitions, explanation prompts; deterministic, deduplicated, section-aware; self-assessed model answers shown after rating |
+| Study packs | 10 subjects × 20 notes = 200 Markdown assets; manifest with source URL, CC BY-SA 4.0, size and SHA-256; checksum verified before import |
+| Privacy | Study notes are bundled; no runtime download, account, sync or upload path was added |
+
+New residual risks:
+- The 200 Wikipedia extracts are lead-section summaries; some are short (≈550–800 characters) and will yield fewer than 20 unique questions. The UI reports the actual count rather than padding with invented items.
+- OCR quality, model residency, chat IME/scroll behaviour and PDF/PPTX extraction quality are untested on hardware.
+- The debug APK is now ~99 MB, above GitHub's 50 MB guidance, because ML Kit's bundled OCR models ship inside it. Prefer a release artifact or split ABI/OCR bundles for distribution later.
+- The study-pack content is CC BY-SA 4.0, not the application licence; redistribution must preserve attribution and share-alike terms (see `assets/study_sets/LICENSE.md`).

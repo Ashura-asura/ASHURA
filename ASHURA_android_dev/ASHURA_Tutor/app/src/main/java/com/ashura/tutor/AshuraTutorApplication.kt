@@ -1,11 +1,11 @@
 package com.ashura.tutor
 
 import android.app.Application
-import android.content.ComponentCallbacks2
 import com.ashura.tutor.application.PracticeService
 import com.ashura.tutor.data.AppDatabase
 import com.ashura.tutor.data.DocumentReader
 import com.ashura.tutor.data.TutorRepository
+import com.ashura.tutor.data.StudyPackRepository
 import com.ashura.tutor.data.model.ModelManager
 import com.ashura.tutor.data.profile.LearnerProfileStore
 import com.ashura.tutor.domain.CalculatorTool
@@ -17,9 +17,11 @@ import com.ashura.tutor.domain.assessment.AnswerChecker
 import com.ashura.tutor.domain.curriculum.CurriculumPack
 import com.ashura.tutor.domain.curriculum.SeedCurriculum
 import com.ashura.tutor.domain.runtime.LiteRtLmModelRuntime
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.io.File
 
 /** Manual dependency wiring (spec §4.1 modular monolith). One shared runtime instance: never two loaded models. */
@@ -46,11 +48,15 @@ class AshuraTutorApplication : Application() {
         private set
     lateinit var learnerProfile: LearnerProfileStore
         private set
+    lateinit var studyPacks: StudyPackRepository
+        private set
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {
         super.onCreate()
+        // PdfBox-Android needs its bundled font/metric resources before the first PDF is opened.
+        PDFBoxResourceLoader.init(this)
         repository = TutorRepository(AppDatabase.create(this))
         modelRuntime = LiteRtLmModelRuntime(
             modelsDir = File(filesDir, "models"),
@@ -61,11 +67,15 @@ class AshuraTutorApplication : Application() {
             runtime = modelRuntime,
             scope = appScope
         )
+        // Keep the verified model ready across app restarts. The user can still unload it explicitly;
+        // nothing unloads it behind their back.
+        appScope.launch { modelManager.autoLoadInstalled() }
         learnerProfile = LearnerProfileStore(this)
+        studyPacks = StudyPackRepository(assets)
         val calculator = CalculatorTool()
         taskController = TaskController(modelRuntime = modelRuntime, tools = mapOf(calculator.name to calculator))
         tutorEngine = TutorEngine(modelRuntime = modelRuntime, taskController = taskController)
-        documentReader = DocumentReader(contentResolver)
+        documentReader = DocumentReader(contentResolver, cacheDir)
         curriculum = SeedCurriculum.pack
         lessonPlanner = LessonPlanner(curriculum)
         spacingScheduler = SpacingScheduler()
@@ -73,15 +83,8 @@ class AshuraTutorApplication : Application() {
     }
 
     /**
-     * Frees the model's memory when the process is under pressure (spec §16.4). The file stays installed;
-     * the user can load it again from Settings. ModelManager.unload() is non-suspending and cancels an
-     * in-flight decode before releasing the native engine.
+     * The model is never unloaded automatically. Earlier builds unloaded on memory-pressure callbacks,
+     * which surprised learners in the middle of a session. The user now controls load/unload explicitly
+     * from Settings; the operating system can still reclaim the process if it needs the memory.
      */
-    @Suppress("DEPRECATION")
-    override fun onTrimMemory(level: Int) {
-        super.onTrimMemory(level)
-        val critical = level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL ||
-            level >= ComponentCallbacks2.TRIM_MEMORY_MODERATE
-        if (critical && ::modelManager.isInitialized) modelManager.unload()
-    }
 }

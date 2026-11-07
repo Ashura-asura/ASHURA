@@ -163,3 +163,46 @@ Verification: compile, unit tests and lint pass here. Static/written only: nativ
 cancellation latency, measured memory/thermal behaviour, and the final structured-answer replacement on a real screen.
 Next: run the device checklist in `docs/RUNTIME_INTEGRATION.md` (including the new streaming/diagnostics items), then start
 documents/OCR, source verification, research, speech and plotting phases.
+
+---
+
+# Checkpoint 6 — persistent model, chat tutor, document test sets, offline study packs (v0.5.0)
+
+Scope: address the first physical-device feedback (model disappeared after 5–10 seconds, the tutor screen did not feel
+like a chat, imported PDFs/Office files produced only four fill-in-the-blanks, and no subject content was bundled).
+
+New:
+- **Model stays loaded**: removed the `Application.onTrimMemory` auto-unload entirely. `ModelManager.autoLoadInstalled()`
+  loads a verified model at app start, and only an explicit user action unloads it. The OS may still reclaim the process.
+- **ChatGPT-style tutor**: the Tutor tab is now a full-height conversation with user/assistant bubbles, streaming deltas,
+  a typing indicator, stop/cancel, mode and citation footnotes, a pinned composer, markdown-lite bold/code rendering and
+  suggested topics on an empty transcript. The existing bottom navigation is unchanged.
+- **Document intelligence**: `PdfTextExtractor` (PdfBox-Android embedded text), `DocumentOcr` (bundled ML Kit Latin and
+  Devanagari), `PdfPageOcr` (PdfRenderer + OCR, 24-page cap), and `DocumentReader` now route PDF, PNG/JPEG/WebP, DOCX,
+  XLSX, PPTX and text/Markdown into the same provenance-preserving pipeline. Caps: 25 MB PDF, 15 MB image, 2 MB text/Office.
+- **Page/slide/sheet provenance**: extractors insert `[Page N]`, `[Slide N]`, `[Sheet: Name]` markers. `SectionLabel`
+  recovers them for citations, and `TextChunker` now starts a new chunk at each marker so pages do not merge silently.
+- **Richer test sets**: `QuizBuilder` builds up to 20 mixed questions per document — up to 12 machine-checked cloze items,
+  up to 6 definitions, and explanation prompts — round-robin across pages/slides/sheets with deduplication and section-aware
+  prompts. Self-assessed items reveal a model answer after the learner records a rating. Deterministic fallback works with
+  no model loaded. `startNoteQuiz` reports the actual mix in the Library.
+- **Offline study packs**: 200 Markdown notes (20 each for mathematics, general science, physics, chemistry, Python, C,
+  Rust, electrical engineering, basic electronics and devices, and advanced calculus) fetched from Wikipedia introductions
+  by `tools/fetch_study_sets.py`. `app/src/main/assets/study_sets/manifest.json` records source URL, CC BY-SA 4.0 licence,
+  retrieval date, size and SHA-256 for every note. `StudyPackRepository` verifies the checksum before import; the Library
+  shows subjects, individual sets, attribution and "add all". `LICENSE.md` and `README.md` ship with the pack.
+- **Tests**: `DocumentQuizTest` (section labels, provenance-aware chunking, citation labels, quiz mix/caps/dedup),
+  `PdfTextExtractorTest` (Robolectric PDF round-trip and page cap), `StudyPackRepositoryTest` (10 subjects × 20 sets, all
+  200 checksums, tamper rejection), plus updated `TextChunkerTest` PDF/image detection and caps. **151 JVM tests pass**,
+  `lintDebug` passes, `assembleDebug` succeeds.
+- **Artifact**: `dist/ASHURA_Tutor-v0.5.0-dev-debug.apk` (~99 MB; the increase is the bundled OCR recognisers), SHA-256
+  `3d50111f5079add9a02b0095b1e3eae872e9ab954f6012d69b084f1057030707`.
+
+Verification: compile, JVM tests, lint and APK assembly pass in this environment. Static/written only: whether the model
+actually stays resident on the phone, chat scrolling/IME behaviour, real OCR accuracy, PDF/PowerPoint extraction quality,
+checksum-verified import of all 200 packs on-device, and memory/thermal behaviour with the larger APK.
+
+Next: install `dist/ASHURA_Tutor-v0.5.0-dev-debug.apk` on the phone and verify (1) Settings → load model, wait 60 s, ask a
+question; the model must remain loaded; (2) chat streaming/stop/scroll; (3) import a text PDF, a scanned PDF/photo, a PPTX
+and a DOCX, then run Quiz me and confirm the mixed set and page/slide citations; (4) Library → add a subject and confirm
+the study sets and their checksums import; (5) record actual timings and any OCR/extraction failures before the next change.

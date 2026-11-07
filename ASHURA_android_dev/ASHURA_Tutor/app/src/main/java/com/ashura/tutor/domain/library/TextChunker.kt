@@ -14,31 +14,46 @@ sealed interface ImportCheck {
  */
 object TextChunker {
     const val MAX_BYTES = 2 * 1024 * 1024
+    const val MAX_PDF_BYTES = 25 * 1024 * 1024
+    const val MAX_IMAGE_BYTES = 15 * 1024 * 1024
     const val MAX_CHUNKS = 2_000
     const val TARGET_CHARS = 900
     const val MAX_CHARS = 1_400
     private val allowedMime = setOf("text/plain", "text/markdown", "text/x-markdown")
 
+    /**
+     * Page/slide/sheet labels inserted by the document extractors. A new provenance label starts a new
+     * chunk so citations and generated quizzes keep per-page context instead of merging several pages.
+     */
+    private val provenanceLine = Regex("\\n\\[(?:Page \\d+|Slide \\d+|Sheet: [^]\\n]{1,60}|Image(?: \\d+)?)]\\s*\\n")
+
     /** Import formats supported by the current build. OOXML containers are unpacked in memory. */
-    enum class Kind { TEXT, DOCX, XLSX, PPTX }
+    enum class Kind { TEXT, DOCX, XLSX, PPTX, PDF, IMAGE }
 
     private val extensionKinds = mapOf(
         "txt" to Kind.TEXT, "md" to Kind.TEXT, "markdown" to Kind.TEXT,
-        "docx" to Kind.DOCX, "xlsx" to Kind.XLSX, "pptx" to Kind.PPTX
+        "docx" to Kind.DOCX, "xlsx" to Kind.XLSX, "pptx" to Kind.PPTX,
+        "pdf" to Kind.PDF,
+        "png" to Kind.IMAGE, "jpg" to Kind.IMAGE, "jpeg" to Kind.IMAGE, "webp" to Kind.IMAGE
     )
 
     private const val DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     private const val XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     private const val PPTX_MIME = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    private const val PDF_MIME = "application/pdf"
+    private const val IMAGE_MIME = "image/*"
 
     fun detectKind(mimeType: String?, displayName: String?): Kind? {
         val extension = displayName.orEmpty().lowercase().substringAfterLast('.', "")
         extensionKinds[extension]?.let { return it }
-        return when (mimeType.orEmpty().lowercase()) {
-            in allowedMime -> Kind.TEXT
-            DOCX_MIME -> Kind.DOCX
-            XLSX_MIME -> Kind.XLSX
-            PPTX_MIME -> Kind.PPTX
+        val mime = mimeType.orEmpty().lowercase()
+        return when {
+            mime in allowedMime -> Kind.TEXT
+            mime == DOCX_MIME -> Kind.DOCX
+            mime == XLSX_MIME -> Kind.XLSX
+            mime == PPTX_MIME -> Kind.PPTX
+            mime == PDF_MIME -> Kind.PDF
+            mime == "image/png" || mime == "image/jpeg" || mime == "image/webp" -> Kind.IMAGE
             else -> null
         }
     }
@@ -48,6 +63,15 @@ object TextChunker {
         Kind.DOCX -> DOCX_MIME
         Kind.XLSX -> XLSX_MIME
         Kind.PPTX -> PPTX_MIME
+        Kind.PDF -> PDF_MIME
+        Kind.IMAGE -> IMAGE_MIME
+    }
+
+    /** Per-format input cap; PDFs and images are streamed to a temp file rather than held as one byte array. */
+    fun maxBytesFor(kind: Kind): Long = when (kind) {
+        Kind.PDF -> MAX_PDF_BYTES.toLong()
+        Kind.IMAGE -> MAX_IMAGE_BYTES.toLong()
+        else -> MAX_BYTES.toLong()
     }
 
     fun check(mimeType: String?, displayName: String?, sizeBytes: Long?): ImportCheck {
@@ -58,8 +82,9 @@ object TextChunker {
         }
         // Extension wins (providers often report generic MIME types); MIME is the fallback when there is no name.
         val kind = detectKind(mimeType, displayName)
-            ?: return ImportCheck.Rejected("Only .txt, .md, .docx, .xlsx and .pptx files are supported in this build.")
-        if (sizeBytes != null && sizeBytes > MAX_BYTES) return ImportCheck.Rejected("File is larger than ${MAX_BYTES / (1024 * 1024)} MB.")
+            ?: return ImportCheck.Rejected("Only .txt, .md, .pdf, .docx, .xlsx, .pptx and image files are supported.")
+        val max = maxBytesFor(kind)
+        if (sizeBytes != null && sizeBytes > max) return ImportCheck.Rejected("File is larger than ${max / (1024 * 1024)} MB.")
         if (sizeBytes != null && sizeBytes == 0L) return ImportCheck.Rejected("File is empty.")
         if (kind != Kind.TEXT && sizeBytes != null && sizeBytes < 4L) return ImportCheck.Rejected("File is empty.")
         return ImportCheck.Ok
@@ -126,7 +151,13 @@ object TextChunker {
             while (pos < n && normalized[pos].isWhitespace()) pos++
             if (pos >= n) break
             val hardEnd = minOf(n, pos + MAX_CHARS)
-            val end = if (hardEnd == n) n else breakPoint(normalized, pos, hardEnd)
+            var end = if (hardEnd == n) n else breakPoint(normalized, pos, hardEnd)
+            // Keep page/slide/sheet provenance intact: never swallow the next label into this chunk.
+            val marker = provenanceLine.find(normalized.substring(pos, end))
+            if (marker != null) {
+                val cut = pos + marker.range.first
+                if (cut > pos) end = cut
+            }
             val text = normalized.substring(pos, end).trim()
             if (text.isNotEmpty()) chunks.add(TextChunk(chunks.size, text, pos, end))
             pos = end

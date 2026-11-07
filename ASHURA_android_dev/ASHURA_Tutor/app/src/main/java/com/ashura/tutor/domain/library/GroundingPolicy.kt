@@ -3,7 +3,13 @@ package com.ashura.tutor.domain.library
 import com.ashura.tutor.domain.ContextSnippet
 
 /** A retrieved passage with provenance; independent of Room so the policy is testable on a JVM. */
-data class PassageRef(val title: String, val ordinal: Int, val text: String)
+data class PassageRef(
+    val title: String,
+    val ordinal: Int,
+    val text: String,
+    /** e.g. "Page 3", "Slide 2", "Sheet: Marks"; null when the format has no page/sheet structure. */
+    val section: String? = null
+)
 
 data class GroundedContext(val snippets: List<ContextSnippet>, val citations: List<String>)
 
@@ -28,7 +34,8 @@ object GroundingPolicy {
             if (used + text.length > maxChars) continue
             perTitle[h.title] = (perTitle[h.title] ?: 0) + 1
             used += text.length
-            snippets.add(ContextSnippet(h.title, text, "${h.title} · passage ${h.ordinal + 1}"))
+            val where = if (h.section.isNullOrBlank()) h.title else "${h.title} · ${h.section}"
+            snippets.add(ContextSnippet(h.title, text, "$where · passage ${h.ordinal + 1}"))
         }
         val citations = snippets.mapIndexed { i, s -> "[${i + 1}] ${s.sourceLabel}" }
         return GroundedContext(snippets, citations)

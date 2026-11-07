@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,19 +39,26 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ashura.tutor.R
 import com.ashura.tutor.data.LibraryItemEntity
+import com.ashura.tutor.data.StudyLibrary
+import com.ashura.tutor.data.StudySet
+import com.ashura.tutor.data.StudySubject
 
 /** Import notes, search their passages, delete them. Imported text is only ever shown as plain text. */
 @Composable
 fun LibraryScreen(
     libraryItems: List<LibraryItemEntity>,
     state: LibraryUiState,
+    studyLibrary: StudyLibrary?,
     onImport: (android.net.Uri) -> Unit,
     onQueryChange: (String) -> Unit,
     onDelete: (String) -> Unit,
-    onQuiz: (String, String) -> Unit
+    onQuiz: (String, String) -> Unit,
+    onAddStudySet: (StudySet) -> Unit,
+    onAddStudySubject: (StudySubject) -> Unit
 ) {
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(onImport) }
     var pendingDelete by remember { mutableStateOf<LibraryItemEntity?>(null) }
+    var expandedSubject by rememberSaveable { mutableStateOf<String?>(null) }
 
     LazyColumn(
         Modifier.fillMaxSize().padding(20.dp),
@@ -63,6 +73,7 @@ fun LibraryScreen(
                     picker.launch(
                         arrayOf(
                             "text/plain", "text/markdown", "text/x-markdown",
+                            "application/pdf", "image/png", "image/jpeg", "image/webp",
                             "application/msword",
                             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                             "application/vnd.ms-excel",
@@ -86,6 +97,95 @@ fun LibraryScreen(
             }
         }
 
+        item { SectionHeading(stringResource(R.string.study_sets_title)) }
+        if (studyLibrary == null) {
+            item {
+                Text(
+                    stringResource(R.string.study_sets_loading),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            item {
+                Text(
+                    stringResource(R.string.study_sets_intro, studyLibrary.count),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            items(studyLibrary.subjects, key = { "study-subject:${it.id}" }) { subject ->
+                val expanded = expandedSubject == subject.id
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = { expandedSubject = if (expanded) null else subject.id },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+                                Text(subject.name, style = MaterialTheme.typography.titleSmall)
+                                Text(
+                                    stringResource(R.string.study_sets_level, subject.level, subject.sets.size),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        IconButton(
+                            onClick = { onAddStudySubject(subject) },
+                            enabled = !state.busy
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = stringResource(R.string.study_sets_add_all_cd, subject.name)
+                            )
+                        }
+                    }
+                    if (expanded) {
+                        subject.sets.forEach { set ->
+                            Row(
+                                Modifier.fillMaxWidth().padding(start = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        set.title,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        stringResource(R.string.study_sets_meta, set.license),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        set.source,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                TextButton(onClick = { onAddStudySet(set) }, enabled = !state.busy) {
+                                    Text(stringResource(R.string.study_sets_add))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            item {
+                Text(
+                    stringResource(R.string.study_sets_notice, studyLibrary.license),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        item { SectionHeading(stringResource(R.string.library_search_title)) }
         item {
             OutlinedTextField(
                 value = state.query, onValueChange = onQueryChange, singleLine = true,

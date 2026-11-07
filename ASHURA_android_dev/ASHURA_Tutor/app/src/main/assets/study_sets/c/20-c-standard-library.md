@@ -1,0 +1,4 @@
+# C standard library
+
+The C standard library, sometimes referred to as libc, is the standard library for the C programming language specified in the ISO C standard. Starting from the original ANSI C standard, it was developed at the same time as the C POSIX library, which is a superset of it. Since ANSI C was adopted by the International Organization for Standardization, the C standard library is also called the ISO C library.
+The C standard library provides and includes macros, type definitions and functions for tasks such as string manipulation, mathematical computation, input/output processing, memory management, and input/output.

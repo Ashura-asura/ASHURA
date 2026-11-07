@@ -1,0 +1,6 @@
+# Kinematics
+
+Kinematics is a subfield of physics and
+a branch of geometry. In physics, kinematics studies the geometrical aspects of motion of physical objects independent of forces that set them in motion. Constrained motion such as linked machine parts are also described as kinematics. In geometry, kinematics studies the time dependence of geometrical quantities such as position, distance and angular measure with respect to a frame of reference. Most frequently, the quantities that kinematics deals with are the time derivatives of these quantities and the relations between them. Objects whose motion is studied include points and subsets of Euclidean space that undergo rigid motion.
+Kinematics is concerned with systems of specification of objects' positions and velocities and mathematical transformations between such systems. These systems may be rectangular like Cartesian, Curvilinear coordinates like polar coordinates or other systems. The object trajectories may be specified with respect to other objects which may themselves be in motion relative to a standard reference. Rotating systems may also be used.
+Numerous practical problems in kinematics involve constraints, such as mechanical linkages, ropes, or rolling disks.

@@ -1,0 +1,4 @@
+# Divergence
+
+In vector calculus, divergence is a vector operator that operates on a vector field, producing a scalar field giving the rate that the vector field alters the volume in an infinitesimal neighborhood of each point. (In 2D this "volume" refers to area.) More precisely, the divergence at a point is the rate that the flow of the vector field modifies a volume about the point in the limit, as a small volume shrinks down to the point.
+As an example, consider air as it is heated or cooled. The velocity of the air at each point defines a vector field. While air is heated in a region, it expands in all directions, and thus the velocity field points outward from that region. The divergence of the velocity field in that region would thus have a positive value. While the air is cooled and thus contracting, the divergence of the velocity has a negative value.

@@ -45,6 +45,8 @@ interface LibraryDao {
     suspend fun searchRaw(query: SupportSQLiteQuery): List<LibraryItemEntity>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(item: LibraryItemEntity)
+    @Query("SELECT COUNT(*) FROM library_items WHERE title = :title")
+    suspend fun countByTitle(title: String): Int
     @Query("DELETE FROM library_items WHERE id = :id")
     suspend fun delete(id: String)
 }

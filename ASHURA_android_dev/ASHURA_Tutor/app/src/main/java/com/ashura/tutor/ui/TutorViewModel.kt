@@ -9,6 +9,10 @@ import com.ashura.tutor.data.ChunkHit
 import com.ashura.tutor.data.DocumentReader
 import com.ashura.tutor.data.LibraryItemEntity
 import com.ashura.tutor.data.ReadResult
+import com.ashura.tutor.data.StudyLibrary
+import com.ashura.tutor.data.StudyPackRepository
+import com.ashura.tutor.data.StudySet
+import com.ashura.tutor.data.StudySubject
 import com.ashura.tutor.data.TutorRepository
 import com.ashura.tutor.data.model.ModelManager
 import com.ashura.tutor.data.model.ModelState
@@ -24,17 +28,21 @@ import com.ashura.tutor.domain.ReviewSchedule
 import com.ashura.tutor.domain.TutorEngine
 import com.ashura.tutor.domain.TutorRequest
 import com.ashura.tutor.domain.TutorStyle
+import com.ashura.tutor.domain.library.PassageRef
+import com.ashura.tutor.domain.library.SectionLabel
 import com.ashura.tutor.domain.runtime.ModelManifest
 import com.ashura.tutor.domain.runtime.RamTier
 import com.ashura.tutor.domain.runtime.RuntimeMetrics
 import com.ashura.tutor.domain.runtime.TutorStreamEvent
 import com.ashura.tutor.domain.assessment.AnswerCheck
 import com.ashura.tutor.domain.assessment.Verdict
-import com.ashura.tutor.domain.library.ClozeGenerator
 import com.ashura.tutor.domain.library.GroundingPolicy
-import com.ashura.tutor.domain.library.PassageRef
+import com.ashura.tutor.domain.library.QuizBuilder
+import com.ashura.tutor.domain.library.QuizKind
+import com.ashura.tutor.domain.library.TextChunker
 import com.ashura.tutor.domain.curriculum.CurriculumPack
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -49,12 +57,27 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class TutorUiState(
     val question: String = "", val answer: String? = null, val limitation: String? = null,
     val citations: List<String> = emptyList(),
     val isBusy: Boolean = false, val error: String? = null,
-    val mode: ResponseMode? = null
+    val mode: ResponseMode? = null,
+    /** Full chat transcript for the tutor screen. */
+    val messages: List<ChatMessage> = emptyList()
+)
+
+enum class ChatRole { USER, ASSISTANT }
+
+data class ChatMessage(
+    val id: String,
+    val role: ChatRole,
+    val text: String,
+    val mode: ResponseMode? = null,
+    val citations: List<String> = emptyList(),
+    val limitation: String? = null,
+    val streaming: Boolean = false
 )
 
 data class TopicSummary(val id: String, val title: String, val subject: String, val prerequisiteTitles: List<String>)
@@ -104,7 +127,8 @@ class TutorViewModel(
     private val pack: CurriculumPack,
     private val documentReader: DocumentReader,
     private val modelManager: ModelManager,
-    private val learnerProfile: LearnerProfileStore
+    private val learnerProfile: LearnerProfileStore,
+    private val studyPacks: StudyPackRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(TutorUiState())
     val state: StateFlow<TutorUiState> = _state.asStateFlow()
@@ -190,16 +214,93 @@ class TutorViewModel(
     private val _settingsMessage = MutableStateFlow<String?>(null)
     val settingsMessage: StateFlow<String?> = _settingsMessage.asStateFlow()
 
+    private val _studyLibrary = MutableStateFlow<StudyLibrary?>(null)
+    val studyLibrary: StateFlow<StudyLibrary?> = _studyLibrary.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            try {
+                _studyLibrary.value = withContext(Dispatchers.IO) { studyPacks.loadCatalog() }
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _library.update {
+                    it.copy(message = "Built-in study sets could not be loaded: ${e.message ?: "unknown error"}")
+                }
+            }
+        }
+    }
+
+    /** Adds one bundled, checksum-verified study note to the local library. */
+    fun importStudySet(set: StudySet) {
+        if (_library.value.busy) return
+        _library.update { it.copy(busy = true, message = null) }
+        viewModelScope.launch {
+            try {
+                if (repository.hasLibraryTitle(set.title)) {
+                    _library.update { it.copy(busy = false, message = "\"${set.title}\" is already in your library.") }
+                    return@launch
+                }
+                val text = studyPacks.readSet(set)
+                val result = repository.importText(set.title, TextChunker.normalize(text), "text/markdown")
+                _library.update {
+                    it.copy(
+                        busy = false,
+                        message = "Added \"${set.title}\" as ${result.chunkCount} passages. Open it here and tap Quiz."
+                    )
+                }
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _library.update { it.copy(busy = false, message = "Could not add the study set: ${e.message ?: "unknown error"}") }
+            }
+        }
+    }
+
+    /** Adds every set in a subject, skipping titles the learner already has. */
+    fun importStudySubject(subject: StudySubject) {
+        if (_library.value.busy) return
+        _library.update { it.copy(busy = true, message = "Adding ${subject.name}…") }
+        viewModelScope.launch {
+            try {
+                var added = 0
+                var skipped = 0
+                for (set in subject.sets) {
+                    if (repository.hasLibraryTitle(set.title)) {
+                        skipped++
+                        continue
+                    }
+                    val text = studyPacks.readSet(set)
+                    repository.importText(set.title, TextChunker.normalize(text), "text/markdown")
+                    added++
+                }
+                val suffix = if (skipped > 0) " ($skipped already in your library)" else ""
+                _library.update {
+                    it.copy(busy = false, message = "Added $added study sets from ${subject.name}$suffix.")
+                }
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _library.update { it.copy(busy = false, message = "Could not add ${subject.name}: ${e.message ?: "unknown error"}") }
+            }
+        }
+    }
+
     fun importDocument(uri: Uri) {
         if (_library.value.busy) return
         _library.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
             try {
-                when (val read = documentReader.read(uri)) {
+                when (val read = documentReader.read(uri, learnerProfile.profile.value.language)) {
                     is ReadResult.Failure -> _library.update { it.copy(busy = false, message = read.message) }
                     is ReadResult.Document -> {
                         val result = repository.importText(read.title, read.text, read.mimeType)
-                        val note = "Imported \"${read.title}\" as ${result.chunkCount} passages." +
+                        val extras = buildList {
+                            read.pages?.let { add("$it pages") }
+                            if (read.usedOcr) add("OCR used for scanned content")
+                        }
+                        val note = "Imported \"${read.title}\" as ${result.chunkCount} passages" +
+                            (if (extras.isEmpty()) "." else " (${extras.joinToString(", ")}).") +
                             if (result.truncated) " The file was very long, so only the first part was indexed." else ""
                         _library.update { it.copy(busy = false, message = note) }
                     }
@@ -229,24 +330,39 @@ class TutorViewModel(
         }
     }
 
-    /** Builds up to five fill-in-the-blank questions from one imported note and opens the first. */
+    /**
+     * Builds a mixed test set (recall, definitions and explanations) from one imported document and
+     * opens the first question. Works with or without a loaded model because every item is derived
+     * from the learner's own text.
+     */
     fun startNoteQuiz(itemId: String, title: String) {
         viewModelScope.launch {
             try {
-                val items = ClozeGenerator.generate(repository.chunksForItem(itemId), 5)
+                val items = QuizBuilder.build(repository.chunksForItem(itemId), title, QuizBuilder.DEFAULT_MAX)
                 if (items.isEmpty()) {
                     _library.update { it.copy(message = "This note has too few complete sentences with distinctive terms to make questions.") }
                     return@launch
                 }
                 quizQueue.clear()
                 items.forEachIndexed { i, item ->
+                    val hints = listOfNotNull(item.hint)
                     quizQueue.addLast(
                         PracticeQuestion(
                             id = "note:$itemId:q${i + 1}", conceptId = "note:$itemId",
-                            prompt = "Fill in the blank (from \"$title\"): ${item.prompt}",
-                            expectedAnswer = item.answer, explanation = "From \"$title\", passage ${item.chunkOrdinal + 1}.",
-                            hints = listOf(item.hint)
+                            prompt = item.prompt,
+                            expectedAnswer = item.answer,
+                            explanation = item.explanation,
+                            hints = hints,
+                            selfAssessed = item.selfAssessed
                         )
+                    )
+                }
+                val cloze = items.count { it.kind == QuizKind.CLOZE }
+                val written = items.count { it.kind != QuizKind.CLOZE }
+                _library.update {
+                    it.copy(
+                        message = "Built ${items.size} questions from \"$title\": " +
+                            "$cloze recall and $written explain/define."
                     )
                 }
                 nextQuizQuestion()
@@ -300,10 +416,14 @@ class TutorViewModel(
     fun ask() {
         val question = _state.value.question.trim()
         if (question.isEmpty() || _state.value.isBusy) return
+        val assistantId = "a${System.nanoTime()}"
         _state.update {
             it.copy(
                 isBusy = true, answer = "", limitation = null, citations = emptyList(),
-                error = null, mode = null
+                error = null, mode = null, question = "",
+                messages = it.messages +
+                    ChatMessage("u${System.nanoTime()}", ChatRole.USER, question) +
+                    ChatMessage(assistantId, ChatRole.ASSISTANT, "", streaming = true)
             )
         }
         askJob = viewModelScope.launch {
@@ -312,7 +432,9 @@ class TutorViewModel(
                 repository.appendMessage(id, "user", question)
                 // Retrieval is best-effort: a search failure must never block the answer.
                 val grounded = try {
-                    GroundingPolicy.select(repository.searchPassagesForQuestion(question).map { PassageRef(it.title, it.ordinal, it.text) })
+                    GroundingPolicy.select(repository.searchPassagesForQuestion(question).map {
+                        PassageRef(it.title, it.ordinal, it.text, SectionLabel.forChunk(it.text))
+                    })
                 } catch (c: CancellationException) {
                     throw c
                 } catch (e: Exception) {
@@ -332,11 +454,19 @@ class TutorViewModel(
                     when (event) {
                         is TutorStreamEvent.Delta -> {
                             streamed.append(event.text)
+                            updateAssistant(assistantId) { it.copy(text = streamed.toString()) }
                             _state.update { it.copy(answer = streamed.toString()) }
                         }
                         is TutorStreamEvent.Complete -> {
                             val result = event.response
                             repository.appendMessage(id, "assistant", result.answer, result.mode.name)
+                            updateAssistant(assistantId) {
+                                it.copy(
+                                    text = result.answer, mode = result.mode,
+                                    citations = result.citations, limitation = result.limitation,
+                                    streaming = false
+                                )
+                            }
                             _state.update {
                                 it.copy(
                                     answer = result.answer, limitation = result.limitation,
@@ -347,18 +477,52 @@ class TutorViewModel(
                     }
                 }
             } catch (timeout: TimeoutCancellationException) {
+                failAssistant(assistantId)
                 _state.update { it.copy(isBusy = false, error = "This request took too long. Try a shorter question.") }
             } catch (cancelled: CancellationException) {
+                finishStopped(assistantId)
                 _state.update { it.copy(isBusy = false) }
                 throw cancelled
             } catch (failure: Exception) {
+                failAssistant(assistantId)
                 _state.update { it.copy(isBusy = false, error = failure.message ?: "Something went wrong.") }
             }
         }
     }
 
     /** User-visible cancellation for a running request (spec §3.3). */
-    fun cancelAsk() { askJob?.cancel(); _state.update { it.copy(isBusy = false) } }
+    fun cancelAsk() {
+        val streaming = _state.value.messages.filter { it.streaming }.map { it.id }
+        askJob?.cancel()
+        _state.update { s ->
+            s.copy(
+                isBusy = false,
+                messages = s.messages.map { message ->
+                    if (message.id in streaming) message.copy(
+                        text = message.text.ifBlank { "Stopped." },
+                        streaming = false
+                    ) else message
+                }
+            )
+        }
+    }
+
+    private fun updateAssistant(id: String, transform: (ChatMessage) -> ChatMessage) {
+        _state.update { state ->
+            state.copy(messages = state.messages.map { if (it.id == id) transform(it) else it })
+        }
+    }
+
+    private fun finishStopped(id: String) = updateAssistant(id) {
+        it.copy(text = it.text.ifBlank { "Stopped." }, streaming = false)
+    }
+
+    private fun failAssistant(id: String) = updateAssistant(id) {
+        it.copy(
+            text = it.text.ifBlank { "I couldn't finish that answer. Check the message below and try again." },
+            streaming = false
+        )
+    }
 
     fun startTopic(topicId: String) {
         val topic = pack.topic(topicId) ?: return
@@ -450,14 +614,15 @@ class TutorViewModelFactory(
     private val pack: CurriculumPack,
     private val documentReader: DocumentReader,
     private val modelManager: ModelManager,
-    private val learnerProfile: LearnerProfileStore
+    private val learnerProfile: LearnerProfileStore,
+    private val studyPacks: StudyPackRepository
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         require(modelClass.isAssignableFrom(TutorViewModel::class.java))
         return TutorViewModel(
             repository, engine, lessonPlanner, practiceService, pack, documentReader,
-            modelManager, learnerProfile
+            modelManager, learnerProfile, studyPacks
         ) as T
     }
 }

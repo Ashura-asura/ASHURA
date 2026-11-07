@@ -1,0 +1,4 @@
+# Object-oriented programming
+
+Object-oriented programming (OOP) is a programming paradigm based on objects – software entities that encapsulate data and function(s). An OOP computer program consists of objects that interact with one another. An OOP language is one that provides object-oriented programming features, but as the set of features that contribute to OOP is contested, classifying a language as OOP – and the degree to which it supports OOP – is debatable. As paradigms are not mutually exclusive, a language can be multi-paradigm (i.e. categorized as more than only OOP).
+Notable languages with OOP support include Ada, ActionScript, C++, C#, Common Lisp, Dart, Eiffel, Fortran, Haxe, Java, JavaScript, Kotlin, Logo, MATLAB, Objective-C, Object Pascal, Perl, PHP, Python, R, Raku, Ruby, Scala, SIMSCRIPT, Simula, Smalltalk, Swift, Vala and Visual Basic (.NET).

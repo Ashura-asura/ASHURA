@@ -1,0 +1,3 @@
+# Memory safety
+
+Memory safety is the state of being protected from various software bugs and security vulnerabilities when dealing with memory access, such as buffer overflows and dangling pointers. For example, Java is memory-safe because its runtime error detection checks array bounds and pointer dereferences. By contrast, programming languages like C, C++, and Fortran allow arbitrary pointer arithmetic with pointers implemented as direct memory addresses with no provision for bounds checking, making them memory-unsafe. Memory-unsafe code is typically found in low level programming, with higher level programming languages generally incorporating either garbage collection or static analysis (as in Rust) to prevent such errors.

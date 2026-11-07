@@ -40,6 +40,17 @@
     <string name="tutor_lessons">Lessons</string>
     <string name="tutor_recommended_suffix">  — recommended next</string>
     <string name="tutor_builds_on">Builds on: %1$s</string>
+    <string name="tutor_chat_title">ASHURA Tutor</string>
+    <string name="tutor_local_ready">Local model ready · answers stay on this device</string>
+    <string name="tutor_offline_mode">Offline study mode · no model loaded</string>
+    <string name="tutor_welcome_title">What do you want to learn?</string>
+    <string name="tutor_welcome_body_local">Ask any subject, or ask about your imported notes. I will explain step by step and cite your sources.</string>
+    <string name="tutor_welcome_body_offline">I can work through study methods and exact arithmetic offline. Load a local model in Settings for full subject explanations.</string>
+    <string name="tutor_suggestions">Suggested topics</string>
+    <string name="tutor_privacy_note">Everything is processed on this device. Nothing is uploaded.</string>
+    <string name="tutor_composer_hint">Message ASHURA…</string>
+    <string name="tutor_send">Send</string>
+    <string name="tutor_thinking">Thinking…</string>
 
     <!-- Progress -->
     <string name="progress_title">Your Progress</string>
@@ -133,6 +144,7 @@
     <string name="practice_show_solution">Show solution</string>
     <string name="practice_hint_n">Hint %1$d: %2$s</string>
     <string name="practice_answer">Answer: %1$s</string>
+    <string name="practice_model_answer">Model answer: %1$s</string>
     <string name="practice_solution_note">Viewing the solution first means a correct answer counts as help-assisted.</string>
     <plurals name="practice_schedule">
         <item quantity="one">Mastery estimate %1$d%% · next review in %2$d day.</item>
@@ -149,9 +161,10 @@
 
     <!-- Library -->
     <string name="library_title">Your Library</string>
-    <string name="library_intro">Import .txt, .md, .docx, .xlsx or .pptx notes. They stay on this device and are searched offline. PDF and photo (OCR) import are not built yet.</string>
+    <string name="library_intro">Import text, Markdown, PDF, photos, Word, Excel or PowerPoint files. PDF pages and photos are read with on-device OCR when needed. You can also add the built-in study sets below. Everything stays on this device and is searched offline.</string>
     <string name="library_import">Import a note</string>
     <string name="library_importing">Importing…</string>
+    <string name="library_search_title">Search your notes</string>
     <string name="library_search_label">Search your notes</string>
     <string name="library_no_matches">No matching passages.</string>
     <string name="library_imported_count">Imported notes (%1$d)</string>
@@ -165,6 +178,14 @@
     <string name="library_passage">%1$s · passage %2$d</string>
     <string name="library_delete_title">Delete this note?</string>
     <string name="library_delete_body">“%1$s” and its passages will be removed from this device.</string>
+    <string name="study_sets_title">Built-in study sets</string>
+    <string name="study_sets_intro">%1$d offline notes from Wikipedia (CC BY-SA 4.0). Add a set, then tap “Quiz me” to build a mixed test.</string>
+    <string name="study_sets_loading">Loading study sets…</string>
+    <string name="study_sets_level">%1$s · %2$d sets</string>
+    <string name="study_sets_add">Add</string>
+    <string name="study_sets_add_all_cd">Add every set in %1$s</string>
+    <string name="study_sets_meta">Wikipedia · %1$s</string>
+    <string name="study_sets_notice">Notes are condensed Wikipedia excerpts licensed %1$s. Source links and checksums are stored in the pack manifest. Nothing is downloaded at runtime.</string>
 
     <!-- Shared actions -->
     <string name="splash_credit">Powered and built by Bishal Bhandari from Nepal</string>

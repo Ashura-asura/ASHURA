@@ -1,0 +1,6 @@
+# Thermochemistry
+
+Thermochemistry is the study of the heat energy which is associated with chemical reactions and/or phase changes such as melting and boiling.  A reaction may release or absorb energy, and a phase change may do the same. Thermochemistry focuses on the energy exchange between a system and its surroundings in the form of heat. Thermochemistry is useful in predicting reactant and product quantities throughout the course of a given reaction. In combination with entropy determinations, it is also used to predict whether a reaction is spontaneous or non-spontaneous, favorable or unfavorable.
+Endothermic reactions absorb heat, while exothermic reactions release heat.  Thermochemistry coalesces the concepts of thermodynamics with the concept of energy in the form of chemical bonds.  The subject commonly includes calculations of such quantities as heat capacity, heat of combustion, heat of formation, enthalpy, entropy, and free energy.
+
+Thermochemistry is one part of the broader field of chemical thermodynamics, which deals with the exchange of all forms of energy between system and surroundings, including not only heat but also various forms of work, as well the exchange of matter. When all forms of energy are considered, the concepts of exothermic and endothermic reactions are generalized to exergonic reactions and endergonic reactions.

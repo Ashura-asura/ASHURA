@@ -163,6 +163,12 @@ class ModelManager(
         }
     }
 
+    /** Loads an already verified model at startup without requiring the learner to open Settings. */
+    fun autoLoadInstalled() {
+        val ready = (state.value as? ModelState.Ready) ?: return
+        if (!ready.loaded) loadInstalled()
+    }
+
     fun unload() {
         runtime.unload()
         val current = state.value

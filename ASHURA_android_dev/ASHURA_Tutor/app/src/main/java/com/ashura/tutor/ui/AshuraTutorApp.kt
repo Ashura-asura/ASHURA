@@ -13,6 +13,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -21,20 +22,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -64,7 +74,14 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.ashura.tutor.R
 import com.ashura.tutor.data.model.ModelState
@@ -101,6 +118,7 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
     val progress by viewModel.progress.collectAsState()
     val libraryState by viewModel.library.collectAsState()
     val libraryItems by viewModel.libraryItems.collectAsState()
+    val studyLibrary by viewModel.studyLibrary.collectAsState()
     val settingsMessage by viewModel.settingsMessage.collectAsState()
     val modelState by viewModel.modelState.collectAsState()
     val profile by viewModel.profile.collectAsState()
@@ -155,8 +173,8 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                         onNavigateHome = viewModel::clearLesson
                     )
                     else -> TutorScreen(
-                        question = state.question, answer = state.answer, limitation = state.limitation,
-                        citations = state.citations, mode = state.mode,
+                        messages = state.messages,
+                        question = state.question,
                         isBusy = state.isBusy, error = state.error,
                         modelLoaded = (modelState as? ModelState.Ready)?.loaded == true,
                         style = profile.style,
@@ -171,9 +189,11 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                     )
                 }
                 Destination.LIBRARY -> LibraryScreen(
-                    libraryItems = libraryItems, state = libraryState,
+                    libraryItems = libraryItems, state = libraryState, studyLibrary = studyLibrary,
                     onImport = viewModel::importDocument, onQueryChange = viewModel::updateLibraryQuery,
-                    onDelete = viewModel::deleteLibraryItem, onQuiz = viewModel::startNoteQuiz
+                    onDelete = viewModel::deleteLibraryItem, onQuiz = viewModel::startNoteQuiz,
+                    onAddStudySet = viewModel::importStudySet,
+                    onAddStudySubject = viewModel::importStudySubject
                 )
                 Destination.PROGRESS -> ProgressScreen(progress)
                 Destination.SETTINGS -> SettingsScreen(
@@ -263,113 +283,356 @@ private fun HomeScreen(recommendedTitle: String?, dueCount: Int, onContinue: () 
 
 @Composable
 private fun TutorScreen(
-    question: String, answer: String?, limitation: String?, citations: List<String>,
-    mode: ResponseMode?, isBusy: Boolean, error: String?, modelLoaded: Boolean,
+    messages: List<ChatMessage>, question: String,
+    isBusy: Boolean, error: String?, modelLoaded: Boolean,
     style: TutorStyle, onToggleStyle: () -> Unit,
     topics: List<TopicSummary>, recommendedId: String?,
     onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit, onStartTopic: (String) -> Unit
 ) {
-    LazyColumn(
-        Modifier.fillMaxSize().imePadding().padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item { ScreenHeading(stringResource(R.string.tutor_title)) }
-        item { Text(stringResource(R.string.tutor_intro)) }
-        if (!modelLoaded) {
-            item {
+    val listState = rememberLazyListState()
+    LaunchedEffect(messages.size, messages.lastOrNull()?.text) {
+        if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+    }
+
+    Column(Modifier.fillMaxSize().imePadding()) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(Modifier.weight(1f)) {
                 Text(
-                    stringResource(R.string.tutor_no_model_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    stringResource(R.string.tutor_chat_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    stringResource(if (modelLoaded) R.string.tutor_local_ready else R.string.tutor_offline_mode),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (modelLoaded) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        }
-        item {
-            OutlinedButton(onClick = onToggleStyle, modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    stringResource(
-                        if (style == TutorStyle.SOCRATIC) R.string.tutor_style_socratic
-                        else R.string.tutor_style_direct
+            FilterChip(
+                selected = style == TutorStyle.SOCRATIC,
+                onClick = onToggleStyle,
+                label = {
+                    Text(
+                        stringResource(
+                            if (style == TutorStyle.SOCRATIC) R.string.tutor_style_socratic
+                            else R.string.tutor_style_direct
+                        )
                     )
-                )
-            }
-        }
-        item {
-            OutlinedTextField(
-                value = question, onValueChange = onQuestionChange, modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.tutor_question_label)) }, minLines = 3
+                }
             )
         }
-        item {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(onClick = onAsk, enabled = !isBusy && question.isNotBlank()) {
-                    Text(if (isBusy) stringResource(R.string.tutor_working) else stringResource(R.string.tutor_ask))
+        HorizontalDivider()
+
+        if (messages.isEmpty()) {
+            WelcomeChat(
+                topics = topics, recommendedId = recommendedId,
+                modelLoaded = modelLoaded, onStartTopic = onStartTopic,
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(messages, key = { it.id }) { message -> ChatBubble(message) }
+                error?.let { message ->
+                    item {
+                        Text(
+                            message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
                 }
-                if (isBusy) TextButton(onClick = onCancel) { Text(stringResource(R.string.tutor_cancel)) }
             }
         }
-        if (isBusy) item { CircularProgressIndicator() }
-        error?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.error) } }
-        answer?.let { text ->
-            item {
-                Text(stringResource(R.string.tutor_response), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+        if (messages.isEmpty() && error != null) {
+            Text(
+                error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+
+        ChatComposer(
+            question = question, isBusy = isBusy,
+            onQuestionChange = onQuestionChange, onAsk = onAsk, onCancel = onCancel
+        )
+    }
+}
+
+@Composable
+private fun WelcomeChat(
+    topics: List<TopicSummary>, recommendedId: String?, modelLoaded: Boolean,
+    onStartTopic: (String) -> Unit, modifier: Modifier = Modifier
+) {
+    val suggestions = (topics.filter { it.id == recommendedId } + topics.filter { it.id != recommendedId })
+        .distinctBy { it.id }
+        .take(4)
+    Column(
+        modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(72.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    "A",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.Bold
+                )
             }
-            val structured = StructuredAnswer.parse(text)
-            if (structured.isStructured) {
-                val lead = structured.answer ?: structured.preamble
-                if (lead.isNotBlank()) item { Text(lead) }
-                if (structured.steps.isNotEmpty()) {
-                    item { Text(stringResource(R.string.tutor_steps), style = MaterialTheme.typography.titleSmall) }
-                    items(structured.steps) { step -> Text(stringResource(R.string.tutor_step_line, step)) }
+        }
+        Text(
+            stringResource(R.string.tutor_welcome_title),
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            stringResource(
+                if (modelLoaded) R.string.tutor_welcome_body_local
+                else R.string.tutor_welcome_body_offline
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (suggestions.isNotEmpty()) {
+            Text(
+                stringResource(R.string.tutor_suggestions),
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            )
+            suggestions.forEach { topic ->
+                OutlinedButton(
+                    onClick = { onStartTopic(topic.id) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(topic.title, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-                structured.check?.let { check ->
-                    item { Text(stringResource(R.string.tutor_check), style = MaterialTheme.typography.titleSmall) }
-                    item { Text(check) }
-                }
-            } else {
-                item { Text(text) }
             }
-            limitation?.let { l ->
-                item { Text(l, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        }
+        Text(
+            stringResource(R.string.tutor_privacy_note),
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+    }
+}
+
+@Composable
+private fun ChatComposer(
+    question: String, isBusy: Boolean,
+    onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit
+) {
+    Surface(tonalElevation = 3.dp, shadowElevation = 6.dp) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = question,
+                onValueChange = onQuestionChange,
+                modifier = Modifier.weight(1f),
+                placeholder = { Text(stringResource(R.string.tutor_composer_hint)) },
+                maxLines = 5,
+                shape = RoundedCornerShape(24.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = { if (question.isNotBlank() && !isBusy) onAsk() })
+            )
+            FilledIconButton(
+                onClick = { if (isBusy) onCancel() else onAsk() },
+                enabled = isBusy || question.isNotBlank(),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    if (isBusy) Icons.Default.Stop else Icons.AutoMirrored.Filled.Send,
+                    contentDescription = stringResource(
+                        if (isBusy) R.string.tutor_cancel else R.string.tutor_send
+                    )
+                )
             }
-            mode?.let { m ->
-                item {
-                    val label = when (m) {
-                        ResponseMode.LOCAL_MODEL -> R.string.tutor_mode_local
-                        ResponseMode.OFFLINE_FALLBACK -> R.string.tutor_mode_offline
-                        ResponseMode.DETERMINISTIC -> R.string.tutor_mode_deterministic
-                    }
+        }
+    }
+}
+
+@Composable
+private fun ChatBubble(message: ChatMessage) {
+    val isUser = message.role == ChatRole.USER
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.Top
+    ) {
+        if (!isUser) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(30.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
                     Text(
-                        stringResource(label),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "A",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
-            if (citations.isNotEmpty()) {
-                item {
-                    Text(stringResource(R.string.tutor_sources), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+            Spacer(Modifier.size(8.dp))
+        }
+        Column(
+            Modifier.fillMaxWidth(0.86f),
+            horizontalAlignment = if (isUser) Alignment.End else Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Surface(
+                shape = if (isUser) RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp)
+                else RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp),
+                color = if (isUser) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                    when {
+                        isUser -> Text(
+                            message.text,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        message.streaming && message.text.isBlank() -> TypingIndicator()
+                        else -> AssistantContent(message.text)
+                    }
                 }
-                items(citations) { c -> Text(c, style = MaterialTheme.typography.bodySmall) }
+            }
+            if (!isUser && !message.streaming) {
+                message.mode?.let { mode ->
+                    Text(
+                        stringResource(
+                            when (mode) {
+                                ResponseMode.LOCAL_MODEL -> R.string.tutor_mode_local
+                                ResponseMode.OFFLINE_FALLBACK -> R.string.tutor_mode_offline
+                                ResponseMode.DETERMINISTIC -> R.string.tutor_mode_deterministic
+                            }
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+                }
+                message.limitation?.let { limitation ->
+                    Text(
+                        limitation,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+                }
+                if (message.citations.isNotEmpty()) {
+                    Text(
+                        stringResource(R.string.tutor_sources),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                    message.citations.forEach { citation ->
+                        Text(
+                            citation,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
             }
         }
-        item { SectionHeading(stringResource(R.string.tutor_lessons)) }
-        items(topics, key = { it.id }) { t ->
-            val recommended = t.id == recommendedId
-            val label = buildString {
-                append(t.title)
-                if (recommended) append(stringResource(R.string.tutor_recommended_suffix))
-                if (t.prerequisiteTitles.isNotEmpty()) {
-                    append('\n')
-                    append(stringResource(R.string.tutor_builds_on, t.prerequisiteTitles.joinToString()))
+        if (isUser) Spacer(Modifier.size(4.dp))
+    }
+}
+
+@Composable
+private fun AssistantContent(text: String) {
+    val structured = StructuredAnswer.parse(text)
+    if (structured.isStructured) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val lead = structured.answer ?: structured.preamble
+            if (lead.isNotBlank()) FormattedText(lead)
+            if (structured.steps.isNotEmpty()) {
+                Text(
+                    stringResource(R.string.tutor_steps),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                structured.steps.forEach { step ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("•", style = MaterialTheme.typography.bodyLarge)
+                        FormattedText(step, Modifier.weight(1f))
+                    }
                 }
             }
-            if (recommended) {
-                Button(onClick = { onStartTopic(t.id) }, modifier = Modifier.fillMaxWidth()) { Text(label) }
-            } else {
-                OutlinedButton(onClick = { onStartTopic(t.id) }, modifier = Modifier.fillMaxWidth()) { Text(label) }
+            structured.check?.let { check ->
+                Text(
+                    stringResource(R.string.tutor_check),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                FormattedText(check)
             }
         }
+    } else {
+        FormattedText(text)
+    }
+}
+
+/** Minimal Markdown-lite rendering: **bold** and `inline code`, without pulling in a parser library. */
+@Composable
+private fun FormattedText(text: String, modifier: Modifier = Modifier) {
+    val annotated = remember(text) {
+        val pattern = Regex("\\*\\*(.+?)\\*\\*|`([^`]+)`")
+        buildAnnotatedString {
+            var last = 0
+            for (match in pattern.findAll(text)) {
+                if (match.range.first > last) append(text.substring(last, match.range.first))
+                val bold = match.groupValues[1]
+                val code = match.groupValues[2]
+                if (bold.isNotEmpty()) {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(bold) }
+                } else {
+                    withStyle(SpanStyle(fontFamily = FontFamily.Monospace)) { append(code) }
+                }
+                last = match.range.last + 1
+            }
+            if (last < text.length) append(text.substring(last))
+        }
+    }
+    Text(annotated, style = MaterialTheme.typography.bodyLarge, modifier = modifier)
+}
+
+@Composable
+private fun TypingIndicator() {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+        Text(
+            stringResource(R.string.tutor_thinking),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

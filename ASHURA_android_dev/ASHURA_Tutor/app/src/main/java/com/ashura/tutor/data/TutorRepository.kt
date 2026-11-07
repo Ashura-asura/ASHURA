@@ -66,6 +66,9 @@ class TutorRepository(private val db: AppDatabase) {
 
     suspend fun deleteLibraryItem(id: String) = db.library().delete(id) // chunks and FTS rows follow via cascade/triggers
 
+    /** True when a note with the same title is already present (used to avoid duplicate study-pack imports). */
+    suspend fun hasLibraryTitle(title: String): Boolean = db.library().countByTitle(title.trim()) > 0
+
     /** Ranked passage search with provenance (all words must match); falls back to LIKE if FTS5 is missing. */
     suspend fun searchPassages(query: String): List<ChunkHit> {
         val term = query.trim()
