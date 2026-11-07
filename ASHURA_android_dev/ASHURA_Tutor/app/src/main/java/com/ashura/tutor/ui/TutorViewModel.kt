@@ -35,6 +35,7 @@ import com.ashura.tutor.domain.runtime.RamTier
 import com.ashura.tutor.domain.runtime.RuntimeMetrics
 import com.ashura.tutor.domain.runtime.TutorStreamEvent
 import com.ashura.tutor.domain.assessment.AnswerCheck
+import com.ashura.tutor.domain.assessment.HintLadder
 import com.ashura.tutor.domain.assessment.Verdict
 import com.ashura.tutor.domain.library.GroundingPolicy
 import com.ashura.tutor.domain.library.QuizBuilder
@@ -460,11 +461,16 @@ class TutorViewModel(
                     GroundingPolicy.select(emptyList())
                 }
                 val profile = learnerProfile.profile.value
+                // Socratic guidance must not become an obstacle (spec §1.2C): "just tell me" switches
+                // this one answer to direct explanation without changing the saved preference.
+                val effectiveStyle = if (
+                    profile.style == TutorStyle.SOCRATIC && HintLadder.asksForDirectAnswer(question)
+                ) TutorStyle.DIRECT else profile.style
                 val request = TutorRequest(
                     question = question,
                     learnerLevel = profile.level,
                     language = profile.language,
-                    style = profile.style,
+                    style = effectiveStyle,
                     retrievedContext = grounded.snippets,
                     notesSearched = true
                 )
@@ -612,6 +618,28 @@ class TutorViewModel(
                 throw c
             } catch (e: Exception) {
                 _practice.update { it.copy(busy = false, error = e.message ?: "Could not save this attempt.") }
+            }
+        }
+    }
+
+    /** Spec §15.3: erase chat history only; imported notes and learning progress stay. */
+    fun clearChatHistory() {
+        viewModelScope.launch {
+            try {
+                askJob?.cancel()
+                repository.clearChatHistory()
+                conversationId = null
+                _state.update {
+                    it.copy(
+                        messages = emptyList(), question = "", answer = null, limitation = null,
+                        citations = emptyList(), isBusy = false, error = null, mode = null
+                    )
+                }
+                _settingsMessage.value = null
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _state.update { it.copy(error = "Could not clear chat history: ${e.message}") }
             }
         }
     }

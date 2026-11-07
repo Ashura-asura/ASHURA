@@ -285,3 +285,35 @@ Artifact: `dist/ASHURA_Tutor-v0.5.2-dev-debug.apk` (~99 MB), SHA-256
 Verification: compile, JVM tests and lint pass here. Still device-pending: OCR accuracy/speed on real
 scans, Compose editing of a long OCR body, spreadsheet/PDF extraction quality, model residency, and
 memory/thermal behaviour.
+
+---
+
+# Checkpoint 9 — confidence labels, hint ladder, clear chat (v0.5.3)
+
+Scope: integrated the external “gap-closing” update (`CHANGES_session.md`) into the v0.5.2 tree after
+checking that it was based on the same code and did not revert the document/OCR fixes.
+
+Added:
+- **Honest confidence labels** (`ConfidenceLabel`): every completed tutor answer now shows one of
+  *verified by calculation*, *based on your notes (individual claims not checked)*, *model-only* or
+  *insufficient evidence*. The label is derived from the answer mode and whether citations were actually
+  retrieved; it is not a fake percentage. EN + NE strings.
+- **Clear chat history**: Settings → *Clear chat history* with confirmation. It deletes conversations and
+  messages only; imported notes, learning state and attempts are kept. `clearChatHistory` resets the
+  in-memory transcript and cancels an in-flight answer.
+- **Hint ladder / stuck detection**: after a wrong attempt the Practice screen nudges the learner to the next
+  hint; when hints are exhausted (or there are none) it offers the worked solution. Tests cover fresh
+  questions, repeated mistakes, already-taken hints and solution-shown states.
+- **Direct-answer override**: if the learner writes “just tell me”, “I give up” and similar phrases while the
+  saved style is Socratic, that single answer is generated in direct style. The saved preference is not
+  changed, and the Socratic toggle still works normally.
+
+Tests: **173 JVM tests, 0 failures** (159 + 6 confidence + 8 hint-ladder). `lintDebug` and
+`assembleDebug` pass.
+
+Artifact: `dist/ASHURA_Tutor-v0.5.3-dev-debug.apk` (~99 MB), SHA-256
+`a3e55dcb806e4b63ebd64c0ebfa9b6d6927af10c776bc9b0459fd56d3e5bc697`.
+
+Still open and recorded in `docs/ARCHITECTURE_STATUS.md`: claim-level evidence coverage, explain-my-mistake,
+import status/original-file storage, broader assessment types, speech, plotting, code sandbox, online
+research, semantic retrieval, encrypted storage and all device benchmarks.

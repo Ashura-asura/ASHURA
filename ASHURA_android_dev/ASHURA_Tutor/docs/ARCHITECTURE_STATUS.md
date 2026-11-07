@@ -13,7 +13,7 @@ Legend:
 - **Not implemented** — do not advertise as available.
 
 Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
-**159 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
+**173 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
 hardware-dependent claim below is device-pending, not proven.
 
 ## Implemented and verified on the JVM
@@ -44,6 +44,10 @@ hardware-dependent claim below is device-pending, not proven.
 | Model catalog pinning, size/SHA-256 manifest, `.part` download + atomic rename, one-model rule (§6, §17) | Verified (JVM) | `ModelCatalogTest`, `ModelRuntimeContractTest` |
 | Learner profile persistence (level, style, language) with safe enum/language fallbacks (§1.4, §15) | Verified (JVM) | `LearnerProfileStoreTest` |
 | Export to JSON and delete-all controls (§15.3) | Verified (JVM) | `ExportAndQuizTest` |
+| Clear chat history without deleting notes/progress, with confirmation (§15.3) | Verified (JVM) | `TutorRepository.clearChatHistory`, `TutorViewModel.clearChatHistory` |
+| Honest-confidence labels derived from answer mode and retrieved citations (§12.4) | Verified (JVM) | `ConfidenceLabelTest` |
+| Hint ladder / stuck detection with a guaranteed path to the worked solution (§3.3) | Verified (JVM) | `HintLadderTest` |
+| “Just tell me” overrides Socratic style for that one answer without changing the saved preference (§1.2C) | Verified (JVM) | `HintLadderTest`, `TutorViewModel.ask` |
 | Nepali UI strings for the core screens (§1.4) | Written | `values-ne/strings.xml`; native review still needed |
 
 ## Written and wired, device-pending
@@ -69,12 +73,12 @@ hardware-dependent claim below is device-pending, not proven.
 | Document questions (§9.5) | Cloze recall, definitions, explanation prompts, page/slide/sheet spread | No multiple-choice distractors, no table/number reasoning questions, no answer-key extraction from the document |
 | Spreadsheet behaviour (§9.6) | Sheet + `A1` coordinates, displayed value and formula | No range selection, no column-type summaries, no chart/image references |
 | Retrieval (§10) | SQLite FTS5 (BM25), LIKE fallback, per-document diversity, provenance | No embeddings or hybrid semantic retrieval; no retrieval evaluation set; no query expansion |
-| Verification (§12) | Deterministic calculator, exact answer checker, source citations | No evidence-coverage check that every claim is supported; no independent rubric; no code-execution sandbox |
-| Teaching engine (§7) | Lesson planner, Socratic/direct prompt styles, misconceptions recorded | Adaptive explanation is prompt-driven, not a full misconception taxonomy per topic |
+| Verification (§12) | Deterministic calculator, exact answer checker, source citations, honest-confidence labels | No claim-level evidence-coverage check that every statement is supported; no independent rubric; no code-execution sandbox |
+| Teaching engine (§7) | Lesson planner, Socratic/direct prompt styles, hint ladder, stuck detection, direct-answer override, misconceptions recorded | Adaptive explanation is prompt-driven, not a full misconception taxonomy per topic |
 | Curriculum (§8) | 4 maths topics + 200 bundled study notes | No broad multi-subject curriculum graph with objectives/prerequisites per subject |
-| Assessment (§12.2) | Topic quiz, document quiz, self-assessed explanations, spaced review | No diagnostic exam, exam simulation, transfer-question generator or delayed-recall scheduling beyond the current scheduler |
+| Assessment (§12.2) | Topic quiz, document quiz, self-assessed explanations, spaced review, hint assistance tracking | No diagnostic exam, exam simulation, transfer-question generator or delayed-recall scheduling beyond the current scheduler |
 | Data model (§19) | Conversations, messages, library items, chunks, concepts, learning state, attempts, misconceptions | No stored original file, no `file_hash`/`storage_uri`, no separate `Document`/`DocumentChunk` metadata columns for heading path or extraction method |
-| Data controls (§15.3) | Export JSON, delete one note, delete all data | No per-conversation retention policy UI, no selective export, no encrypted database |
+| Data controls (§15.3) | Export JSON, delete one note, clear all chat history, delete all data | No per-conversation retention policy UI, no selective export, no encrypted database |
 | Resource management (§16) | Device tiers, one-model rule, caps, memory-pressure handling removed in favour of user control | Device benchmarks and thermal measurements are unrun; no GPU backend exercised |
 | Accessibility (§3.6) | Content descriptions, headings, live regions, large touch targets | No dedicated TalkBack pass, font-scale stress test or switch-access review |
 
@@ -88,6 +92,12 @@ hardware-dependent claim below is device-pending, not proven.
 | Plotting and simulations (§11.4) | None. |
 | Programming engine / code sandbox (§11.3) | None. No code execution, no compiler, no sandbox. |
 | Science specialist engines (§11.2) | None beyond the calculator/unit converter and the model's own text. |
+| Original-file storage and hashes (§9.2, §19) | Imported originals are not retained; there is no `file_hash` or `storage_uri`, only the extracted text. |
+| Per-conversation retention policy (§15.3) | Only clear-all chat history exists; individual conversations cannot be retained/expired separately. |
+| Encrypted database or files (§18.3) | Room and imported text rely on the Android app sandbox, not app-level encryption. |
+| Claim-level evidence coverage (§12.1, §12.4) | Confidence labels describe the answer source; they do not verify every statement against retrieved passages. |
+| 125-question benchmark and learning-effectiveness study (§21.2, §21.4) | No versioned benchmark set or pre/post/delayed-recall evaluation has been run. |
+| Instrumentation, long-session and failure-recovery tests (§21.1) | Only JVM tests exist; `androidTest` sources are minimal and have not run on hardware. |
 | Optional SFT / training pipeline (§17.2–§17.5) | None. Weights are never trained or bundled. |
 | Multi-module `core/feature/engine` layout (§20) | Not done. The checkout is still one `app` module; the spec's layout is a target, not current fact. |
 | Device/release benchmarks and release signing (§16.5, §21.5, Phase 12) | Debug builds only; release signing needs external `keystore.properties` or `ASHURA_KEYSTORE_*`; no device benchmark has been recorded. |

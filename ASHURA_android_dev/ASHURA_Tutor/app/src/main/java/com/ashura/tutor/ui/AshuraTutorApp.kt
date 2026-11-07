@@ -108,6 +108,7 @@ import com.ashura.tutor.R
 import com.ashura.tutor.data.model.ModelState
 import com.ashura.tutor.data.profile.LearnerProfile
 import com.ashura.tutor.domain.LearnerLevel
+import com.ashura.tutor.domain.ConfidenceLabel
 import com.ashura.tutor.domain.ResponseMode
 import com.ashura.tutor.domain.StructuredAnswer
 import com.ashura.tutor.domain.TutorStyle
@@ -239,6 +240,7 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                     onCancelModel = viewModel::cancelModelDownload,
                     onExport = viewModel::exportData,
                     onDeleteAll = { viewModel.deleteAllData { selected = Destination.HOME.name } },
+                    onClearChat = viewModel::clearChatHistory,
                     profile = profile,
                     onLevelChange = viewModel::setLearnerLevel,
                     onStyleChange = viewModel::setTutorStyle,
@@ -701,6 +703,21 @@ private fun AssistantMessage(message: ChatMessage) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                ConfidenceLabel.forAnswer(message.mode, message.citations)?.let { label ->
+                    Text(
+                        stringResource(
+                            when (label) {
+                                ConfidenceLabel.VERIFIED_BY_CALCULATION -> R.string.confidence_verified
+                                ConfidenceLabel.SUPPORTED_BY_SOURCE -> R.string.confidence_supported
+                                ConfidenceLabel.MODEL_ONLY -> R.string.confidence_model_only
+                                ConfidenceLabel.INSUFFICIENT_EVIDENCE -> R.string.confidence_insufficient
+                            }
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 message.limitation?.let { limitation ->
                     Text(
                         limitation,
@@ -906,6 +923,7 @@ private fun SettingsScreen(
     onCancelModel: () -> Unit,
     onExport: (android.net.Uri) -> Unit,
     onDeleteAll: () -> Unit,
+    onClearChat: () -> Unit,
     profile: LearnerProfile,
     onLevelChange: (LearnerLevel) -> Unit,
     onStyleChange: (TutorStyle) -> Unit,
@@ -914,6 +932,7 @@ private fun SettingsScreen(
     freeStorageBytes: Long
 ) {
     var confirmDeleteAll by remember { mutableStateOf(false) }
+    var confirmClearChat by remember { mutableStateOf(false) }
     var confirmDeleteModel by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri -> uri?.let(onExport) }
@@ -1128,6 +1147,9 @@ private fun SettingsScreen(
             Text(stringResource(R.string.settings_export))
         }
         message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+        OutlinedButton(onClick = { confirmClearChat = true }, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.settings_clear_chat))
+        }
         OutlinedButton(onClick = { confirmDeleteAll = true }, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.settings_delete_all))
         }
@@ -1137,6 +1159,15 @@ private fun SettingsScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        )
+    }
+    if (confirmClearChat) {
+        AlertDialog(
+            onDismissRequest = { confirmClearChat = false },
+            title = { Text(stringResource(R.string.settings_clear_chat_title)) },
+            text = { Text(stringResource(R.string.settings_clear_chat_body)) },
+            confirmButton = { TextButton(onClick = { confirmClearChat = false; onClearChat() }) { Text(stringResource(R.string.action_delete)) } },
+            dismissButton = { TextButton(onClick = { confirmClearChat = false }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
     if (confirmDeleteAll) {

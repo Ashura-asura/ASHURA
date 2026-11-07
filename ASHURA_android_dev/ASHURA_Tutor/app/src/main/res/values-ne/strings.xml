@@ -197,4 +197,13 @@
     <string name="action_save">सुरक्षित गर्नुहोस्</string>
     <string name="action_back_to_tutor">शिक्षकमा फर्कनुहोस्</string>
     <string name="action_back_to_lesson">पाठमा फर्कनुहोस्</string>
+    <string name="confidence_verified">गणनाद्वारा पुष्टि गरिएको</string>
+    <string name="confidence_supported">तपाईंका नोटमा आधारित (अंश भेटिए; प्रत्येक दाबी जाँचिएको छैन)</string>
+    <string name="confidence_model_only">मोडेल-मात्र जवाफ: कुनै नोटले समर्थन गरेन, फेरि जाँच गर्नुहोस्</string>
+    <string name="confidence_insufficient">प्रमाण अपर्याप्त: यो सामान्य अध्ययन ढाँचा हो</string>
+    <string name="practice_stuck_hint">अल्झिनुभयो? फेरि जाँच्नुअघि अर्को संकेत हेर्नुहोस्।</string>
+    <string name="practice_stuck_solution">संकेत सकियो। चाहेको बेला हल गरिएको समाधान हेर्न सक्नुहुन्छ।</string>
+    <string name="settings_clear_chat">च्याट इतिहास मेटाउनुहोस्</string>
+    <string name="settings_clear_chat_title">च्याट इतिहास मेटाउने?</string>
+    <string name="settings_clear_chat_body">यसले सबै ट्युटर कुराकानी हटाउँछ। तपाईंका नोट, प्रगति र सेटिङ रहन्छन्।</string>
 </resources>

@@ -40,6 +40,14 @@ class TutorRepository(private val db: AppDatabase) {
         }
     }
 
+    /** Spec §15.3: erase conversations only; notes, progress and attempts are kept. */
+    suspend fun clearChatHistory() {
+        db.withTransaction {
+            db.messages().deleteAll()
+            db.conversations().deleteAll()
+        }
+    }
+
     suspend fun saveLibraryText(title: String, body: String, mimeType: String = "text/plain", originUri: String? = null): String {
         require(title.isNotBlank() && body.isNotBlank())
         val now = System.currentTimeMillis()

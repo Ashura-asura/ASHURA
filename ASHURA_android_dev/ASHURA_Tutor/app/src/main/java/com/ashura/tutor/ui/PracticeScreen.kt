@@ -1,5 +1,8 @@
 package com.ashura.tutor.ui
 
+import com.ashura.tutor.domain.assessment.HintLadder
+import com.ashura.tutor.domain.assessment.LadderStep
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -144,6 +147,18 @@ fun PracticeScreen(
                                 Text(stringResource(R.string.practice_show_solution))
                             }
                         }
+                    }
+                }
+                val ladder = HintLadder.nextStep(question.hints.size, state.hintsShown, state.wrongAttempts, state.solutionShown)
+                if (ladder != LadderStep.NONE) {
+                    item {
+                        Text(
+                            stringResource(
+                                if (ladder == LadderStep.SUGGEST_HINT) R.string.practice_stuck_hint else R.string.practice_stuck_solution
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
                 items(state.hintsShown) { index ->

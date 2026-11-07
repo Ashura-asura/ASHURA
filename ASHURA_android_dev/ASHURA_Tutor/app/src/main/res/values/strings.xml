@@ -205,4 +205,13 @@
     <string name="action_back_to_lesson">Back to lesson</string>
 
     <!-- Accessibility content descriptions -->
+    <string name="confidence_verified">Verified by calculation</string>
+    <string name="confidence_supported">Based on your notes (passages retrieved; individual claims not checked)</string>
+    <string name="confidence_model_only">Model-only answer: no notes backed this, so double-check it</string>
+    <string name="confidence_insufficient">Insufficient evidence: this is a generic study scaffold</string>
+    <string name="practice_stuck_hint">Stuck? Try the next hint before checking again.</string>
+    <string name="practice_stuck_solution">Out of hints. You can reveal the worked solution whenever you like.</string>
+    <string name="settings_clear_chat">Clear chat history</string>
+    <string name="settings_clear_chat_title">Clear chat history?</string>
+    <string name="settings_clear_chat_body">This removes all tutor conversations. Your notes, progress and settings are kept.</string>
 </resources>

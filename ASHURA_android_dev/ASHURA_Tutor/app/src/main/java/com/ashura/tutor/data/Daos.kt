@@ -20,6 +20,8 @@ interface ConversationDao {
     suspend fun upsert(item: ConversationEntity)
     @Query("UPDATE conversations SET updatedAt = :updatedAt WHERE id = :id")
     suspend fun touch(id: String, updatedAt: Long)
+    @Query("DELETE FROM conversations")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -30,6 +32,8 @@ interface MessageDao {
     suspend fun all(): List<MessageEntity>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(message: MessageEntity)
+    @Query("DELETE FROM messages")
+    suspend fun deleteAll()
 }
 
 @Dao
