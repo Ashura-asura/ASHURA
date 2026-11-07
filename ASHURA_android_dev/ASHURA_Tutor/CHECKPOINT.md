@@ -123,7 +123,9 @@ New:
   `arm64-v8a`/`x86_64` ABI filter, INTERNET/ACCESS_NETWORK_STATE, R8 keep rules.
 - **Tests**: `ModelCatalogTest`, `PromptBuilderPartsTest`, `LiteRtLmRuntimeContractTest`; 115 JVM tests pass in total.
 - **Artifact**: `dist/ASHURA_Tutor-v0.3.0-dev-debug.apk` (~65 MB), SHA-256
-  `9f9c682ce8147704b5f9cd60fee4c69ee23d8acbc6d3f909e9f696fb0ad553b0`.
+  `3c027947d9b40297dd1d5146b7fa7bacdcba6912620ab964485f80b4ec676855`.
+- **Branding**: a short opening screen shows “Powered and built by Bishal Bhandari from Nepal” (English/Nepali), and the
+  same credit appears at the bottom of Settings.
 
 Verification: `:app:assembleDebug` and `:app:testDebugUnitTest` succeed. Static/written only: native load and generation,
 download progress against the real hosts, cancellation timing, memory/latency/thermal behaviour, GPU backend. A physical

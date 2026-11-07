@@ -69,3 +69,7 @@ The wrapper download and initial dependency resolution require network access. A
 installation and accepting its licenses are separate machine setup steps.
 
 No model weights or training are part of this checkout.
+
+---
+
+Built and powered by **Bishal Bhandari** from Nepal.

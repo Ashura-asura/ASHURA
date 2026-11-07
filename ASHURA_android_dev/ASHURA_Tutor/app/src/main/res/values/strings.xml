@@ -141,6 +141,7 @@
     <string name="library_delete_body">“%1$s” and its passages will be removed from this device.</string>
 
     <!-- Shared actions -->
+    <string name="splash_credit">Powered and built by Bishal Bhandari from Nepal</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_back_to_tutor">Back to tutor</string>

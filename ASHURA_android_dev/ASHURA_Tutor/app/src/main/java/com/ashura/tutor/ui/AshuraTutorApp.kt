@@ -5,7 +5,12 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,6 +62,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ashura.tutor.R
 import com.ashura.tutor.data.model.ModelState
@@ -65,6 +71,7 @@ import com.ashura.tutor.domain.runtime.ModelCatalog
 import com.ashura.tutor.domain.runtime.ModelManifest
 import com.ashura.tutor.domain.runtime.RamTier
 import com.ashura.tutor.domain.runtime.rank
+import kotlinx.coroutines.delay
 import java.text.DateFormat
 import java.util.Date
 
@@ -95,6 +102,10 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
     BackHandler(enabled = practice.question != null) { viewModel.closePractice() }
     BackHandler(enabled = practice.question == null && lesson != null && selected == Destination.TUTOR.name) { viewModel.clearLesson() }
 
+    var showSplash by rememberSaveable { mutableStateOf(true) }
+    LaunchedEffect(Unit) { delay(1_800); showSplash = false }
+
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -165,6 +176,45 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                     onDeleteAll = { viewModel.deleteAllData { selected = Destination.HOME.name } }
                 )
             }
+        }
+    }
+    AnimatedVisibility(
+        visible = showSplash,
+        enter = fadeIn(tween(250)),
+        exit = fadeOut(tween(450))
+    ) { BrandSplash() }
+    }
+}
+
+@Composable
+private fun BrandSplash() {
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.primary) {
+        Column(
+            Modifier.fillMaxSize().padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                stringResource(R.string.app_name),
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onPrimary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.semantics { heading() }
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                stringResource(R.string.home_tagline),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimary,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(40.dp))
+            Text(
+                stringResource(R.string.splash_credit),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimary,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -470,6 +520,13 @@ private fun SettingsScreen(
         OutlinedButton(onClick = { confirmDeleteAll = true }, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.settings_delete_all))
         }
+        Text(
+            stringResource(R.string.splash_credit),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        )
     }
     if (confirmDeleteAll) {
         AlertDialog(

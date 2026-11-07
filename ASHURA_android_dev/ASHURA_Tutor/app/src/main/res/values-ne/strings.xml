@@ -136,6 +136,7 @@
     <string name="library_delete_title">यो नोट मेटाउने?</string>
     <string name="library_delete_body">“%1$s” र यसका अंशहरू यो उपकरणबाट हटाइनेछन्।</string>
 
+    <string name="splash_credit">बिशाल भण्डारी, नेपालद्वारा निर्मित र सञ्चालित</string>
     <string name="action_delete">मेटाउनुहोस्</string>
     <string name="action_cancel">रद्द गर्नुहोस्</string>
     <string name="action_back_to_tutor">शिक्षकमा फर्कनुहोस्</string>
