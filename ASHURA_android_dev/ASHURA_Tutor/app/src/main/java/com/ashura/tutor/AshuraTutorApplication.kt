@@ -7,6 +7,7 @@ import com.ashura.tutor.data.AppDatabase
 import com.ashura.tutor.data.DocumentReader
 import com.ashura.tutor.data.TutorRepository
 import com.ashura.tutor.data.model.ModelManager
+import com.ashura.tutor.data.profile.LearnerProfileStore
 import com.ashura.tutor.domain.CalculatorTool
 import com.ashura.tutor.domain.LessonPlanner
 import com.ashura.tutor.domain.SpacingScheduler
@@ -43,6 +44,8 @@ class AshuraTutorApplication : Application() {
         private set
     lateinit var modelRuntime: LiteRtLmModelRuntime
         private set
+    lateinit var learnerProfile: LearnerProfileStore
+        private set
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -58,6 +61,7 @@ class AshuraTutorApplication : Application() {
             runtime = modelRuntime,
             scope = appScope
         )
+        learnerProfile = LearnerProfileStore(this)
         val calculator = CalculatorTool()
         taskController = TaskController(modelRuntime = modelRuntime, tools = mapOf(calculator.name to calculator))
         tutorEngine = TutorEngine(modelRuntime = modelRuntime, taskController = taskController)

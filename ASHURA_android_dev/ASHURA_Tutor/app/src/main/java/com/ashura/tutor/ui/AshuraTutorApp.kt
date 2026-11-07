@@ -9,6 +9,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -66,10 +68,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ashura.tutor.R
 import com.ashura.tutor.data.model.ModelState
+import com.ashura.tutor.data.profile.LearnerProfile
+import com.ashura.tutor.domain.LearnerLevel
 import com.ashura.tutor.domain.ResponseMode
+import com.ashura.tutor.domain.StructuredAnswer
+import com.ashura.tutor.domain.TutorStyle
 import com.ashura.tutor.domain.runtime.ModelCatalog
 import com.ashura.tutor.domain.runtime.ModelManifest
 import com.ashura.tutor.domain.runtime.RamTier
+import com.ashura.tutor.domain.runtime.RuntimeMetrics
 import com.ashura.tutor.domain.runtime.rank
 import kotlinx.coroutines.delay
 import java.text.DateFormat
@@ -96,6 +103,8 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
     val libraryItems by viewModel.libraryItems.collectAsState()
     val settingsMessage by viewModel.settingsMessage.collectAsState()
     val modelState by viewModel.modelState.collectAsState()
+    val profile by viewModel.profile.collectAsState()
+    val runtimeMetrics by viewModel.runtimeMetrics.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.openTutorTab.collect { selected = Destination.TUTOR.name } }
 
@@ -150,6 +159,12 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                         citations = state.citations, mode = state.mode,
                         isBusy = state.isBusy, error = state.error,
                         modelLoaded = (modelState as? ModelState.Ready)?.loaded == true,
+                        style = profile.style,
+                        onToggleStyle = {
+                            viewModel.setTutorStyle(
+                                if (profile.style == TutorStyle.SOCRATIC) TutorStyle.DIRECT else TutorStyle.SOCRATIC
+                            )
+                        },
                         topics = viewModel.topics, recommendedId = progress.recommendedTopicId,
                         onQuestionChange = viewModel::updateQuestion, onAsk = viewModel::ask,
                         onCancel = viewModel::cancelAsk, onStartTopic = viewModel::startTopic
@@ -173,7 +188,13 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                     onDeleteModel = viewModel::deleteModel,
                     onCancelModel = viewModel::cancelModelDownload,
                     onExport = viewModel::exportData,
-                    onDeleteAll = { viewModel.deleteAllData { selected = Destination.HOME.name } }
+                    onDeleteAll = { viewModel.deleteAllData { selected = Destination.HOME.name } },
+                    profile = profile,
+                    onLevelChange = viewModel::setLearnerLevel,
+                    onStyleChange = viewModel::setTutorStyle,
+                    onLanguageChange = viewModel::setResponseLanguage,
+                    metrics = runtimeMetrics,
+                    freeStorageBytes = viewModel.freeStorageBytes()
                 )
             }
         }
@@ -244,6 +265,7 @@ private fun HomeScreen(recommendedTitle: String?, dueCount: Int, onContinue: () 
 private fun TutorScreen(
     question: String, answer: String?, limitation: String?, citations: List<String>,
     mode: ResponseMode?, isBusy: Boolean, error: String?, modelLoaded: Boolean,
+    style: TutorStyle, onToggleStyle: () -> Unit,
     topics: List<TopicSummary>, recommendedId: String?,
     onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit, onStartTopic: (String) -> Unit
 ) {
@@ -259,6 +281,16 @@ private fun TutorScreen(
                     stringResource(R.string.tutor_no_model_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        item {
+            OutlinedButton(onClick = onToggleStyle, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    stringResource(
+                        if (style == TutorStyle.SOCRATIC) R.string.tutor_style_socratic
+                        else R.string.tutor_style_direct
+                    )
                 )
             }
         }
@@ -282,7 +314,21 @@ private fun TutorScreen(
             item {
                 Text(stringResource(R.string.tutor_response), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
             }
-            item { Text(text) }
+            val structured = StructuredAnswer.parse(text)
+            if (structured.isStructured) {
+                val lead = structured.answer ?: structured.preamble
+                if (lead.isNotBlank()) item { Text(lead) }
+                if (structured.steps.isNotEmpty()) {
+                    item { Text(stringResource(R.string.tutor_steps), style = MaterialTheme.typography.titleSmall) }
+                    items(structured.steps) { step -> Text(stringResource(R.string.tutor_step_line, step)) }
+                }
+                structured.check?.let { check ->
+                    item { Text(stringResource(R.string.tutor_check), style = MaterialTheme.typography.titleSmall) }
+                    item { Text(check) }
+                }
+            } else {
+                item { Text(text) }
+            }
             limitation?.let { l ->
                 item { Text(l, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
@@ -357,6 +403,16 @@ private fun ProgressScreen(progress: ProgressUiState) {
 }
 
 @Composable
+private fun levelLabel(level: LearnerLevel): String = stringResource(
+    when (level) {
+        LearnerLevel.SCHOOL -> R.string.level_school
+        LearnerLevel.BACHELOR -> R.string.level_bachelor
+        LearnerLevel.MASTER -> R.string.level_master
+        LearnerLevel.UNKNOWN -> R.string.level_unknown
+    }
+)
+
+@Composable
 private fun SettingsScreen(
     message: String?,
     modelState: ModelState,
@@ -369,7 +425,13 @@ private fun SettingsScreen(
     onDeleteModel: () -> Unit,
     onCancelModel: () -> Unit,
     onExport: (android.net.Uri) -> Unit,
-    onDeleteAll: () -> Unit
+    onDeleteAll: () -> Unit,
+    profile: LearnerProfile,
+    onLevelChange: (LearnerLevel) -> Unit,
+    onStyleChange: (TutorStyle) -> Unit,
+    onLanguageChange: (String) -> Unit,
+    metrics: RuntimeMetrics?,
+    freeStorageBytes: Long
 ) {
     var confirmDeleteAll by remember { mutableStateOf(false) }
     var confirmDeleteModel by remember { mutableStateOf(false) }
@@ -390,6 +452,45 @@ private fun SettingsScreen(
     ) {
         ScreenHeading(stringResource(R.string.settings_title))
         Text(stringResource(R.string.settings_intro))
+
+        Text(stringResource(R.string.settings_profile_heading), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.settings_profile_intro), style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.settings_level), style = MaterialTheme.typography.labelMedium)
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LearnerLevel.entries.forEach { level ->
+                FilterChip(
+                    selected = profile.level == level,
+                    onClick = { onLevelChange(level) },
+                    label = { Text(levelLabel(level)) }
+                )
+            }
+        }
+        Text(stringResource(R.string.settings_style), style = MaterialTheme.typography.labelMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = profile.style == TutorStyle.DIRECT,
+                onClick = { onStyleChange(TutorStyle.DIRECT) },
+                label = { Text(stringResource(R.string.tutor_style_direct)) }
+            )
+            FilterChip(
+                selected = profile.style == TutorStyle.SOCRATIC,
+                onClick = { onStyleChange(TutorStyle.SOCRATIC) },
+                label = { Text(stringResource(R.string.tutor_style_socratic)) }
+            )
+        }
+        Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.labelMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = profile.language == "en",
+                onClick = { onLanguageChange("en") },
+                label = { Text(stringResource(R.string.language_english)) }
+            )
+            FilterChip(
+                selected = profile.language == "ne",
+                onClick = { onLanguageChange("ne") },
+                label = { Text(stringResource(R.string.language_nepali)) }
+            )
+        }
 
         Text(stringResource(R.string.settings_model_heading), style = MaterialTheme.typography.titleMedium)
         Text(stringResource(R.string.settings_model_intro), style = MaterialTheme.typography.bodySmall)
@@ -509,6 +610,36 @@ private fun SettingsScreen(
         ) { Text(stringResource(R.string.settings_model_import)) }
         Text(
             stringResource(R.string.settings_model_import_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(stringResource(R.string.settings_diagnostics), style = MaterialTheme.typography.titleMedium)
+        if (metrics == null) {
+            Text(stringResource(R.string.settings_diagnostics_empty), style = MaterialTheme.typography.bodySmall)
+        } else {
+            Text(stringResource(R.string.settings_diag_backend, metrics.backend), style = MaterialTheme.typography.bodySmall)
+            metrics.loadMillis?.let {
+                Text(stringResource(R.string.settings_diag_load, it), style = MaterialTheme.typography.bodySmall)
+            }
+            metrics.firstTokenMillis?.let {
+                Text(stringResource(R.string.settings_diag_first_token, it), style = MaterialTheme.typography.bodySmall)
+            }
+            metrics.tokensPerSecond?.let { speed ->
+                Text(
+                    stringResource(R.string.settings_diag_speed, speed.toInt(), metrics.estimatedTokens),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            metrics.heapUsedMb?.let {
+                Text(stringResource(R.string.settings_diag_heap, it), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Text(
+            stringResource(
+                R.string.settings_diag_storage,
+                Formatter.formatShortFileSize(context, freeStorageBytes)
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

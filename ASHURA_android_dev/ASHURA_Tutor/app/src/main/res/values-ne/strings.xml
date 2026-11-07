@@ -28,6 +28,11 @@
     <string name="tutor_mode_local">स्थानीय मोडेलद्वारा जवाफ</string>
     <string name="tutor_mode_offline">अफलाइन अध्ययन ढाँचा</string>
     <string name="tutor_mode_deterministic">ठ्याक्कै उपकरण परिणाम</string>
+    <string name="tutor_style_direct">अवस्था: प्रत्यक्ष</string>
+    <string name="tutor_style_socratic">अवस्था: सुकराती</string>
+    <string name="tutor_steps">चरणहरू</string>
+    <string name="tutor_step_line">• %1$s</string>
+    <string name="tutor_check">आफैँ जाँच्नुहोस्</string>
     <string name="tutor_question_label">तपाईं के बुझ्न चाहनुहुन्छ?</string>
     <string name="tutor_ask">सोध्नुहोस्</string>
     <string name="tutor_working">काम गर्दै…</string>
@@ -78,6 +83,26 @@
     <string name="settings_model_failed">मोडेल त्रुटि: %1$s</string>
     <string name="settings_model_delete_title">स्थापित मोडेल मेटाउने?</string>
     <string name="settings_model_delete_body">%1$s यो उपकरणबाट हटाइनेछ। पछि फेरि डाउनलोड वा आयात गर्न सकिन्छ।</string>
+
+    <string name="settings_profile_heading">अध्ययन प्रोफाइल</string>
+    <string name="settings_profile_intro">व्याख्या मिलाउन प्रयोग हुन्छ। जहिले पनि परिवर्तन गर्न सकिन्छ; केही पनि अपलोड हुँदैन।</string>
+    <string name="settings_level">तह</string>
+    <string name="settings_style">पढाउने शैली</string>
+    <string name="settings_language">जवाफको भाषा</string>
+    <string name="level_school">विद्यालय</string>
+    <string name="level_bachelor">स्नातक</string>
+    <string name="level_master">स्नातकोत्तर</string>
+    <string name="level_unknown">सेट गरिएको छैन</string>
+    <string name="language_english">अङ्ग्रेजी</string>
+    <string name="language_nepali">नेपाली</string>
+    <string name="settings_diagnostics">रनटाइम निदान</string>
+    <string name="settings_diagnostics_empty">अझै कुनै मोडेल चलाइएको छैन। मोडेल लोड गरेर एउटा प्रश्न सोध्नुहोस्, मापिएको समय देखिन्छ।</string>
+    <string name="settings_diag_backend">ब्याकइन्ड: %1$s</string>
+    <string name="settings_diag_load">मोडेल लोड: %1$d मिलिसेकेन्ड</string>
+    <string name="settings_diag_first_token">पहिलो टोकन: %1$d मिलिसेकेन्ड</string>
+    <string name="settings_diag_speed">लगभग %1$d टोकन/सेकेन्ड (%2$d अनुमानित टोकन)</string>
+    <string name="settings_diag_heap">प्रयोगमा रहेको जाभा हिप: %1$d MB</string>
+    <string name="settings_diag_storage">खाली भण्डारण: %1$s</string>
 
     <string name="lesson_none_title">कुनै पाठ चयन गरिएको छैन</string>
     <string name="lesson_open_hint">पाठ सुरु गर्न कुनै विषय खोल्नुहोस्।</string>

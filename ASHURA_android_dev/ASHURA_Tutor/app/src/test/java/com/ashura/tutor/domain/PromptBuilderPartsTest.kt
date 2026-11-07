@@ -70,4 +70,37 @@ class PromptBuilderPartsTest {
         assertTrue(parts.userMessage.length <= limits.maxContextCharacters / 4)
         assertEquals(limits.maxContextCharacters / 4, parts.userMessage.length)
     }
+
+    @Test fun directStyleRequestsTheStructuredAnswerFormat() {
+        val parts = PromptBuilder.buildParts(
+            TutorRequest("Explain fractions.", style = TutorStyle.DIRECT),
+            limits
+        )
+        assertTrue(parts.systemInstruction.contains("Explain clearly and step by step"))
+        assertTrue(parts.systemInstruction.contains("ANSWER:"))
+        assertTrue(parts.systemInstruction.contains("STEPS:"))
+        assertTrue(parts.systemInstruction.contains("CHECK:"))
+        assertTrue(!parts.systemInstruction.contains("Socratically"))
+    }
+
+    @Test fun socraticStyleWithholdsTheFinalAnswer() {
+        val parts = PromptBuilder.buildParts(
+            TutorRequest("Explain fractions.", style = TutorStyle.SOCRATIC),
+            limits
+        )
+        assertTrue(parts.systemInstruction.contains("Socratically"))
+        assertTrue(parts.systemInstruction.contains("do not give the final answer"))
+        assertTrue(parts.systemInstruction.contains("guiding question"))
+        assertTrue(!parts.systemInstruction.contains("Explain clearly and step by step"))
+    }
+
+    @Test fun unknownLevelAndLanguageAreHandledSafely() {
+        val parts = PromptBuilder.buildParts(
+            TutorRequest("Help me study.", learnerLevel = LearnerLevel.UNKNOWN, language = "xx"),
+            limits
+        )
+        assertTrue(parts.systemInstruction.contains("a learner"))
+        assertTrue(parts.systemInstruction.contains("English")) // unsupported codes fall back, never echoed raw
+        assertTrue(!parts.systemInstruction.contains("xx"))
+    }
 }

@@ -15,6 +15,7 @@ import com.ashura.tutor.domain.runtime.ModelFileVerifier
 import com.ashura.tutor.domain.runtime.ModelManifest
 import com.ashura.tutor.domain.runtime.RamTier
 import com.ashura.tutor.domain.runtime.ResourcePolicy
+import com.ashura.tutor.domain.runtime.RuntimeMetrics
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +64,12 @@ class ModelManager(
 ) {
     private val _state = MutableStateFlow<ModelState>(ModelState.NotInstalled)
     val state: StateFlow<ModelState> = _state.asStateFlow()
+
+    /** Last measured runtime timings, passed through from the engine for the diagnostics panel. */
+    val metrics: StateFlow<RuntimeMetrics?> = runtime.metrics
+
+    /** Free space on the install volume, shown next to the model size. */
+    fun freeStorageBytes(): Long = installDir.usableSpace
 
     private var activeJob: Job? = null
     @Volatile private var connection: HttpURLConnection? = null

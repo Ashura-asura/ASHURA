@@ -26,6 +26,11 @@
     <string name="tutor_mode_local">Answered by the local model</string>
     <string name="tutor_mode_offline">Offline study scaffold</string>
     <string name="tutor_mode_deterministic">Exact tool result</string>
+    <string name="tutor_style_direct">Mode: Direct</string>
+    <string name="tutor_style_socratic">Mode: Socratic</string>
+    <string name="tutor_steps">Steps</string>
+    <string name="tutor_step_line">• %1$s</string>
+    <string name="tutor_check">Check yourself</string>
     <string name="tutor_question_label">What would you like to understand?</string>
     <string name="tutor_ask">Ask</string>
     <string name="tutor_working">Working…</string>
@@ -79,6 +84,27 @@
     <string name="settings_model_failed">Model error: %1$s</string>
     <string name="settings_model_delete_title">Delete the installed model?</string>
     <string name="settings_model_delete_body">%1$s will be removed from this device. You can download or import it again later.</string>
+
+    <!-- Settings: learning profile and diagnostics -->
+    <string name="settings_profile_heading">Learning profile</string>
+    <string name="settings_profile_intro">Used to shape explanations. You can change this at any time; nothing is uploaded.</string>
+    <string name="settings_level">Level</string>
+    <string name="settings_style">Teaching style</string>
+    <string name="settings_language">Answer language</string>
+    <string name="level_school">School</string>
+    <string name="level_bachelor">Bachelor</string>
+    <string name="level_master">Master</string>
+    <string name="level_unknown">Not set</string>
+    <string name="language_english">English</string>
+    <string name="language_nepali">Nepali</string>
+    <string name="settings_diagnostics">Runtime diagnostics</string>
+    <string name="settings_diagnostics_empty">No model run recorded yet. Load a model and ask one question to see measured timings.</string>
+    <string name="settings_diag_backend">Backend: %1$s</string>
+    <string name="settings_diag_load">Model load: %1$d ms</string>
+    <string name="settings_diag_first_token">First token: %1$d ms</string>
+    <string name="settings_diag_speed">Approx. %1$d tokens/s (%2$d estimated tokens)</string>
+    <string name="settings_diag_heap">Java heap in use: %1$d MB</string>
+    <string name="settings_diag_storage">Free storage: %1$s</string>
 
     <!-- Lesson -->
     <string name="lesson_none_title">No lesson selected</string>

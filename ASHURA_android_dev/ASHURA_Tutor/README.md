@@ -2,8 +2,9 @@
 
 Offline-first, Android-first adaptive learning platform.
 
-**Status:** v0.3.0 — offline learning core plus an integrated local-model runtime (LiteRT-LM), verified model downloads and
-SAF import. See `CHECKPOINT.md`, `docs/ARCHITECTURE_STATUS.md` and `docs/RUNTIME_INTEGRATION.md`.
+**Status:** v0.4.0 — offline learning core with an integrated local-model runtime (LiteRT-LM), real token streaming,
+structured direct/Socratic answers, a persisted learner profile and measured runtime diagnostics. See `CHECKPOINT.md`,
+`docs/ARCHITECTURE_STATUS.md` and `docs/RUNTIME_INTEGRATION.md`.
 **Spec:** `docs/PRODUCT_SPEC.md` (architecture v5.0).  
 **Target:** 4 GB RAM Android phones (primary), 6 GB (standard), 8 GB+ (enhanced).
 

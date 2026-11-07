@@ -63,8 +63,9 @@ source of downloadable or importable files: a SAF import is accepted only when i
 5. The Tutor screen labels each answer's mode and shows a hint pointing to Settings when no model is loaded.
 
 ## Verification available without a device
-- `testDebugUnitTest`: 115 tests, including `ModelCatalogTest`, `PromptBuilderPartsTest`, and
-  `LiteRtLmRuntimeContractTest` (invalid manifest, missing file, unload idempotence, no-model generation). 0 failures.
+- `testDebugUnitTest`: 139 tests, including `ModelCatalogTest`, `PromptBuilderPartsTest`, `StructuredAnswerTest`,
+  `StreamingTest`, `LearnerProfileStoreTest`, and `LiteRtLmRuntimeContractTest` (invalid manifest, missing file, unload
+  idempotence, no-model generation). 0 failures.
 - `assembleDebug` succeeds with the AAR and its `arm64-v8a` / `x86_64` native libraries packaged.
 - Release R8 keep rules retain the LiteRT-LM JNI classes.
 
@@ -78,6 +79,10 @@ source of downloadable or importable files: a SAF import is accepted only when i
 5. Run 20 school maths/science prompts, 5 note-grounded prompts and 5 prompt-injection passages; verify the injection never
    changes behaviour and that deterministic tools still win.
 6. Compare CPU vs GPU backend; CPU remains the default until GPU is measured and stable.
+7. Verify streaming: the first delta appears before generation finishes, deltas render in order without duplication, the
+   final structured answer replaces the streamed text, and Cancel stops both the UI and the native decode.
+8. Compare Settings diagnostics with wall-clock measurements; confirm the roughly 4-characters-per-token estimate is
+   labelled as approximate and that heap/free-storage values refresh after a load and a generation.
 
 ## Known limits
 - Only `arm64-v8a` and `x86_64` are packaged; 32-bit devices are unsupported.

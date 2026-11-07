@@ -29,7 +29,7 @@ migration/FTS SQL against SQLite 3.45; fuzzing and stress tests on a JVM (kotlin
 ## Open findings (not fixed here)
 | # | Sev | Finding | Recommendation |
 |---|---|---|---|
-| O1 | **High** | ~4 000 lines of Android code (Compose, Room DAOs, ViewModel, SAF) have never been compiled or run | Gradle `assembleDebug testDebugUnitTest` now passes (115 tests); **running on a device is still unverified** |
+| O1 | **High** | ~4 000 lines of Android code (Compose, Room DAOs, ViewModel, SAF) have never been compiled or run | Gradle `assembleDebug testDebugUnitTest lintDebug` now passes (139 tests); **running on a device is still unverified** |
 | O2 | Med | No Room schema JSON committed, so `MigrationTestHelper` tests cannot exist yet (SQL itself is verified) | Resolved in a later checkpoint: schemas 1–4 committed and `MigrationTest` runs |
 | O3 | Med | Database and export file are unencrypted at rest (Android sandbox + disk encryption only) | Decide threat model; SQLCipher or Keystore-wrapped key if notes are sensitive |
 | O4 | Med | No real model runtime; tutoring beyond curriculum/notes is a scaffold | Runtime integrated (LiteRT-LM 0.19.1, pinned catalog, verified download/import). Device load, latency and memory benchmarks remain |
@@ -64,4 +64,21 @@ New residual risks:
 - Loading, generation, cancellation under load, peak memory and thermal behaviour are unmeasured on hardware.
 - The GPU backend is not exercised; CPU is the default.
 - The debug APK is ~65 MB (native AAR), above GitHub's 50 MB guidance. Prefer release artifacts outside Git history later.
+
+## Streaming and learning-UX checkpoint (v0.4.0)
+| Check | Result |
+|---|---|
+| Build | `:app:assembleDebug`, `:app:lintDebug`, `:app:testDebugUnitTest` succeed |
+| Unit tests | 139/139 passing, adding `StructuredAnswerTest`, `StreamingTest`, `LearnerProfileStoreTest` and direct/Socratic prompt tests |
+| Streaming | Native deltas go through `channelFlow`; deterministic tools stay single-shot; model failure degrades to the offline scaffold; no delta is emitted after `Complete` |
+| Structured output | Markers are parsed tolerantly; unrecognised output is preserved as plain text; steps are capped at 8 |
+| Profile | Level/style/language persist locally; unknown enum names and unsupported language codes fall back to safe defaults |
+| Diagnostics | Load/first-token/generation timings, approximate tokens/s, heap and free storage are measured, explicitly labelled approximate where needed |
+| Privacy | Profile is a plain SharedPreferences file on device; no account, sync or upload path was added |
+
+New residual risks:
+- Streaming cadence, cancellation latency and the final-answer replacement have not been observed on hardware.
+- Token counts are estimated from characters because the current LiteRT-LM API does not expose them; treat tokens/s as indicative.
+- A small model may ignore the requested `ANSWER`/`STEPS`/`CHECK` structure; the parser then shows plain text rather than inventing sections.
+- Socratic mode is prompt-enforced, not guarantee-enforced; a model can still reveal the answer.
 

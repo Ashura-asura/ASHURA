@@ -2,6 +2,8 @@ package com.ashura.tutor.domain.runtime
 
 import com.ashura.tutor.domain.TutorRequest
 import com.ashura.tutor.domain.TutorResponse
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 /**
  * Replaceable local-inference boundary (spec §6.2). Cancellation is cooperative: callers cancel
@@ -11,6 +13,15 @@ import com.ashura.tutor.domain.TutorResponse
 interface ModelRuntime {
     val isAvailable: Boolean
     suspend fun generate(request: TutorRequest, limits: GenerationLimits): TutorResponse
+
+    /**
+     * Streaming form of [generate]. Runtimes that cannot stream keep this default, which yields the
+     * complete answer as one event; callers therefore only need one code path.
+     */
+    fun generateStream(request: TutorRequest, limits: GenerationLimits): Flow<TutorStreamEvent> = flow {
+        emit(TutorStreamEvent.Complete(generate(request, limits)))
+    }
+
     fun unload()
     /** Loads (or verifies) the model described by [manifest] under [budget]. Default: not supported. */
     suspend fun load(manifest: ModelManifest, budget: ResourceBudget): LoadResult =

@@ -3,6 +3,10 @@ package com.ashura.tutor.domain
 import com.ashura.tutor.domain.runtime.GenerationLimits
 import com.ashura.tutor.domain.runtime.ModelRuntime
 import com.ashura.tutor.domain.runtime.PromptBuilder
+import com.ashura.tutor.domain.runtime.TutorStreamEvent
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -76,6 +80,53 @@ class TaskController(
         return fallthrough(request)
     }
 
+    /**
+     * Streaming form of [execute] (spec §25 step 4). Tools and the offline scaffold emit one final
+     * event; the local model emits deltas followed by the final response. Tool output is never
+     * streamed through the model, so deterministic answers stay exact.
+     */
+    fun executeStream(plan: Plan, request: TutorRequest): Flow<TutorStreamEvent> = flow {
+        if (plan.tools.isNotEmpty()) {
+            emit(TutorStreamEvent.Complete(execute(plan, request)))
+            return@flow
+        }
+        if (!modelRuntime.isAvailable) {
+            emit(TutorStreamEvent.Complete(fallthrough(request)))
+            return@flow
+        }
+        val bounded = request.copy(
+            retrievedContext = PromptBuilder.trimContext(request.retrievedContext, limits.maxContextCharacters / 2)
+        )
+        try {
+            modelRuntime.generateStream(bounded, limits).collect { event ->
+                when (event) {
+                    is TutorStreamEvent.Delta -> emit(event)
+                    is TutorStreamEvent.Complete -> emit(
+                        TutorStreamEvent.Complete(
+                            event.response.copy(
+                                mode = ResponseMode.LOCAL_MODEL,
+                                citations = event.response.citations.ifEmpty { citationsFor(bounded) },
+                                limitation = event.response.limitation
+                                    ?: "Model-generated explanation; not independently verified."
+                            )
+                        )
+                    )
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            emit(
+                TutorStreamEvent.Complete(
+                    offlineScaffold(
+                        request,
+                        "The local model failed (${e.message ?: "unknown error"}); showing a study scaffold instead."
+                    )
+                )
+            )
+        }
+    }
+
     private suspend fun fallthrough(request: TutorRequest): TutorResponse {
         if (modelRuntime.isAvailable) {
             // One bounded model call; no self-reflection loop (spec §5.4). Evidence is trimmed and sanitised.
@@ -128,17 +179,31 @@ class TaskController(
                     appendLine("I searched your imported notes and found nothing relevant to this question.")
                     appendLine()
                 }
-                appendLine("Let's work through this carefully.")
-                appendLine()
-                appendLine("**Your question:** ${request.question}")
-                appendLine()
-                appendLine("**Study method**")
-                appendLine("1. Identify the key concept and define unfamiliar terms.")
-                appendLine("2. List what is known and what must be explained.")
-                appendLine("3. Break the task into smaller steps and justify each step.")
-                appendLine("4. Check the result independently.")
-                appendLine()
-                append("No local language model is configured, so I won't invent a subject-specific explanation.")
+                if (request.style == TutorStyle.SOCRATIC) {
+                    appendLine("ANSWER: What do you already know about this question, and which part is unclear?")
+                    appendLine()
+                    appendLine("STEPS:")
+                    appendLine("1. Write down the key terms and what each one means.")
+                    appendLine("2. Say which step you can already do, and where you get stuck.")
+                    appendLine()
+                    append("CHECK: Try one small step now; I will respond to your attempt.")
+                } else {
+                    appendLine("ANSWER: Let's work through this carefully.")
+                    appendLine()
+                    appendLine("**Your question:** ${request.question}")
+                    appendLine()
+                    appendLine("STEPS:")
+                    appendLine("1. Identify the key concept and define unfamiliar terms.")
+                    appendLine("2. List what is known and what must be explained.")
+                    appendLine("3. Break the task into smaller steps and justify each step.")
+                    appendLine("4. Check the result independently.")
+                    appendLine()
+                    append("CHECK: Restate the main idea in your own words, then try one practice step.")
+                }
+                if (request.notesSearched) {
+                    appendLine()
+                    appendLine("No local language model is configured, so I won't invent a subject-specific explanation.")
+                }
             },
             mode = ResponseMode.OFFLINE_FALLBACK,
             limitation = limitation

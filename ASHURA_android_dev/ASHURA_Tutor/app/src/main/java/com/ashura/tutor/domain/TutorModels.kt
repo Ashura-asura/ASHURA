@@ -1,9 +1,16 @@
 package com.ashura.tutor.domain
 
+/**
+ * How the tutor should respond (spec §1.2 B/C). DIRECT explains and checks; SOCRATIC asks a guiding
+ * question first and withholds the final answer so the learner has to reason.
+ */
+enum class TutorStyle { DIRECT, SOCRATIC }
+
 data class TutorRequest(
     val question: String,
     val learnerLevel: LearnerLevel = LearnerLevel.UNKNOWN,
     val language: String = "en",
+    val style: TutorStyle = TutorStyle.DIRECT,
     val retrievedContext: List<ContextSnippet> = emptyList(),
     /** True when the learner's imported notes were searched for this request (so "nothing found" is meaningful). */
     val notesSearched: Boolean = false

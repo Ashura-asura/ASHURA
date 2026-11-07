@@ -4,8 +4,8 @@ Legend: **Verified** = compiled with the Gradle Android toolchain and covered by
 **Written, device-pending** = compiles, but behaviour that depends on Android/native services or hardware is unverified.
 **Not implemented** = do not advertise as available.
 
-Last build: `:app:assembleDebug` and `:app:testDebugUnitTest` pass; 115 tests, 0 failures. No physical device or emulator has
-run this build.
+Last build: `:app:assembleDebug`, `:app:lintDebug` and `:app:testDebugUnitTest` pass; 139 tests, 0 failures. No physical
+device or emulator has run this build.
 
 ## Implemented
 | Area (spec §) | State |
@@ -27,6 +27,10 @@ run this build.
 | Library storage, import/search/delete UI, FTS5 + fallback (§10, §15.3) | Verified (build); device-pending |
 | Question → keyword extraction → OR/BM25 retrieval; grounding policy, extractive cited answers, honest "nothing found", citations, prompt asks for [n] citations (§10.3, §18.1) | Verified |
 | LiteRT-LM 0.19.1 runtime: single mutex-guarded engine, streaming, cancellation, CPU backend, verified load, unload-during-generation (§6.2) | Verified (refusal paths); device-pending (native load/generate) |
+| Real token streaming: `channelFlow` native deltas, deterministic tools emit one exact event, bounded context, model failure degrades to the offline scaffold (§6.2, §25 step 4) | Verified (logic); device-pending (native chunk cadence) |
+| Structured answers: tolerant `ANSWER`/`STEPS`/`CHECK` parser, sectioned Tutor UI, plain-text fallback when a small model ignores the format (§1.3, §3.3) | Verified |
+| Learner profile: level, direct/Socratic style and English/Nepali answer language persisted in SharedPreferences and applied to prompts (§1.2 C, §1.4) | Verified (Robolectric) |
+| Runtime diagnostics: measured load time, first-token latency, approximate tokens/s, Java heap and free storage shown in Settings (§16.5) | Verified (logic); device-pending (real timings) |
 | Pinned model catalog: Qwen2.5-1.5B Q8 and Qwen3-0.6B INT4, exact revision/size/SHA-256, RAM-tier gating (§6.1, §6.3, §16.1) | Verified |
 | Model install: HTTPS-only download with progress/cancel, SAF import, checksum + size verification, `.part` + atomic rename, 1 GB reserve, one-model slot (§6.3) | Verified (logic); device-pending |
 | Settings UI: tier, catalog, download/import/load/unload/delete, progress, delete confirmation, privacy disclosure | Verified (build); device-pending |

@@ -133,3 +133,33 @@ device or emulator is still required for those. The catalog hashes have not been
 
 Next: run the device checklist in `docs/RUNTIME_INTEGRATION.md`, then record results in a benchmark note before changing the
 default model or backend.
+
+---
+
+# Checkpoint 5 — streaming, structured answers, learner profile (v0.4.0)
+
+Scope: spec §1.3, §1.4, §6.2, §16.5 and roadmap step 4 — make the tutor feel like a tutor while the model writes, and make
+runtime behaviour measurable instead of asserted.
+
+New:
+- **Real streaming**: `ModelRuntime.generateStream` (single `Complete` default), `LiteRtLmModelRuntime` native delta stream
+  via `channelFlow`, `TaskController.executeStream`, `TutorEngine.answerStream`, ViewModel delta rendering. Deterministic
+  tools still emit one exact event; a model failure falls back to the offline scaffold.
+- **Structured answers**: prompt asks for `ANSWER` / `STEPS` / `CHECK`; `StructuredAnswer` parses tolerantly (bold markers,
+  numbered/bulleted steps, Windows line endings) and keeps plain text when a small model ignores the format. Tutor UI renders
+  sections with headings.
+- **Direct vs Socratic**: `TutorStyle` in `TutorRequest`; Socratic prompts withhold the final answer and ask one guiding
+  question. Tutor has a style toggle; the offline scaffold respects the same mode.
+- **Learner profile**: `LearnerProfileStore` persists level (school/bachelor/master/not set), style and English/Nepali answer
+  language in SharedPreferences; Settings exposes chips. No account or upload.
+- **Runtime diagnostics**: measured load time, first-token latency, generation time, approximate tokens/s, Java heap and free
+  storage in Settings. Token count is an explicit ~4-characters/token estimate because the engine API does not expose ids.
+- **Tests**: `StructuredAnswerTest`, `StreamingTest`, `LearnerProfileStoreTest`, direct/Socratic prompt tests; **139 JVM tests
+  pass**, `lintDebug` passes.
+- **Artifact**: `dist/ASHURA_Tutor-v0.4.0-dev-debug.apk` (~65 MB), SHA-256
+  `f3a85004fd507a4839015ea6c340b114b516695648fb7f0ff97231b70881db43`.
+
+Verification: compile, unit tests and lint pass here. Static/written only: native streaming cadence, first-token timing,
+cancellation latency, measured memory/thermal behaviour, and the final structured-answer replacement on a real screen.
+Next: run the device checklist in `docs/RUNTIME_INTEGRATION.md` (including the new streaming/diagnostics items), then start
+documents/OCR, source verification, research, speech and plotting phases.
