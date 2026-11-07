@@ -263,6 +263,9 @@ Fixed defects:
   in the imported text; the 24-page OCR cap is disclosed separately.
 - **Sideways phone photos failed.** When the first OCR pass finds fewer than 12 characters, 90/180/270°
   rotations are tried and the richest result wins.
+- **OCR page labels did not start a new chunk.** The chunker only recognised the exact `[Page N]` form, so
+  `[Page N · OCR: check against the original scan]` was treated as ordinary text and pages could merge.
+  The provenance pattern now accepts the OCR suffix; a regression test covers it.
 
 Added:
 - **Editable OCR text**: Library → edit opens the imported text. Saving normalises it, replaces the body and
@@ -273,11 +276,11 @@ Added:
   retrieval, evidence-coverage verification, broad curriculum, original-file storage and device benchmarks.
   README carries the same short limitation notice.
 - **Tests**: `CsvExtractorTest` (quoted fields, TSV, semicolon, caps, blank rows, provenance, column
-  rollover) plus CSV cases in `TextChunkerTest`. **158 JVM tests pass**; `lintDebug` and `assembleDebug`
+  rollover) plus CSV cases in `TextChunkerTest`. **159 JVM tests pass**; `lintDebug` and `assembleDebug`
   pass.
 
 Artifact: `dist/ASHURA_Tutor-v0.5.2-dev-debug.apk` (~99 MB), SHA-256
-`648e23f4943cdfb0e4200a64183843fee39c8fc7352cf667f6eeef5376b6152c`.
+`3e02c219c86d911bfe3ec1955f7e8481c585d284df18fa6a8b928a4949e662a5`.
 
 Verification: compile, JVM tests and lint pass here. Still device-pending: OCR accuracy/speed on real
 scans, Compose editing of a long OCR body, spreadsheet/PDF extraction quality, model residency, and

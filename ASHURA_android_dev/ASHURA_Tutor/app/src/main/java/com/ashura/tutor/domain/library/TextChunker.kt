@@ -25,7 +25,9 @@ object TextChunker {
      * Page/slide/sheet labels inserted by the document extractors. A new provenance label starts a new
      * chunk so citations and generated quizzes keep per-page context instead of merging several pages.
      */
-    private val provenanceLine = Regex("\\n\\[(?:Page \\d+|Slide \\d+|Sheet: [^]\\n]{1,60}|Image(?: \\d+)?)]\\s*\\n")
+    private val provenanceLine = Regex(
+        "\\n\\[(?:Page \\d+[^]\\n]{0,80}|Slide \\d+[^]\\n]{0,80}|Sheet: [^]\\n]{1,60}|Image(?: \\d+)?[^]\\n]{0,80})]\\s*\\n"
+    )
 
     /** Import formats supported by the current build. OOXML containers are unpacked in memory. */
     enum class Kind { TEXT, CSV, DOCX, XLSX, PPTX, PDF, IMAGE }

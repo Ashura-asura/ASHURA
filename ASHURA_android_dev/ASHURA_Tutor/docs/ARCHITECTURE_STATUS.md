@@ -13,7 +13,7 @@ Legend:
 - **Not implemented** — do not advertise as available.
 
 Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
-**158 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
+**159 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
 hardware-dependent claim below is device-pending, not proven.
 
 ## Implemented and verified on the JVM

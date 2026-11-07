@@ -78,6 +78,15 @@ class TextChunkerTest {
         assertTrue(r.truncated)
     }
 
+    @Test fun ocrPageLabelsStartANewChunk() {
+        val text = "[Page 1]\nembedded text\n" +
+            "[Page 2 · OCR: check against the original scan]\n" + "x ".repeat(600) + "\n" +
+            "[Page 3 · OCR: check against the original scan]\n" + "y ".repeat(600)
+        val chunks = TextChunker.chunk(TextChunker.normalize(text)).chunks
+        assertTrue(chunks.any { it.text.startsWith("[Page 2 · OCR") })
+        assertTrue(chunks.any { it.text.startsWith("[Page 3 · OCR") })
+    }
+
     @Test fun nepaliDandaIsASentenceBoundary() {
         val s = "यो एउटा वाक्य हो। ".repeat(200)
         val r = TextChunker.chunk(TextChunker.normalize(s))
