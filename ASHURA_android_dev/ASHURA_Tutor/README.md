@@ -99,8 +99,9 @@ scripts/        — setup, test, build_debug, benchmark (PowerShell)
 
 ## Build prerequisites
 
-Install JDK 17 or newer and Android SDK Platform 35 plus Build Tools 35.0.0. The Gradle Wrapper
-is checked in; on first use it downloads Gradle 8.14.4. On Windows:
+Install JDK 21 and Android SDK Platform 35 plus Build Tools 35.0.0. The app compiles to Java 17
+bytecode, but the pinned LiteRT-LM 0.19.1 classes need a Java 21 runtime for the JVM unit tests.
+The Gradle Wrapper is checked in; on first use it downloads Gradle 8.14.4. On Windows:
 
 ```powershell
 sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
@@ -110,6 +111,11 @@ sdkmanager --licenses
 
 The wrapper download and initial dependency resolution require network access. Android SDK
 installation and accepting its licenses are separate machine setup steps.
+
+CI (`.github/workflows/android-ci.yml` at the repository root, because GitHub only reads workflows
+there) runs the same three tasks with JDK 21, caches Gradle, and uploads the debug APK plus the test
+and lint reports. Existing lint warnings are recorded in `app/lint-baseline.xml`; new issues are still
+reported and any lint error still fails the build.
 
 No model weights or training are part of this checkout.
 

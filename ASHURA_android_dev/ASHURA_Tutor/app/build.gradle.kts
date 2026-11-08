@@ -90,6 +90,9 @@ android {
     lint {
         abortOnError = true
         checkReleaseBuilds = true
+        // Existing warnings are recorded in the committed baseline. New issues are still reported,
+        // and any error still fails the build (`abortOnError`), so the baseline cannot hide one.
+        baseline = file("lint-baseline.xml")
     }
 }
 

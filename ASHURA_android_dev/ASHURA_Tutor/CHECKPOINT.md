@@ -465,3 +465,19 @@ Manual device checks for the user:
 
 Known limitation: an in-progress test is held in the ViewModel, so rotation keeps it but process death loses
 it. Persisting an active session is not implemented and is recorded as missing rather than claimed.
+
+## CI and lint baseline (P0.2 / P0.3)
+
+The earlier workflow lived in `ASHURA_android_dev/ASHURA_Tutor/.github/workflows/`, where GitHub never reads
+it, so no Android job had ever run. It now lives at the repository root and uses a working directory of
+`ASHURA_android_dev/ASHURA_Tutor`.
+
+- `android-ci` run **42476055931** (green): JDK 21, cached Gradle, `testDebugUnitTest`, `lintDebug`,
+  `assembleDebug`, then uploads `app-debug.apk` plus test/lint reports.
+- The gate was proven, not assumed: a temporary failing test on branch `ci-failure-selftest` produced run
+  **42476341546** with `213 tests completed, 1 failed` and a failed job. The branch was deleted.
+- JDK 21 is required for the JVM tests because the pinned LiteRT-LM 0.19.1 classes are newer bytecode than
+  Java 17; app bytecode still targets Java 17.
+- `app/lint-baseline.xml` records the current 53 warnings. `:app:lintDebug` now says “no new issues (53
+  warnings filtered by baseline)”. New issues are still reported and any lint error fails the build
+  (`abortOnError = true`); P0.3 does not require new warnings to fail.

@@ -13,13 +13,17 @@ Legend:
 - **Not implemented** — do not advertise as available.
 
 Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
-**212 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
+**212 JVM tests, 0 failures**. The same tasks pass in GitHub Actions (`android-ci`, JDK 21, run
+42476055931) and a deliberately failing test was observed to fail that job (run 42476341546, branch
+deleted afterwards). No physical Android device or emulator has run this build, so every
 hardware-dependent claim below is device-pending, not proven.
 
 ## Implemented and verified on the JVM
 
 | Area (spec §) | State | Evidence |
 |---|---|---|
+| Continuous integration: repository-root GitHub Actions workflow runs tests, lint and APK assembly on JDK 21, caches Gradle, uploads the APK and reports (§21.5) | Verified (CI) | `android-ci` runs 42476055931 (green) and 42476341546 (failing test fails the job) |
+| Lint baseline: existing warnings tracked in `app/lint-baseline.xml`; new issues are reported and errors still fail (§21.5) | Verified (JVM) | `:app:lintDebug` reports “no new issues (53 warnings filtered by baseline)” |
 | Expression evaluator: precedence, parentheses, unary minus, `^`, `%`, sqrt/abs, exact decimals, resource limits (§11.1) | Verified (JVM) | `ExpressionEvaluatorTest` |
 | Unit conversion: length, mass, time, volume, speed, temperature (§11.2) | Verified (JVM) | `UnitConverterTest` |
 | Deterministic calculator routing before the model (§5.2) | Verified (JVM) | `CalculatorToolTest`, `TaskControllerTest` |
