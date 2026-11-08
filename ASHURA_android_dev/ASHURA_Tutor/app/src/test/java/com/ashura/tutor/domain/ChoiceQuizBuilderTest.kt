@@ -92,4 +92,26 @@ class ChoiceQuizBuilderTest {
         assertTrue(questions.any { it.sourceTitle == "Physics basics" })
         assertTrue(questions.any { it.sourceTitle == "Chemistry basics" })
     }
+
+    @Test
+    fun distractorsComeFromTheSameNoteBeforeOtherSubjects() {
+        val chemistry = source(
+            "Chemistry basics",
+            """
+                An atom is the smallest unit of an element that keeps its chemical properties.
+                A molecule is a group of atoms joined together by chemical bonds.
+                A catalyst is a substance that speeds up a reaction without being used up.
+                An ion is an atom or molecule that has gained or lost an electron.
+            """.trimIndent()
+        )
+        val questions = ChoiceQuizBuilder.build(listOf(physics, chemistry), 20)
+        val physicsQuestions = questions.filter { it.sourceTitle == "Physics basics" }
+        assertTrue(physicsQuestions.isNotEmpty())
+        // The physics note has six definitions, so every distractor should be physics too.
+        physicsQuestions.forEach { question ->
+            assertFalse(question.options.any { it.contains("atom", ignoreCase = true) })
+            assertFalse(question.options.any { it.contains("molecule", ignoreCase = true) })
+            assertFalse(question.options.any { it.contains("catalyst", ignoreCase = true) })
+        }
+    }
 }

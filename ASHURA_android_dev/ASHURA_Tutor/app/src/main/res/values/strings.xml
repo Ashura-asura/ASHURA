@@ -75,6 +75,8 @@
     <string name="tutor_suggestion_start">Start</string>
     <string name="tutor_copy">Copy</string>
     <string name="tutor_copied">Copied</string>
+    <string name="tutor_copy_question">Copy question</string>
+    <string name="tutor_copy_all">Copy conversation</string>
     <string name="tutor_disclaimer">ASHURA can make mistakes. Check important facts.</string>
 
     <!-- Progress -->

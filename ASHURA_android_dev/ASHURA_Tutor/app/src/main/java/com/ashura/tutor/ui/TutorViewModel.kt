@@ -30,6 +30,7 @@ import com.ashura.tutor.domain.ReviewSchedule
 import com.ashura.tutor.domain.TutorEngine
 import com.ashura.tutor.domain.TutorRequest
 import com.ashura.tutor.domain.TutorStyle
+import com.ashura.tutor.domain.TutorTurn
 import com.ashura.tutor.domain.library.PassageRef
 import com.ashura.tutor.domain.library.SectionLabel
 import com.ashura.tutor.domain.runtime.ModelManifest
@@ -669,6 +670,12 @@ class TutorViewModel(
     fun ask() {
         val question = _state.value.question.trim()
         if (question.isEmpty() || _state.value.isBusy) return
+        // The runtime has no session memory, so replay the current conversation window with the
+        // request. New chat and history loading both start from an empty messages list / stored text.
+        val history = _state.value.messages
+            .filter { !it.streaming && it.text.isNotBlank() }
+            .takeLast(10)
+            .map { TutorTurn(fromUser = it.role == ChatRole.USER, text = it.text) }
         val assistantId = "a${System.nanoTime()}"
         _state.update {
             it.copy(
@@ -706,7 +713,8 @@ class TutorViewModel(
                     language = profile.language,
                     style = effectiveStyle,
                     retrievedContext = grounded.snippets,
-                    notesSearched = true
+                    notesSearched = true,
+                    history = history
                 )
                 val streamed = StringBuilder()
                 engine.answerStream(request).collect { event ->

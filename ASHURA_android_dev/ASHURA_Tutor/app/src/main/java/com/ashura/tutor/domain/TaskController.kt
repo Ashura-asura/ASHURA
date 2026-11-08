@@ -1,5 +1,6 @@
 package com.ashura.tutor.domain
 
+import com.ashura.tutor.domain.runtime.AnswerSanitizer
 import com.ashura.tutor.domain.runtime.GenerationLimits
 import com.ashura.tutor.domain.runtime.ModelRuntime
 import com.ashura.tutor.domain.runtime.PromptBuilder
@@ -104,6 +105,7 @@ class TaskController(
                     is TutorStreamEvent.Complete -> emit(
                         TutorStreamEvent.Complete(
                             event.response.copy(
+                                answer = AnswerSanitizer.clean(event.response.answer),
                                 mode = ResponseMode.LOCAL_MODEL,
                                 citations = event.response.citations.ifEmpty { citationsFor(bounded) },
                                 limitation = event.response.limitation
@@ -136,6 +138,7 @@ class TaskController(
             try {
                 val generated = modelRuntime.generate(bounded, limits)
                 return generated.copy(
+                    answer = AnswerSanitizer.clean(generated.answer),
                     mode = ResponseMode.LOCAL_MODEL,
                     citations = generated.citations.ifEmpty { citationsFor(bounded) },
                     limitation = generated.limitation

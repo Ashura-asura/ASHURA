@@ -71,10 +71,10 @@ class StructuredAnswerTest {
         assertFalse(parsed.isStructured)
     }
 
-    @Test fun stepsAreCappedToKeepTheUiBounded() {
+    @Test fun longDerivationsKeepAllTheirStepsUpToTheSafetyCap() {
         val steps = (1..12).joinToString("\n") { "$it. Step $it" }
         val parsed = StructuredAnswer.parse("ANSWER: Done.\nSTEPS:\n$steps")
-        assertEquals(8, parsed.steps.size)
+        assertEquals(12, parsed.steps.size)
         assertEquals("Step 1", parsed.steps.first())
     }
 

@@ -62,3 +62,5 @@ Tests added: `ChoiceQuizBuilderTest`, `TestSessionTest`, `TestModeTest`, `TestHi
 
 Not done: active-test persistence across process death, edit message, semantic search, OCR confidence/region
 selection, programming sandbox, everything hardware-dependent.
+22. Tutor: conversation memory, sanitized answers (no prompt placeholders or hidden reasoning), Unicode maths
+    rendering, question/answer/conversation copy, longer derivations, and same-note test distractors.

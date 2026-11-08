@@ -11,7 +11,7 @@ import org.junit.Test
 class GenerationLimitsTest {
     @Test fun defaultsLeaveRoomForAFullDerivation() {
         val limits = GenerationLimits()
-        assertTrue(limits.maxOutputTokens >= 512)
-        assertTrue(limits.timeoutMillis >= 120_000)
+        assertTrue(limits.maxOutputTokens >= 1024)
+        assertTrue(limits.timeoutMillis >= 180_000)
     }
 }

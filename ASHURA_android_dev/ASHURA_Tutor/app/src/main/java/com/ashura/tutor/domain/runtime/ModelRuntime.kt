@@ -38,21 +38,21 @@ data class RuntimeHealth(val loaded: Boolean, val detail: String?)
 
 data class GenerationLimits(
     /**
-     * Room for a full derivation, not just a one-line answer. The old 384-token cap could stop a
-     * multi-step solution mid-way; 512 still fits a phone-friendly response.
+     * Room for a full derivation, not just a one-line answer. A multi-step solution plus a check
+     * question can exceed 512 tokens; 1024 lets a 0.6B–1.5B phone model finish without truncation.
      */
-    val maxOutputTokens: Int = 512,
+    val maxOutputTokens: Int = 1024,
     /**
      * Total wall-clock budget for one answer. At the ~4-8 tokens/s a 1.5B model reaches on a phone,
-     * 45 s was often too short for a derivation; 120 s covers the slow end while still bounding the
-     * worst case. The UI keeps streaming and never blocks input on it.
+     * a long derivation can take a few minutes. The UI streams the text and the learner can cancel,
+     * so the timeout only bounds a stuck request.
      */
-    val timeoutMillis: Long = 120_000,
-    val maxContextCharacters: Int = 12_000
+    val timeoutMillis: Long = 180_000,
+    val maxContextCharacters: Int = 8_000
 ) {
     init {
         require(maxOutputTokens in 32..2048)
-        require(timeoutMillis in 1_000..120_000)
+        require(timeoutMillis in 1_000..300_000)
         require(maxContextCharacters in 1_000..64_000)
     }
 }

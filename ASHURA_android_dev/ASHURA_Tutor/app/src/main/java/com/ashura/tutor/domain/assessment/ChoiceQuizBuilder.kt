@@ -68,11 +68,28 @@ object ChoiceQuizBuilder {
             group += Candidate(fact, Kind.DEFINITION_OF_TERM)
             group += Candidate(fact, Kind.TERM_FOR_DESCRIPTION)
         }
+        // Distractors are chosen from the same note first. A physics question must not offer a
+        // chemistry definition as an obviously wrong option just because both notes are imported.
+        val termsBySource = facts.groupBy { it.sourceTitle }
+            .mapValues { (_, group) ->
+                group.map { it.definition.term }.filter { it.length in 3..70 }.distinctBy(::normalize)
+            }
+        val definitionsBySource = facts.groupBy { it.sourceTitle }
+            .mapValues { (_, group) ->
+                group.map { it.definition.definition }.filter { it.length >= 15 }.distinctBy(::normalize)
+            }
 
         val out = ArrayList<ChoiceQuestion>(max)
         for (candidate in interleave(perSource.values.toList())) {
             if (out.size >= max) break
-            out += candidate.toQuestion(terms, definitions, out.size) ?: continue
+            val title = candidate.fact.sourceTitle
+            out += candidate.toQuestion(
+                terms = terms,
+                definitions = definitions,
+                localTerms = termsBySource[title].orEmpty(),
+                localDefinitions = definitionsBySource[title].orEmpty(),
+                index = out.size
+            ) ?: continue
         }
         return out
     }
@@ -86,21 +103,26 @@ object ChoiceQuizBuilder {
     private fun Candidate.toQuestion(
         terms: List<String>,
         definitions: List<String>,
+        localTerms: List<String>,
+        localDefinitions: List<String>,
         index: Int
     ): ChoiceQuestion? {
         val definition = fact.definition
         val correct: String
         val prompt: String
-        val pool: List<String>
+        val localPool: List<String>
+        val globalPool: List<String>
         when (kind) {
             Kind.DEFINITION_OF_TERM -> {
                 correct = definition.definition
                 prompt = "Which option best defines \"${definition.term}\"?"
                 val termKey = normalize(definition.term)
-                pool = definitions.filter {
+                fun usable(values: List<String>) = values.filter {
                     val key = normalize(it)
                     key != normalize(correct) && !key.contains(termKey)
                 }
+                localPool = usable(localDefinitions)
+                globalPool = usable(definitions)
             }
             Kind.TERM_FOR_DESCRIPTION -> {
                 // A definition that repeats its own term makes the reverse question trivial.
@@ -108,7 +130,9 @@ object ChoiceQuizBuilder {
                 correct = definition.term
                 prompt = "Which term does this description match?\n\n" +
                     "\"${clip(definition.definition, MAX_DESCRIPTION_CHARS)}\""
-                pool = terms.filter { normalize(it) != normalize(correct) }
+                fun usable(values: List<String>) = values.filter { normalize(it) != normalize(correct) }
+                localPool = usable(localTerms)
+                globalPool = usable(terms)
             }
         }
 
@@ -123,7 +147,8 @@ object ChoiceQuizBuilder {
         val distractors = ArrayList<String>(3)
         val used = HashSet<String>()
         used += correctKey
-        for (raw in pool.shuffled(random)) {
+        val candidates = localPool.shuffled(random) + globalPool.shuffled(random)
+        for (raw in candidates) {
             val option = clip(raw, MAX_OPTION_CHARS)
             val key = normalize(option)
             if (option.length < 3 || key == correctKey || !used.add(key)) continue

@@ -114,7 +114,8 @@ class GroundingTest {
     @Test fun promptAsksForCitationsAndStaysDelimited() {
         val ctx = GroundingPolicy.select(listOf(PassageRef("Bio", 0, "Mitochondria make ATP."))).snippets
         val p = PromptBuilder.build(TutorRequest("Where is ATP made?", retrievedContext = ctx), GenerationLimits())
-        assertTrue(p.contains("cite it as [n]"))
+        assertTrue(p.contains("for example [1] or [2]"))
+        assertTrue(p.contains("Never write a placeholder such as [n] or [Ref]"))
         assertTrue(p.contains("<evidence id=\"1\""))
         assertTrue(p.contains("do not cover it"))
     }

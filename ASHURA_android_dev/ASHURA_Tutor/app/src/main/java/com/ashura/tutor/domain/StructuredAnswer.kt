@@ -42,6 +42,7 @@ data class StructuredAnswer(
             block.lines()
                 .map { it.replace(listPrefix, "").trim() }
                 .filter { it.isNotEmpty() }
-                .take(8)
+                // A full derivation can legitimately need more than eight lines.
+                .take(32)
     }
 }

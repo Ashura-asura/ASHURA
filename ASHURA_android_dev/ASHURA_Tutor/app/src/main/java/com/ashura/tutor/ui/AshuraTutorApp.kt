@@ -58,6 +58,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
@@ -126,6 +127,7 @@ import com.ashura.tutor.domain.LearnerLevel
 import com.ashura.tutor.domain.ConfidenceLabel
 import com.ashura.tutor.domain.ResponseMode
 import com.ashura.tutor.domain.StructuredAnswer
+import com.ashura.tutor.domain.text.LatexLite
 import com.ashura.tutor.domain.TutorStyle
 import com.ashura.tutor.domain.assessment.TestMode
 import com.ashura.tutor.domain.export.DiagnosticsReport
@@ -565,6 +567,14 @@ private fun TutorScreen(
     onOpenConversation: (String) -> Unit, onDeleteConversation: (String) -> Unit
 ) {
     var showHistory by remember { mutableStateOf(false) }
+    var copiedAll by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    LaunchedEffect(copiedAll) {
+        if (copiedAll) {
+            delay(1_500)
+            copiedAll = false
+        }
+    }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     // Follow the stream only while the learner is already at the newest message, so reading earlier
@@ -627,9 +637,20 @@ private fun TutorScreen(
 
     Column(Modifier.fillMaxSize().imePadding()) {
         ChatTopBar(
-            modelLoaded = modelLoaded, style = style,
+            modelLoaded = modelLoaded, style = style, copiedAll = copiedAll,
             onToggleStyle = onToggleStyle, onNewChat = onNewChat,
-            onHistory = { showHistory = true }
+            onHistory = { showHistory = true },
+            onCopyAll = if (messages.isEmpty()) null else {
+                {
+                    val transcript = messages.joinToString("\n\n") { m ->
+                        val who = if (m.role == ChatRole.USER) "You" else "ASHURA"
+                        "$who: ${m.text}"
+                    }
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText("ASHURA chat", transcript))
+                    copiedAll = true
+                }
+            }
         )
         if (!modelLoaded) {
             // Spec §3.3 requires an explicit model-unavailable state, not just a grey dot.
@@ -738,8 +759,9 @@ private fun TutorScreen(
 /** Slim, ChatGPT-style header: assistant identity, live model status, style toggle and New chat. */
 @Composable
 private fun ChatTopBar(
-    modelLoaded: Boolean, style: TutorStyle,
-    onToggleStyle: () -> Unit, onNewChat: () -> Unit, onHistory: () -> Unit
+    modelLoaded: Boolean, style: TutorStyle, copiedAll: Boolean = false,
+    onToggleStyle: () -> Unit, onNewChat: () -> Unit, onHistory: () -> Unit,
+    onCopyAll: (() -> Unit)? = null
 ) {
     Row(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
@@ -786,6 +808,16 @@ private fun ChatTopBar(
                 ),
                 style = MaterialTheme.typography.labelMedium
             )
+        }
+        onCopyAll?.let { copyAll ->
+            IconButton(onClick = copyAll) {
+                Icon(
+                    if (copiedAll) Icons.Default.Check else Icons.Default.ContentCopy,
+                    contentDescription = stringResource(
+                        if (copiedAll) R.string.tutor_copied else R.string.tutor_copy_all
+                    )
+                )
+            }
         }
         IconButton(onClick = onHistory) {
             Icon(Icons.Default.History, contentDescription = stringResource(R.string.tutor_history))
@@ -963,19 +995,22 @@ private fun ChatBubble(
     onRegenerate: (() -> Unit)? = null
 ) {
     if (message.role == ChatRole.USER) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
             Surface(
                 shape = RoundedCornerShape(20.dp, 20.dp, 6.dp, 20.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier.widthIn(max = 340.dp)
             ) {
-                Text(
-                    message.text,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 11.dp)
-                )
+                SelectionContainer {
+                    Text(
+                        message.text,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 11.dp)
+                    )
+                }
             }
+            CopyAnswerButton(message.text, R.string.tutor_copy_question)
         }
     } else {
         AssistantMessage(message, phase, onRegenerate)
@@ -1087,7 +1122,7 @@ private fun AssistantMessage(
 }
 
 @Composable
-private fun CopyAnswerButton(text: String) {
+private fun CopyAnswerButton(text: String, @StringRes labelRes: Int = R.string.tutor_copy) {
     val context = LocalContext.current
     var copied by remember { mutableStateOf(false) }
     LaunchedEffect(copied) {
@@ -1110,7 +1145,7 @@ private fun CopyAnswerButton(text: String) {
             Spacer(Modifier.size(4.dp))
         }
         Text(
-            stringResource(if (copied) R.string.tutor_copied else R.string.tutor_copy),
+            stringResource(if (copied) R.string.tutor_copied else labelRes),
             style = MaterialTheme.typography.labelMedium
         )
     }
@@ -1135,9 +1170,13 @@ private fun AssistantContent(text: String, streaming: Boolean = false) {
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
-                structured.steps.forEach { step ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("•", style = MaterialTheme.typography.bodyLarge)
+                structured.steps.forEachIndexed { index, step ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "${index + 1}.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                         FormattedText(step, Modifier.weight(1f))
                     }
                 }
@@ -1156,15 +1195,19 @@ private fun AssistantContent(text: String, streaming: Boolean = false) {
     }
 }
 
-/** Minimal Markdown-lite rendering: **bold** and `inline code`, without pulling in a parser library. */
+/**
+ * Minimal Markdown-lite rendering: **bold**, `inline code`, and LaTeX converted to Unicode by
+ * [LatexLite]. No parser or maths engine dependency is added (offline-first, §18.4).
+ */
 @Composable
 private fun FormattedText(text: String, modifier: Modifier = Modifier, showCaret: Boolean = false) {
     val annotated = remember(text, showCaret) {
+        val body = LatexLite.render(text)
         val pattern = Regex("\\*\\*(.+?)\\*\\*|`([^`]+)`")
         buildAnnotatedString {
             var last = 0
-            for (match in pattern.findAll(text)) {
-                if (match.range.first > last) append(text.substring(last, match.range.first))
+            for (match in pattern.findAll(body)) {
+                if (match.range.first > last) append(body.substring(last, match.range.first))
                 val bold = match.groupValues[1]
                 val code = match.groupValues[2]
                 if (bold.isNotEmpty()) {
@@ -1174,7 +1217,7 @@ private fun FormattedText(text: String, modifier: Modifier = Modifier, showCaret
                 }
                 last = match.range.last + 1
             }
-            if (last < text.length) append(text.substring(last))
+            if (last < body.length) append(body.substring(last))
             if (showCaret) append("▍")
         }
     }

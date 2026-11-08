@@ -96,6 +96,36 @@ class PromptBuilderPartsTest {
         assertTrue(!parts.systemInstruction.contains("Explain clearly and step by step"))
     }
 
+    @Test fun previousTurnsAreReplayedSoFollowUpsKeepContext() {
+        val request = TutorRequest(
+            question = "Why does the damping term change the frequency?",
+            history = listOf(
+                TutorTurn(fromUser = true, text = "Derive damped oscillation."),
+                TutorTurn(fromUser = false, text = "ANSWER: The equation is x″ + 2ζω₀x′ + ω₀²x = 0.")
+            )
+        )
+        val parts = PromptBuilder.buildParts(request, limits)
+        assertTrue(parts.userMessage.contains("Learner: Derive damped oscillation."))
+        assertTrue(parts.userMessage.contains("Tutor: ANSWER: The equation"))
+        assertTrue(parts.userMessage.indexOf("Earlier in this conversation") <
+            parts.userMessage.indexOf("Why does the damping term"))
+    }
+
+    @Test fun historyIsBoundedAndKeepsTheNewestTurns() {
+        val history = (1..40).map { TutorTurn(fromUser = it % 2 == 1, text = "turn $it") }
+        val kept = PromptBuilder.boundedHistory(history, 60)
+        assertTrue(kept.isNotEmpty())
+        assertTrue(kept.size < history.size)
+        assertEquals("turn 40", kept.last().text)
+    }
+
+    @Test fun systemInstructionForbidsLatexAndVisibleReasoning() {
+        val parts = PromptBuilder.buildParts(TutorRequest("Explain damping."), limits)
+        assertTrue(parts.systemInstruction.contains("plain Unicode"))
+        assertTrue(parts.systemInstruction.contains("Do not use LaTeX"))
+        assertTrue(parts.systemInstruction.contains("Do not reveal private reasoning"))
+    }
+
     @Test fun unknownLevelAndLanguageAreHandledSafely() {
         val parts = PromptBuilder.buildParts(
             TutorRequest("Help me study.", learnerLevel = LearnerLevel.UNKNOWN, language = "xx"),

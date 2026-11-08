@@ -696,3 +696,36 @@ Manual device check:
 1. Open a topic lesson and confirm Practice appears in the top bar.
 2. Tap it and confirm the practice screen opens with the first question.
 3. Open a lesson with no practice questions and confirm the action is absent.
+
+---
+
+# Checkpoint 22 — Tutor memory, clean answers and same-subject test options (v0.5.16)
+
+The pasted answers exposed four separate problems: the model repeated its own prompt placeholders
+(`[n]`, `[Ref]`, “using its id”, an invented `EVIDENCE:` block), it had no memory of earlier turns,
+LaTeX was shown as raw `$...$` commands, and test distractors could come from a different subject.
+
+Changed:
+- **Conversation memory:** the current conversation window (up to ten previous turns) is replayed with each
+  request, so “why?”, “continue” and follow-ups keep their context. New chat still starts empty.
+- **Cleaner answers:** the prompt no longer contains placeholder instructions. `AnswerSanitizer` strips
+  leaked placeholders, fake evidence headings, “trusted source” wording, chat-template tokens and
+  ` thinking...</think>` or “Thinking Process:” blocks. Real `[1]`/`[2]` citations are kept.
+- **Longer derivations:** output budget raised to 1024 tokens and timeout to 180 s; the prompt asks for every
+  algebra step, and the UI keeps up to 32 numbered steps.
+- **Maths:** a dependency-free `LatexLite` renderer converts fractions, roots, Greek letters, operators,
+  accents, superscripts and subscripts to Unicode; the prompt asks for Unicode maths instead of LaTeX.
+- **Copy:** every question now has a copy action, and the chat bar copies the whole conversation
+  (“You:” / “ASHURA:”).
+- **Tests:** distractors are chosen from the same note first, then from the wider library, so a physics
+  question no longer offers chemistry terms as obviously wrong options.
+
+Verification: **232 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. All UI,
+device timing, real model output, memory quality and maths rendering on a phone remain **NOT VERIFIED**.
+
+Manual device check:
+1. Ask a question, then ask “why?” or “continue” and confirm the follow-up refers to the earlier answer.
+2. Ask for a derivation and confirm there is no visible thinking text, `[n]`, `[Ref]` or `EVIDENCE:` block.
+3. Confirm `$...$`, `\frac`, `\dot`/`\ddot` and `\omega` render as readable symbols.
+4. Copy a question, an answer and the whole conversation from their respective actions.
+5. Start a library-wide test and confirm a question from one note offers options from that same note.
