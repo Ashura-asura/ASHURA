@@ -593,6 +593,22 @@ class TutorViewModel(
         }
     }
 
+    /** Writes the already-built diagnostics JSON (counters only) to a user-chosen file. */
+    fun exportDiagnostics(uri: Uri, json: String) {
+        _settingsMessage.value = "Exporting diagnostics…"
+        viewModelScope.launch {
+            try {
+                val error = documentReader.writeText(uri, json)
+                _settingsMessage.value = error
+                    ?: "Diagnostics saved. The file contains runtime counters only, not your notes or questions."
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _settingsMessage.value = "Diagnostics export failed: ${e.message ?: "unknown error"}"
+            }
+        }
+    }
+
     fun deleteLibraryItem(id: String) {
         viewModelScope.launch {
             try {

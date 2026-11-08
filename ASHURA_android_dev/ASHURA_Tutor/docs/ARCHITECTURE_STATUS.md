@@ -13,7 +13,7 @@ Legend:
 - **Not implemented** — do not advertise as available.
 
 Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
-**212 JVM tests, 0 failures**. The same tasks pass in GitHub Actions (`android-ci`, JDK 21, run
+**215 JVM tests, 0 failures**. The same tasks pass in GitHub Actions (`android-ci`, JDK 21, run
 42476055931) and a deliberately failing test was observed to fail that job (run 42476341546, branch
 deleted afterwards). No physical Android device or emulator has run this build, so every
 hardware-dependent claim below is device-pending, not proven.
@@ -76,6 +76,7 @@ hardware-dependent claim below is device-pending, not proven.
 | PDF/DOCX/XLSX/PPTX/CSV import through the SAF picker (§9.1) | Written, device-pending | Vendor file-provider quirks and real-world files |
 | Study-pack import of all 200 assets with checksum verification (§8, Phase 8) | Written, device-pending | Import time and storage use on the phone |
 | Model download/import with pinned SHA-256 (§6, §17) | Written, device-pending | Both pinned artifacts have not been re-downloaded and re-hashed in this environment |
+| Shareable diagnostics export (§16.5, P1.2): runtime counters, device model/API/ABIs, RAM tier, low-RAM flag, total RAM, free storage; explicitly no learner text | Unit-tested (JSON shape) | SAF write and the real values are device-pending; p50/p95, battery drain and thermal status are not captured |
 
 ## Partial — real subset, spec asks for more
 
@@ -114,6 +115,7 @@ hardware-dependent claim below is device-pending, not proven.
 | Optional SFT / training pipeline (§17.2–§17.5) | None. Weights are never trained or bundled. |
 | Multi-module `core/feature/engine` layout (§20) | Not done. The checkout is still one `app` module; the spec's layout is a target, not current fact. |
 | Device/release benchmarks and release signing (§16.5, §21.5, Phase 12) | Debug builds only; release signing needs external `keystore.properties` or `ASHURA_KEYSTORE_*`; no device benchmark has been recorded. |
+| Sustained benchmark harness (P1.2) | No p50/p95 over 20 fixed questions, no battery-drain-per-10-minutes counter and no thermal-status capture. The diagnostics export records only the counters the runtime already measures. |
 
 ## Known correctness fixes in this pass
 

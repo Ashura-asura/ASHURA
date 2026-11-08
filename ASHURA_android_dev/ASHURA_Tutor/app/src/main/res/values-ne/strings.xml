@@ -71,6 +71,8 @@
     <string name="settings_title">सेटिङ</string>
     <string name="settings_intro">कुनै खाता, विश्लेषण, विज्ञापन, API कुञ्जी वा अनिवार्य क्लाउड सेवा समावेश छैन। मोडेल स्थापना भएपछि शिक्षक यही उपकरणमा चल्छ।</string>
     <string name="settings_export">मेरो डाटा निर्यात गर्नुहोस् (JSON)</string>
+    <string name="settings_export_diagnostics">निदान निर्यात गर्नुहोस्</string>
+    <string name="settings_export_diagnostics_hint">माथिका रनटाइम गणना र उपकरण, मेमोरी तथा भण्डारण जानकारी सुरक्षित गर्छ। नोट, प्रश्न, उत्तर वा फाइल नाम समावेश हुँदैनन्।</string>
     <string name="settings_delete_all">मेरो सबै डाटा मेटाउनुहोस्</string>
     <string name="settings_delete_title">सबै डाटा मेटाउने?</string>
     <string name="settings_delete_body">यसले तपाईंका कुराकानी, पुस्तकालय नोट, प्रगति र अभ्यास प्रयासहरू यो उपकरणबाट स्थायी रूपमा मेटाउनेछ।</string>

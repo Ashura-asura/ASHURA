@@ -1,8 +1,10 @@
 package com.ashura.tutor.ui
 
+import android.app.ActivityManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
 import android.text.format.Formatter
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -118,6 +120,7 @@ import com.ashura.tutor.domain.ResponseMode
 import com.ashura.tutor.domain.StructuredAnswer
 import com.ashura.tutor.domain.TutorStyle
 import com.ashura.tutor.domain.assessment.TestMode
+import com.ashura.tutor.domain.export.DiagnosticsReport
 import com.ashura.tutor.domain.assessment.TestResultChange
 import com.ashura.tutor.domain.assessment.formatClock
 import com.ashura.tutor.domain.runtime.ModelCatalog
@@ -266,6 +269,7 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                     onDeleteModel = viewModel::deleteModel,
                     onCancelModel = viewModel::cancelModelDownload,
                     onExport = viewModel::exportData,
+                    onExportDiagnostics = viewModel::exportDiagnostics,
                     onDeleteAll = { viewModel.deleteAllData { selected = Destination.HOME.name } },
                     onClearChat = viewModel::clearChatHistory,
                     profile = profile,
@@ -1098,6 +1102,7 @@ private fun SettingsScreen(
     onDeleteModel: () -> Unit,
     onCancelModel: () -> Unit,
     onExport: (android.net.Uri) -> Unit,
+    onExportDiagnostics: (android.net.Uri, String) -> Unit,
     onDeleteAll: () -> Unit,
     onClearChat: () -> Unit,
     profile: LearnerProfile,
@@ -1110,8 +1115,14 @@ private fun SettingsScreen(
     var confirmDeleteAll by remember { mutableStateOf(false) }
     var confirmClearChat by remember { mutableStateOf(false) }
     var confirmDeleteModel by remember { mutableStateOf(false) }
+    var pendingDiagnostics by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri -> uri?.let(onExport) }
+    val diagnosticsExporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        val text = pendingDiagnostics
+        if (uri != null && text != null) onExportDiagnostics(uri, text)
+        pendingDiagnostics = null
+    }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(onImportModel) }
 
     val busy = modelState is ModelState.Downloading || modelState is ModelState.Verifying ||
@@ -1120,6 +1131,34 @@ private fun SettingsScreen(
     val failed = modelState as? ModelState.Failed
     val recommended = catalog.filter { it.supports(deviceTier) }.maxByOrNull { it.minimumTier.rank }
     val live = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+
+    fun diagnosticsJson(): String {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+        val memory = ActivityManager.MemoryInfo()
+        activityManager?.getMemoryInfo(memory)
+        val version = runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull() ?: "unknown"
+        return DiagnosticsReport(
+            generatedAt = System.currentTimeMillis(),
+            appVersion = version,
+            androidVersion = Build.VERSION.RELEASE ?: "unknown",
+            deviceModel = Build.MODEL ?: "unknown",
+            deviceManufacturer = Build.MANUFACTURER ?: "unknown",
+            supportedAbis = Build.SUPPORTED_ABIS?.joinToString(",") ?: "unknown",
+            ramTier = deviceTier.name,
+            lowRamDevice = activityManager?.isLowRamDevice ?: false,
+            totalRamMb = memory.totalMem / (1024L * 1024L),
+            freeStorageBytes = freeStorageBytes,
+            backend = metrics?.backend,
+            loadMillis = metrics?.loadMillis,
+            firstTokenMillis = metrics?.firstTokenMillis,
+            generationMillis = metrics?.generationMillis,
+            estimatedTokens = metrics?.estimatedTokens,
+            tokensPerSecond = metrics?.tokensPerSecond,
+            heapUsedMb = metrics?.heapUsedMb
+        ).toJson()
+    }
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
@@ -1315,6 +1354,18 @@ private fun SettingsScreen(
                 R.string.settings_diag_storage,
                 Formatter.formatShortFileSize(context, freeStorageBytes)
             ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        OutlinedButton(
+            onClick = {
+                pendingDiagnostics = diagnosticsJson()
+                diagnosticsExporter.launch("ashura-diagnostics.json")
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(stringResource(R.string.settings_export_diagnostics)) }
+        Text(
+            stringResource(R.string.settings_export_diagnostics_hint),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

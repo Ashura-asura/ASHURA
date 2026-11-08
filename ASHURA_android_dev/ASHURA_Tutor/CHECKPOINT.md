@@ -481,3 +481,38 @@ it, so no Android job had ever run. It now lives at the repository root and uses
 - `app/lint-baseline.xml` records the current 53 warnings. `:app:lintDebug` now says “no new issues (53
   warnings filtered by baseline)”. New issues are still reported and any lint error fails the build
   (`abortOnError = true`); P0.3 does not require new warnings to fail.
+
+---
+
+# Checkpoint 14 — Shareable diagnostics export (P1.2, partial)
+
+P1.2 asks for a Settings action that writes measured runtime counters to a file the user can share.
+The export is now implemented; the measurements themselves still need the user's phone and model.
+
+Added:
+- `domain/export/DiagnosticsReport.kt`: a dependency-free report containing the already-measured runtime
+  counters (backend, load ms, first-token ms, generation ms, estimated tokens, tokens/s, heap MB) plus
+  device model/manufacturer, Android version, supported ABIs, RAM tier, low-RAM flag, total RAM, free
+  storage and a timestamp.
+- Settings → **Export diagnostics** writes `ashura-diagnostics.json` through the Storage Access Framework.
+  The file is built as JSON by the existing `Json` writer.
+- The report deliberately contains **no learner text**: no questions, answers, note titles, prompts,
+  file names or model output. A `privacy` line states this inside the file, and a test asserts the exact
+  key set so a later field cannot silently add personal data.
+
+Verification: **215 JVM tests, 0 failures** (`DiagnosticsReportTest` covers valid JSON, quoting, the
+no-model-yet case and the exact allowed keys). `:app:lintDebug` and `:app:assembleDebug` pass.
+Status labels:
+- JSON shape, counter selection and privacy key set: **unit-tested**.
+- The Settings button, SAF save dialog and real values: **NOT VERIFIED** — no device or emulator here.
+
+Still missing from P1.2: p50/p95 latency over 20 fixed questions, battery drain per 10 minutes,
+thermal throttling behaviour and peak-RAM sampling over a session. The export only reports counters the
+runtime already records; it does not claim to measure those missing values.
+
+Manual device check:
+1. Open Settings with no model loaded; tap Export diagnostics; save the file; confirm it contains the
+   device fields and no runtime keys.
+2. Load a model, ask one question, export again; confirm backend/timing/tokens-per-second values appear.
+3. Open the file in a text editor and confirm no note title, question or answer text is present.
+4. Optionally share the file when reporting performance.

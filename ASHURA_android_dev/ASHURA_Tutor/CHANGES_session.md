@@ -37,6 +37,9 @@ Integrated into the main tree and verified here with `./gradlew clean :app:testD
     stay.
 12. Database v5: `test_results` table with an additive 4→5 migration and a v4→v5 upgrade test; test results
     are included in JSON export and wiped by delete-all-data.
+13. Diagnostics export (P1.2, partial): Settings can save `ashura-diagnostics.json` containing measured
+    runtime counters and device/RAM/storage metadata. It contains no learner text and has an exact-key test.
+    p50/p95, battery drain, thermal status and peak-RAM sampling still need a real device run.
 
 Tests added: `ChoiceQuizBuilderTest`, `TestSessionTest`, `TestModeTest`, `TestHistoryTest`,
 `DataControlsTest`, plus the v4→v5 migration case. `ImportStatusTest`, `MistakeExplainerTest`,

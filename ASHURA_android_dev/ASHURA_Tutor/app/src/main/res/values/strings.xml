@@ -71,6 +71,8 @@
     <string name="settings_title">Settings</string>
     <string name="settings_intro">No account, analytics, advertising, API key, or mandatory cloud service is included. The tutor runs on this device once a model is installed.</string>
     <string name="settings_export">Export my data (JSON)</string>
+    <string name="settings_export_diagnostics">Export diagnostics</string>
+    <string name="settings_export_diagnostics_hint">Saves the runtime counters above plus device, memory and storage information. No notes, questions, answers or file names are included.</string>
     <string name="settings_delete_all">Delete all my data</string>
     <string name="settings_delete_title">Delete all data?</string>
     <string name="settings_delete_body">This permanently erases your conversations, library notes, progress and practice attempts from this device.</string>
