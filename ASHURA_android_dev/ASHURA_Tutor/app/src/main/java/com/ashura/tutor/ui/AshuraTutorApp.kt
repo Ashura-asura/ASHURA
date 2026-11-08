@@ -174,7 +174,8 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
     BackHandler(enabled = practice.question == null && lesson != null && selected == Destination.TUTOR.name) { viewModel.clearLesson() }
 
     var showSplash by rememberSaveable { mutableStateOf(true) }
-    LaunchedEffect(Unit) { delay(1_800); showSplash = false }
+    // Keep branding brief; the first screen should answer “what now?” quickly (spec §3.2).
+    LaunchedEffect(Unit) { delay(900); showSplash = false }
 
     Box(Modifier.fillMaxSize()) {
     Scaffold(
@@ -316,13 +317,13 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
         visible = showSplash,
         enter = fadeIn(tween(250)),
         exit = fadeOut(tween(450))
-    ) { BrandSplash() }
+    ) { BrandSplash(onDismiss = { showSplash = false }) }
     }
 }
 
 @Composable
-private fun BrandSplash() {
-    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.primary) {
+private fun BrandSplash(onDismiss: () -> Unit) {
+    Surface(onClick = onDismiss, modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.primary) {
         Column(
             Modifier.fillMaxSize().padding(32.dp),
             verticalArrangement = Arrangement.Center,
@@ -348,6 +349,12 @@ private fun BrandSplash() {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimary,
                 textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(24.dp))
+            Text(
+                stringResource(R.string.splash_tap),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.72f)
             )
         }
     }

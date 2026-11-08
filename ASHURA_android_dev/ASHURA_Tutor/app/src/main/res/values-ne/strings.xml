@@ -232,6 +232,7 @@
     <string name="study_sets_notice">नोटहरू %1$s इजाजतपत्र अन्तर्गत विकिपिडियाका संक्षिप्त अंश हुन्। स्रोत लिङ्क र चेकसम प्याक म्यानिफेस्टमा छन्। चल्ने बेला केही डाउनलोड हुँदैन।</string>
 
     <string name="splash_credit">बिशाल भण्डारी, नेपालद्वारा निर्मित र सञ्चालित</string>
+    <string name="splash_tap">जारी राख्न ट्याप गर्नुहोस्</string>
     <string name="action_delete">मेटाउनुहोस्</string>
     <string name="action_cancel">रद्द गर्नुहोस्</string>
     <string name="action_save">सुरक्षित गर्नुहोस्</string>

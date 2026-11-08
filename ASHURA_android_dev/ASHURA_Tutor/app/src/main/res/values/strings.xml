@@ -238,6 +238,7 @@
 
     <!-- Shared actions -->
     <string name="splash_credit">Powered and built by Bishal Bhandari from Nepal</string>
+    <string name="splash_tap">Tap to continue</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_save">Save</string>

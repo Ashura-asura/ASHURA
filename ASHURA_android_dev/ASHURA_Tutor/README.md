@@ -2,7 +2,7 @@
 
 Offline-first, Android-first adaptive learning platform.
 
-**Status:** v0.5.13 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
+**Status:** v0.5.14 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
 chat history with reopen/delete, regenerate, timed four-option tests (Quick 20 / Medium 35 / Long 50) with
 saved marks, time taken and score change, on-device OCR with editable text, honest confidence labels, a hint
 ladder, explain-my-mistake, Library import status with re-index, clear added/not-added study-set states, and

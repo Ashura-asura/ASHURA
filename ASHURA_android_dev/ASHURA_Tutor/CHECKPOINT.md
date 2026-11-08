@@ -657,3 +657,23 @@ Manual device check:
 1. Practise a topic until it is due (or use an existing due topic), open Progress.
 2. Tap Review and confirm Tutor opens with that topic started, then return Back to Progress.
 3. Confirm a non-due topic has no Review button.
+
+---
+
+# Checkpoint 20 — Faster, skippable launch (v0.5.14, §3.2)
+
+The brand screen held every cold start for 1.8 s even though the Home screen was ready underneath. Spec
+§3.2 asks the app to load quickly and make the next action obvious.
+
+Changed:
+- The brand screen now dismisses after 900 ms instead of 1,800 ms.
+- Tapping anywhere on it dismisses it immediately; a small “Tap to continue” hint says so.
+- Rotating or returning does not replay it (state is saved), as before.
+
+Verification: **215 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. Launch timing is
+device-dependent and remains **NOT VERIFIED**.
+
+Manual device check:
+1. Cold-start the app; confirm Home is reachable in about a second.
+2. Kill and cold-start again; tap the brand screen immediately and confirm it closes at once.
+3. Rotate on Home and confirm the brand screen does not reappear.
