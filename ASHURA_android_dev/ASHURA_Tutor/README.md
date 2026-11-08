@@ -116,8 +116,9 @@ sdkmanager --licenses
 ```
 
 The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. `dist/` is not produced by
-Gradle; it is a local folder for named copies (for example
-`dist/ASHURA_Tutor-v0.5.15-dev-debug.apk`) and `dist/*.apk` is git-ignored, so APKs are never committed.
+Gradle; it is a local folder for named copies using the pattern
+`ashura-tutor-<version>-debug.apk` (for example `dist/ashura-tutor-0.5.15-debug.apk`) and
+`dist/*.apk` is git-ignored, so APKs are never committed.
 
 The wrapper download and initial dependency resolution require network access. Android SDK
 installation and accepting its licenses are separate machine setup steps.
