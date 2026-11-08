@@ -59,6 +59,9 @@
     <string name="tutor_chat_title">ASHURA शिक्षक</string>
     <string name="tutor_local_ready">स्थानीय मोडेल तयार · जवाफ यही उपकरणमा रहन्छ</string>
     <string name="tutor_offline_mode">अफलाइन अध्ययन मोड · मोडेल लोड छैन</string>
+    <string name="tutor_no_model_title">अझै कुनै मोडेल लोड भएको छैन</string>
+    <string name="tutor_no_model_body">जवाफहरू अफलाइन अध्ययन मोडमा आउँछन्: तपाईंका नोट, गणना र अन्तर्निहित व्याख्या। पूर्ण शिक्षणका लागि स्थानीय मोडेल थप्नुहोस्।</string>
+    <string name="tutor_open_settings">सेट अप गर्नुहोस्</string>
     <string name="tutor_welcome_title">तपाईं के सिक्न चाहनुहुन्छ?</string>
     <string name="tutor_welcome_body_local">कुनै पनि विषय वा आयातित नोटबारे सोध्नुहोस्। म चरणबद्ध व्याख्या गर्छु र स्रोत देखाउँछु।</string>
     <string name="tutor_welcome_body_offline">अफलाइन अध्ययन विधि र ठ्याक्कै गणित काम गर्न सक्छु। पूरा विषय व्याख्याका लागि सेटिङमा स्थानीय मोडेल लोड गर्नुहोस्।</string>

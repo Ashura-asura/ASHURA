@@ -611,3 +611,28 @@ Manual device check:
 3. Open Progress after some practice: confirm the three counts, the qualitative bands, and that no raw
    mastery percentage is shown.
 4. TalkBack: confirm the progress bar reads its band, not an unexplained percentage.
+
+---
+
+# Checkpoint 18 — Model-unavailable banner and reduced motion (v0.5.11, §3.3/§3.6)
+
+Spec §3.3 requires a visible model-unavailable state; the header only changed a small dot and a line of
+text, which is easy to miss. Spec §3.6 asks for reduced motion; the typing indicator looped forever.
+
+Changed:
+- With no model loaded, Tutor now shows a banner under the header: “No model is loaded yet”, a short
+  explanation that offline study mode uses notes, calculations and built-in explanations, and a **Set up**
+  action that opens Settings. The banner disappears as soon as a model is ready.
+- The typing dots read `Settings.Global.ANIMATOR_DURATION_SCALE`. When the learner has turned animations
+  off, the dots render statically; the phase text is unchanged. A content observer updates the state if
+  the setting changes while the app is open.
+
+Verification: **215 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. Both behaviours
+are Compose-only and remain **NOT VERIFIED** on a device.
+
+Manual device check:
+1. Remove/unload the model, open Tutor: confirm the banner and that Set up opens Settings.
+2. Load a model, return to Tutor: confirm the banner is gone.
+3. Turn off animations in Developer options, start an answer: confirm the dots are static but the phase
+   text still changes.
+4. Turn animations back on while Tutor is open: confirm the dots animate again without restarting the app.

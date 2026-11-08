@@ -49,6 +49,8 @@ Integrated into the main tree and verified here with `./gradlew clean :app:testD
 16. Tutor phases (§3.3): “Searching your notes…” then “Writing the answer…” in the streaming bubble, cleared
     on success/error/cancel. Progress (§3.5): practised/due/tests counts and qualitative mastery bands instead
     of mastery/evidence percentages. Device layout and TalkBack remain unverified.
+17. Model-unavailable banner in Tutor with a Set up action (§3.3); typing dots render statically when system
+    animations are off (§3.6). Device behaviour remains unverified.
 
 Tests added: `ChoiceQuizBuilderTest`, `TestSessionTest`, `TestModeTest`, `TestHistoryTest`,
 `DataControlsTest`, plus the v4→v5 migration case. `ImportStatusTest`, `MistakeExplainerTest`,

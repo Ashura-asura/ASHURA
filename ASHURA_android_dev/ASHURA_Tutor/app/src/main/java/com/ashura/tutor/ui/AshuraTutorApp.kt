@@ -4,7 +4,11 @@ import android.app.ActivityManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.database.ContentObserver
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import android.text.format.Formatter
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -81,10 +85,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -253,6 +259,7 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                         onCancel = viewModel::cancelAsk, onStartTopic = viewModel::startTopic,
                         onNewChat = viewModel::newChat,
                         onRegenerate = viewModel::regenerate,
+                        onOpenSettings = { selected = Destination.SETTINGS.name },
                         conversations = viewModel.conversations.collectAsState().value,
                         onOpenConversation = viewModel::openConversation,
                         onDeleteConversation = viewModel::deleteConversation
@@ -530,6 +537,7 @@ private fun TutorScreen(
     onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit,
     onStartTopic: (String) -> Unit, onNewChat: () -> Unit,
     onRegenerate: () -> Unit,
+    onOpenSettings: () -> Unit,
     conversations: List<ConversationEntity>,
     onOpenConversation: (String) -> Unit, onDeleteConversation: (String) -> Unit
 ) {
@@ -600,6 +608,36 @@ private fun TutorScreen(
             onToggleStyle = onToggleStyle, onNewChat = onNewChat,
             onHistory = { showHistory = true }
         )
+        if (!modelLoaded) {
+            // Spec §3.3 requires an explicit model-unavailable state, not just a grey dot.
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                Row(
+                    Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Settings,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.tutor_no_model_title), style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            stringResource(R.string.tutor_no_model_body),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.tutor_open_settings)) }
+                }
+            }
+        }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (messages.isEmpty()) {
                 WelcomeChat(
@@ -1120,26 +1158,58 @@ private fun FormattedText(text: String, modifier: Modifier = Modifier, showCaret
     Text(annotated, style = MaterialTheme.typography.bodyLarge, modifier = modifier)
 }
 
+/** True when the user has turned animations off in system settings (spec §3.6 reduced motion). */
+@Composable
+private fun rememberReduceMotion(): State<Boolean> {
+    val context = LocalContext.current
+    return produceState(initialValue = readReduceMotion(context)) {
+        val uri = Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE)
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                value = readReduceMotion(context)
+            }
+        }
+        context.contentResolver.registerContentObserver(uri, false, observer)
+        awaitDispose { context.contentResolver.unregisterContentObserver(observer) }
+    }
+}
+
+private fun readReduceMotion(context: Context): Boolean = Settings.Global.getFloat(
+    context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f
+) == 0f
+
 @Composable
 private fun TypingIndicator(phase: TutorPhase? = null) {
-    val transition = rememberInfiniteTransition(label = "typing")
+    val reduceMotion by rememberReduceMotion()
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        repeat(3) { index ->
-            val alpha by transition.animateFloat(
-                initialValue = 0.2f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 620, delayMillis = index * 140, easing = LinearEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "dot$index"
-            )
-            Box(
-                Modifier.size(7.dp).background(
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
-                    CircleShape
+        if (reduceMotion) {
+            repeat(3) {
+                Box(
+                    Modifier.size(7.dp).background(
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        CircleShape
+                    )
                 )
-            )
+            }
+        } else {
+            val transition = rememberInfiniteTransition(label = "typing")
+            repeat(3) { index ->
+                val alpha by transition.animateFloat(
+                    initialValue = 0.2f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(durationMillis = 620, delayMillis = index * 140, easing = LinearEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "dot$index"
+                )
+                Box(
+                    Modifier.size(7.dp).background(
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
+                        CircleShape
+                    )
+                )
+            }
         }
         Spacer(Modifier.size(8.dp))
         Text(

@@ -57,6 +57,9 @@
     <string name="tutor_chat_title">ASHURA Tutor</string>
     <string name="tutor_local_ready">Local model ready · answers stay on this device</string>
     <string name="tutor_offline_mode">Offline study mode · no model loaded</string>
+    <string name="tutor_no_model_title">No model is loaded yet</string>
+    <string name="tutor_no_model_body">Answers use offline study mode: your notes, calculations and built-in explanations. Add a local model for full tutoring.</string>
+    <string name="tutor_open_settings">Set up</string>
     <string name="tutor_welcome_title">What do you want to learn?</string>
     <string name="tutor_welcome_body_local">Ask any subject, or ask about your imported notes. I will explain step by step and cite your sources.</string>
     <string name="tutor_welcome_body_offline">I can work through study methods and exact arithmetic offline. Load a local model in Settings for full subject explanations.</string>
