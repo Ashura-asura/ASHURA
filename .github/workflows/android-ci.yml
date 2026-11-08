@@ -28,7 +28,14 @@ jobs:
       - name: Set up Gradle with cache
         uses: gradle/actions/setup-gradle@v4
 
-      - uses: android-actions/setup-android@v3
+      # The ubuntu-latest image ships the Android SDK (ANDROID_HOME) and accepts its licences.
+      # android-actions/setup-android is intentionally not used: v3 still runs
+      # "sdkmanager tools", a package that has been removed from the SDK repository.
+      - name: Show Android SDK location
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-unset}"
+          ls "${ANDROID_HOME:-/usr/local/lib/android/sdk}/platforms" || true
 
       - name: Unit tests, lint and debug APK
         run: chmod +x gradlew && ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug
