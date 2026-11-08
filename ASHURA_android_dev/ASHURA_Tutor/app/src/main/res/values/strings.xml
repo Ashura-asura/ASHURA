@@ -183,16 +183,27 @@
 
     <!-- Library -->
     <string name="library_title">Your Library</string>
-    <string name="library_intro">Import text, Markdown, PDF, photos, Word, Excel or PowerPoint files. PDF pages and photos are read with on-device OCR when needed. You can also add the built-in study sets below. Everything stays on this device and is searched offline.</string>
-    <string name="library_import">Import a note</string>
+    <string name="library_intro">One place for imported material, built-in study sets and timed tests. PDF pages and photos are read with on-device OCR when needed. Everything stays on this device and is searched offline.</string>
+    <string name="library_section_material">Material</string>
+    <string name="library_section_sets">Study sets</string>
+    <string name="library_section_tests">Tests</string>
+    <string name="library_filter_all">All</string>
+    <string name="library_filter_recent">Recent</string>
+    <string name="library_filter_documents">Documents</string>
+    <string name="library_filter_notes">Notes</string>
+    <string name="library_filter_empty">Nothing matches this filter.</string>
+    <string name="library_import">Import material</string>
     <string name="library_importing">Importing…</string>
-    <string name="library_search_title">Search your notes</string>
-    <string name="library_search_label">Search your notes</string>
+    <string name="library_search_label">Search your material</string>
     <string name="library_no_matches">No matching passages.</string>
-    <string name="library_imported_count">Imported notes (%1$d)</string>
-    <string name="library_empty">Nothing imported yet.</string>
+    <string name="library_imported_count">Imported material (%1$d)</string>
+    <string name="library_empty">Nothing imported yet. Use Import material to add a PDF, photo, note or document.</string>
     <string name="library_quiz">Quiz me</string>
-    <string name="library_delete_cd">Delete %1$s</string>
+    <string name="library_detail_format">Format: %1$s</string>
+    <string name="library_detail_source">Stored on this device. The original file is not kept.</string>
+    <string name="library_edit_short">Edit</string>
+    <string name="library_format_photo">Photo</string>
+    <string name="library_format_text">Text</string>
     <plurals name="library_chars">
         <item quantity="one">%1$d character</item>
         <item quantity="other">%1$d characters</item>
@@ -200,7 +211,6 @@
     <string name="library_passage">%1$s · passage %2$d</string>
     <string name="library_delete_title">Delete this note?</string>
     <string name="library_delete_body">“%1$s” and its passages will be removed from this device.</string>
-    <string name="library_edit_cd">Edit text of %1$s</string>
     <string name="library_edit_title">Edit imported text</string>
     <string name="library_edit_body">Correct any OCR mistakes in “%1$s”. Saving rebuilds its searchable passages, so later answers and quizzes use the corrected wording.</string>
     <string name="study_sets_title">Built-in study sets</string>

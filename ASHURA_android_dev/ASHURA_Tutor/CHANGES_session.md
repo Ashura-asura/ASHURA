@@ -43,6 +43,9 @@ Integrated into the main tree and verified here with `./gradlew clean :app:testD
 14. Home screen (P4.6/§3.2): continue card, Ask/Learn/Import/Review tiles, three recent items, model and
     offline status, privacy line. Import now shares one MIME list with Library and switches to Library so
     progress is visible. Device layout and TalkBack remain unverified.
+15. Library (P4.7/§3.4): split into Material / Study sets / Tests; Material filters All/Recent/Documents/Notes;
+    tapping an item opens a detail dialog with format, size, date, index state, test, edit, re-index and
+    delete. Removed the long single scroll. Device layout and TalkBack remain unverified.
 
 Tests added: `ChoiceQuizBuilderTest`, `TestSessionTest`, `TestModeTest`, `TestHistoryTest`,
 `DataControlsTest`, plus the v4→v5 migration case. `ImportStatusTest`, `MistakeExplainerTest`,

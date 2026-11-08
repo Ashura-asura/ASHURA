@@ -548,3 +548,34 @@ Manual device check:
 3. Import three notes; confirm Home lists the three most recent by title and size.
 4. Load the model, return Home; confirm the status changes to “On-device model ready · works offline”.
 5. TalkBack: confirm the tiles read as buttons with their title and hint, and the headings are announced.
+
+---
+
+# Checkpoint 16 — Library split into sections with item details (P4.7/§3.4)
+
+Library used to be one very long scroll: import, search, three test buttons, 200 expandable study sets
+and the imported list, all in one column. Finding a document meant scrolling past the study sets, and
+each row hid its actions behind small icons.
+
+Changed:
+- **Three sections** selected by chips at the top: **Material**, **Study sets**, **Tests**. Only the
+  chosen section is loaded, so the imported list is no longer buried under 200 study sets.
+- **Material filters**: All, Recent (added in the last seven days), Documents (PDF, photo, Word, Excel,
+  PowerPoint) and Notes (text-like imports). The list stays newest-first.
+- **Item detail**: tapping a row opens a dialog with the title, format, size, date added, passage count
+  and whether it is indexed, plus Test, Edit text, Re-index (only when unindexed) and Delete. The
+  actions are stacked in the dialog body so four buttons cannot overflow a narrow screen.
+- **Study sets and Tests** keep their previous behaviour but now live in their own sections.
+- Search remains inside Material and still returns passages, not just titles.
+
+Verification: **215 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. No Compose UI
+tests exist, so the layout is **NOT VERIFIED** until it runs on a phone.
+
+Manual device check:
+1. Open Library: confirm the three section chips, and that Study sets is not visible in Material.
+2. Import a PDF and a .txt; confirm Documents and Notes filters each show the right item.
+3. Add an item, confirm it appears under Recent; wait beyond seven days or change the device date to
+   confirm it leaves Recent but stays in All.
+4. Tap an item: confirm format, size, date and index state, then use Test, Edit, Delete and (on a
+   deliberately unindexed item) Re-index.
+5. TalkBack: confirm each chip reads as selected/not selected and each row reads its title and status.

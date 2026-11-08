@@ -78,6 +78,7 @@ hardware-dependent claim below is device-pending, not proven.
 | Model download/import with pinned SHA-256 (§6, §17) | Written, device-pending | Both pinned artifacts have not been re-downloaded and re-hashed in this environment |
 | Shareable diagnostics export (§16.5, P1.2): runtime counters, device model/API/ABIs, RAM tier, low-RAM flag, total RAM, free storage; explicitly no learner text | Unit-tested (JSON shape) | SAF write and the real values are device-pending; p50/p95, battery drain and thermal status are not captured |
 | Home priorities (§3.2, P4.6): continue learning, today's review, ask, learn a topic, import, three recent items, model/offline status, private-by-default line | Written, device-pending | Layout at font scale 2.0, TalkBack order, small-screen density, whether the four quick actions stay reachable |
+| Library organisation (§3.4): Material / Study sets / Tests sections; All / Recent / Documents / Notes filters; item detail with format, size, date, index state, test, edit, re-index and delete | Written, device-pending | Section chips and detail dialog on a narrow phone, TalkBack reading of filters, behaviour with a large imported collection |
 
 ## Partial — real subset, spec asks for more
 
