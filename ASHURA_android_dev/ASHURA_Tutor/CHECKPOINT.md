@@ -677,3 +677,22 @@ Manual device check:
 1. Cold-start the app; confirm Home is reachable in about a second.
 2. Kill and cold-start again; tap the brand screen immediately and confirm it closes at once.
 3. Rotate on Home and confirm the brand screen does not reappear.
+
+---
+
+# Checkpoint 21 — Practice reachable from the lesson bar (v0.5.15, §1.2A)
+
+A lesson is a long scroll and its practice buttons sat at the very bottom, so starting the check-your-
+understanding step meant scrolling past every section.
+
+Changed:
+- The lesson top bar now has a **Practice** action that starts the first practice question immediately.
+  It is hidden when the lesson has no practice questions.
+
+Verification: **215 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. The action is
+Compose-only and remains **NOT VERIFIED** on a device.
+
+Manual device check:
+1. Open a topic lesson and confirm Practice appears in the top bar.
+2. Tap it and confirm the practice screen opens with the first question.
+3. Open a lesson with no practice questions and confirm the action is absent.

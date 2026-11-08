@@ -15,6 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -45,6 +46,14 @@ fun LessonScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateHome) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back_to_tutor))
+                    }
+                },
+                actions = {
+                    // Practice sits at the end of the lesson; keep it reachable without scrolling.
+                    lesson?.practiceQuestions?.firstOrNull()?.let { first ->
+                        TextButton(onClick = { onStartPractice(first) }) {
+                            Text(stringResource(R.string.lesson_practice))
+                        }
                     }
                 }
             )
