@@ -92,6 +92,7 @@
     <string name="progress_mastery_started">सुरु भयो</string>
     <string name="progress_mastery_new">सुरु भएको छैन</string>
     <string name="progress_review_due">दोहोर्याउने समय</string>
+    <string name="progress_review_action">दोहोर्याउनुहोस्</string>
     <string name="progress_next_review">अर्को दोहोर्याउने %1$s</string>
     <string name="progress_misconceptions">दोहोरिने गलत बुझाइहरू</string>
 

@@ -278,7 +278,15 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                     onAddStudySubject = viewModel::importStudySubject,
                     onRemoveStudySet = viewModel::removeStudySet
                 )
-                Destination.PROGRESS -> ProgressScreen(progress, testHistory, viewModel::clearTestHistory)
+                Destination.PROGRESS -> ProgressScreen(
+                    progress = progress,
+                    testHistory = testHistory,
+                    onClearTestHistory = viewModel::clearTestHistory,
+                    onReviewTopic = { topicId ->
+                        viewModel.startTopic(topicId)
+                        selected = Destination.TUTOR.name
+                    }
+                )
                 Destination.SETTINGS -> SettingsScreen(
                     message = settingsMessage,
                     modelState = modelState,
@@ -1238,7 +1246,8 @@ private fun TypingIndicator(phase: TutorPhase? = null) {
 private fun ProgressScreen(
     progress: ProgressUiState,
     testHistory: List<TestResultChange>,
-    onClearTestHistory: () -> Unit
+    onClearTestHistory: () -> Unit,
+    onReviewTopic: (String) -> Unit
 ) {
     val dateFormat = remember { DateFormat.getDateInstance(DateFormat.MEDIUM) }
     var confirmClearTests by remember { mutableStateOf(false) }
@@ -1296,11 +1305,19 @@ private fun ProgressScreen(
                 )
                 val review = if (t.due) stringResource(R.string.progress_review_due)
                 else stringResource(R.string.progress_next_review, dateFormat.format(Date(t.nextReviewAt)))
-                Text(
-                    stringResource(R.string.progress_topic_line, review),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(R.string.progress_topic_line, review),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (t.due) {
+                        TextButton(onClick = { onReviewTopic(t.topicId) }) {
+                            Text(stringResource(R.string.progress_review_action))
+                        }
+                    }
+                }
             }
         }
         if (progress.misconceptions.isNotEmpty()) {

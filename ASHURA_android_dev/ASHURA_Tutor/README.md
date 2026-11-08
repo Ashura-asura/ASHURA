@@ -2,7 +2,7 @@
 
 Offline-first, Android-first adaptive learning platform.
 
-**Status:** v0.5.12 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
+**Status:** v0.5.13 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
 chat history with reopen/delete, regenerate, timed four-option tests (Quick 20 / Medium 35 / Long 50) with
 saved marks, time taken and score change, on-device OCR with editable text, honest confidence labels, a hint
 ladder, explain-my-mistake, Library import status with re-index, clear added/not-added study-set states, and
@@ -10,8 +10,9 @@ ladder, explain-my-mistake, Library import status with re-index, clear added/not
 today's review, ask, learn, import material, recent items, model/offline status and a privacy line.
 Library is split into Material, Study sets and Tests, with Recent/Documents/Notes filters and a detail
 view for every imported item. Tutor says whether it is searching notes or writing, and Progress shows
-qualitative mastery bands instead of a precise-looking percentage. With no model loaded, Tutor shows an
-explicit setup banner instead of a grey dot, and the typing dots stop moving when system animations are off.
+qualitative mastery bands instead of a precise-looking percentage, and a due topic can be reviewed directly.
+With no model loaded, Tutor shows an explicit setup banner instead of a grey dot, and the typing dots stop
+moving when system animations are off.
 See `CHECKPOINT.md`, `docs/ARCHITECTURE_STATUS.md` and `docs/RUNTIME_INTEGRATION.md`.
 **Spec:** `docs/PRODUCT_SPEC.md` (architecture v5.0).  
 **Target:** 4 GB RAM Android phones (primary), 6 GB (standard), 8 GB+ (enhanced).

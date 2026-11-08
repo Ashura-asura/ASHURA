@@ -91,6 +91,7 @@
     <string name="progress_mastery_started">Started</string>
     <string name="progress_mastery_new">Not started</string>
     <string name="progress_review_due">review due</string>
+    <string name="progress_review_action">Review</string>
     <string name="progress_next_review">next review %1$s</string>
     <string name="progress_misconceptions">Recurring misunderstandings</string>
 

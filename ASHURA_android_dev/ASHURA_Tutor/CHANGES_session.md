@@ -52,6 +52,7 @@ Integrated into the main tree and verified here with `./gradlew clean :app:testD
 17. Model-unavailable banner in Tutor with a Set up action (§3.3); typing dots render statically when system
     animations are off (§3.6). Device behaviour remains unverified.
 18. Home model-status line gains a Set up action that opens Settings when no model is ready.
+19. Progress: a due topic now has a Review action that starts the topic and opens Tutor.
 
 Tests added: `ChoiceQuizBuilderTest`, `TestSessionTest`, `TestModeTest`, `TestHistoryTest`,
 `DataControlsTest`, plus the v4→v5 migration case. `ImportStatusTest`, `MistakeExplainerTest`,

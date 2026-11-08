@@ -637,3 +637,23 @@ Manual device check:
    text still changes.
 4. Turn animations back on while Tutor is open: confirm the dots animate again without restarting the app.
 5. On Home with no model, confirm the status line now has a Set up action that opens Settings.
+
+---
+
+# Checkpoint 19 — Review a due topic from Progress (v0.5.13, §3.5)
+
+Progress showed which topics were due but offered no way to act on that information; the learner had to go
+back to Home or Tutor and find the topic again.
+
+Changed:
+- Every topic marked “review due” now has a **Review** button. It starts that topic and switches to Tutor,
+  so the review begins on the same tap.
+- Topics that are not due show only the next review date and no button.
+
+Verification: **215 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. The navigation
+and topic start are Compose-only, so they remain **NOT VERIFIED** on a device.
+
+Manual device check:
+1. Practise a topic until it is due (or use an existing due topic), open Progress.
+2. Tap Review and confirm Tutor opens with that topic started, then return Back to Progress.
+3. Confirm a non-due topic has no Review button.
