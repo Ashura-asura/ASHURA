@@ -32,6 +32,7 @@ class AnswerSanitizerTest {
         assertFalse(clean.contains("EVIDENCE", ignoreCase = true))
         assertFalse(clean.contains("If unsure, say so"))
         assertFalse(clean.contains("trusted source", ignoreCase = true))
+        assertFalse(clean.contains("Damped Oscillations involve", ignoreCase = true))
         assertTrue(clean.contains("Write the differential equation"))
     }
 

@@ -33,15 +33,17 @@ object AnswerSanitizer {
         RegexOption.IGNORE_CASE
     )
 
-    /**
-     * An invented evidence heading. Retrieved sources are shown by the app, not written by the
-     * model, so the heading is removed. If the same line continues with a real structural label
-     * (for example `ANSWER:`), that remainder is preserved.
-     */
+    /** An invented evidence heading. Retrieved sources are shown by the app, not written by the model. */
     private val evidenceHeading = Regex(
-        """^[ \t>*_]*EVIDENCE[ \t*_]*(?::[^\n]*?(?=\b(?:ANSWER|STEPS|CHECK)\b|$)|$)""",
+        """^[ \t>*_]*EVIDENCE[ \t*_]*:?(.*)$""",
         setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)
     )
+
+    /** The next real section after a leaked evidence block. */
+    private val structuralLabel = Regex("""^\s*\**\s*(?:ANSWER|STEPS|CHECK)\b""", RegexOption.IGNORE_CASE)
+
+    /** A real section marker that continues on the same line as the leaked heading. */
+    private val inlineLabel = Regex("""\b(?:ANSWER|STEPS|CHECK)\b\s*:""")
 
     /** Echoed uncertainty instruction such as “If unsure, say so.” */
     private val echoedUncertainty = Regex("""\bIf unsure,\s*(?:say so|answer that)\b\.?""", RegexOption.IGNORE_CASE)
@@ -61,7 +63,7 @@ object AnswerSanitizer {
         text = usingItsId.replace(text, "")
         text = trustedSource.replace(text, "")
         text = usingAsReference.replace(text, "")
-        text = evidenceHeading.replace(text, "")
+        text = stripEvidenceSections(text)
         text = echoedUncertainty.replace(text, "")
         return text.lines()
             .map { it.trimEnd() }
@@ -69,5 +71,38 @@ object AnswerSanitizer {
             .replace(Regex("""[ \t]{2,}"""), " ")
             .replace(Regex("""\n{3,}"""), "\n\n")
             .trim()
+    }
+
+    /**
+     * Drops a hallucinated `EVIDENCE:` block, including the quoted “source” lines under it, until the
+     * next real section or a blank line. If the same line continues with `ANSWER:`/`STEPS:`/`CHECK:`,
+     * that part is kept.
+     */
+    private fun stripEvidenceSections(text: String): String {
+        val out = ArrayList<String>()
+        var inEvidence = false
+        for (line in text.lines()) {
+            if (!inEvidence) {
+                val heading = evidenceHeading.find(line)
+                if (heading != null) {
+                    val rest = heading.groupValues[1]
+                    val label = inlineLabel.find(rest) ?: structuralLabel.find(rest)
+                    if (label != null) out.add(rest.substring(label.range.first).trim())
+                    inEvidence = true
+                    continue
+                }
+                out.add(line)
+            } else {
+                when {
+                    line.isBlank() -> inEvidence = false
+                    structuralLabel.containsMatchIn(line) -> {
+                        inEvidence = false
+                        out.add(line)
+                    }
+                    // Otherwise this is part of the invented evidence block: drop it.
+                }
+            }
+        }
+        return out.joinToString("\n")
     }
 }
