@@ -217,7 +217,8 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                         viewModel.importDocument(uri)
                         selected = Destination.LIBRARY.name
                     },
-                    onOpenLibrary = { selected = Destination.LIBRARY.name }
+                    onOpenLibrary = { selected = Destination.LIBRARY.name },
+                    onOpenSettings = { selected = Destination.SETTINGS.name }
                 )
                 Destination.TUTOR -> when {
                     testState.session != null -> TestScreen(
@@ -356,7 +357,8 @@ private fun HomeScreen(
     onLearn: () -> Unit,
     onReview: () -> Unit,
     onImport: (android.net.Uri) -> Unit,
-    onOpenLibrary: () -> Unit
+    onOpenLibrary: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(onImport) }
     Column(
@@ -481,17 +483,23 @@ private fun HomeScreen(
         }
 
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Text(
-            stringResource(
-                when {
-                    modelReady -> R.string.home_model_ready
-                    modelBusy -> R.string.home_model_busy
-                    else -> R.string.home_model_missing
-                }
-            ),
-            style = MaterialTheme.typography.bodySmall,
-            color = if (modelReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(
+                    when {
+                        modelReady -> R.string.home_model_ready
+                        modelBusy -> R.string.home_model_busy
+                        else -> R.string.home_model_missing
+                    }
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = if (modelReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            if (!modelReady && !modelBusy) {
+                TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.tutor_open_settings)) }
+            }
+        }
         Text(
             stringResource(R.string.home_private),
             style = MaterialTheme.typography.labelSmall,

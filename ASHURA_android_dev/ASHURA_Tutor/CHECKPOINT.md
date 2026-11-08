@@ -636,3 +636,4 @@ Manual device check:
 3. Turn off animations in Developer options, start an answer: confirm the dots are static but the phase
    text still changes.
 4. Turn animations back on while Tutor is open: confirm the dots animate again without restarting the app.
+5. On Home with no model, confirm the status line now has a Set up action that opens Settings.
