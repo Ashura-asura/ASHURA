@@ -2,10 +2,11 @@
 
 Offline-first, Android-first adaptive learning platform.
 
-**Status:** v0.5.6 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
-chat history with reopen/delete, regenerate, richer mixed test sets from imported PDF/Office/CSV/image notes,
-on-device OCR with editable text, honest confidence labels, a hint ladder, explain-my-mistake, Library import
-status with re-index, and 200 bundled open-licensed study sets.
+**Status:** v0.5.7 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
+chat history with reopen/delete, regenerate, timed four-option tests (Quick 20 / Medium 35 / Long 50) with
+saved marks, time taken and score change, on-device OCR with editable text, honest confidence labels, a hint
+ladder, explain-my-mistake, Library import status with re-index, clear added/not-added study-set states, and
+200 bundled open-licensed study sets.
 See `CHECKPOINT.md`, `docs/ARCHITECTURE_STATUS.md` and `docs/RUNTIME_INTEGRATION.md`.
 **Spec:** `docs/PRODUCT_SPEC.md` (architecture v5.0).  
 **Target:** 4 GB RAM Android phones (primary), 6 GB (standard), 8 GB+ (enhanced).
@@ -41,13 +42,17 @@ study scaffold.
   keeps its page, slide or sheet label for citations, spreadsheets keep `A1` cell references and formulas, and OCR text
   can be corrected in Library → edit, which re-indexes the passages. Each Library item shows its size, passage count and
   date added; an item with no searchable passages is marked *not indexed* and gets a Re-index button.
-- **Mixed test sets** — importing a document and tapping *Quiz me* builds up to 20 questions: recall cloze plus definition
-  and explanation prompts, spread across pages/slides/sheets. It is deterministic and works without a model.
+- **Timed tests** — choose Quick (20 questions), Medium (35) or Long (50) in Library. Each question is a
+  four-option “choose the best answer” item built deterministically from your imported notes; there are no
+  fill-in-the-blank or free-text items. The timer is selected from the mode (60 seconds per question), and
+  obtained marks, time taken and the change from the previous test of the same mode are stored on the device
+  and listed in Progress. A single note can also start a shorter Quick test from its own facts.
 - **Bundled study sets** — 200 offline Markdown notes (20 each for mathematics, general science, physics, chemistry,
   Python, C, Rust, electrical engineering, basic electronics, and advanced calculus) sourced from Wikipedia under
-  CC BY-SA 4.0. The Library lists them by subject; add one or a whole subject, then tap *Quiz me*. The manifest records the
-  exact source URL and a SHA-256 checksum for every note, and the app verifies it before import. Rebuild with
-  `python tools/fetch_study_sets.py` (network is needed only for rebuilding, never at app runtime).
+  CC BY-SA 4.0. The Library lists them by subject with a live “X of Y added” count, a check mark on added sets
+  and a minus action to remove one after confirmation. Add one or a whole subject, then start a timed test. The
+  manifest records the exact source URL and a SHA-256 checksum for every note, and the app verifies it before import.
+  Rebuild with `python tools/fetch_study_sets.py` (network is needed only for rebuilding, never at app runtime).
 
 ## Not implemented yet
 

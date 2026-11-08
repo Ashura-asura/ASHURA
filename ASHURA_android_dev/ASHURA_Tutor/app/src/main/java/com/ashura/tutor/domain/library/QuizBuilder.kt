@@ -18,6 +18,15 @@ data class QuizItem(
     val chunkOrdinal: Int
 )
 
+/** One "X is Y" fact extracted from a note; used to build four-option concept questions. */
+data class TermDefinition(
+    val term: String,
+    val definition: String,
+    val sentence: String,
+    val section: String?,
+    val chunkOrdinal: Int
+)
+
 /**
  * Builds a mixed retrieval-practice set from an imported note without a model (spec §12.2).
  *
@@ -96,6 +105,23 @@ object QuizBuilder {
         )
 
         return interleave(listOf(cloze, definitions, explanations), max)
+    }
+
+    /**
+     * Every "X is Y" fact found in [chunks], in passage order. Four-option tests use these
+     * definitions as both the prompt and the answer pool, so a multiple-choice question never
+     * invents content that is not already in the learner's own notes.
+     */
+    fun termDefinitions(chunks: List<TextChunk>): List<TermDefinition> {
+        if (chunks.isEmpty()) return emptyList()
+        return chunks.sortedBy { it.ordinal }.flatMap { chunk ->
+            val section = SectionLabel.forChunk(chunk.text)
+            candidateSentences(SectionLabel.strip(chunk.text)).mapNotNull { sentence ->
+                definitionOf(sentence)?.let {
+                    TermDefinition(it.term, it.definition, sentence, section, chunk.ordinal)
+                }
+            }
+        }
     }
 
     private fun clozeItems(

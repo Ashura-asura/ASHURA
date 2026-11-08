@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import com.ashura.tutor.domain.export.Json
+import com.ashura.tutor.domain.assessment.QuizSource
 import com.ashura.tutor.domain.library.TextChunk
 import com.ashura.tutor.domain.library.TextChunker
 import java.util.UUID
@@ -91,6 +92,33 @@ class TutorRepository(private val db: AppDatabase) {
         val body = db.library().bodyOf(id) ?: error("This note no longer exists")
         return replaceLibraryText(id, body)
     }
+
+    /**
+     * All passages grouped by note title, or one note when [itemId] is set. Built in one join so a
+     * library-wide test does not run one query per note (200 study sets is a realistic library).
+     */
+    suspend fun testSources(itemId: String? = null): List<QuizSource> {
+        val rows = if (itemId == null) db.chunks().allWithTitle() else db.chunks().withTitleForItem(itemId)
+        return rows.groupBy { it.itemId }.map { (_, group) ->
+            QuizSource(
+                title = group.first().title,
+                chunks = group.map { TextChunk(it.ordinal, it.text, it.startOffset, it.endOffset) }
+            )
+        }
+    }
+
+    fun testResults(): Flow<List<TestResultEntity>> = db.testResults().observeAll()
+
+    suspend fun saveTestResult(result: TestResultEntity) = db.testResults().insert(result)
+
+    /** The previous completed test of the same mode, used for the score-change line. */
+    suspend fun previousTestResult(mode: String): TestResultEntity? = db.testResults().latestForMode(mode)
+
+    suspend fun deleteTestResult(id: String) = db.testResults().delete(id)
+
+    suspend fun clearTestResults() = db.testResults().deleteAll()
+
+    suspend fun deleteLibraryItemByTitle(title: String) = db.library().deleteByTitle(title.trim())
 
     suspend fun deleteLibraryItem(id: String) = db.library().delete(id) // chunks and FTS rows follow via cascade/triggers
 
@@ -250,6 +278,7 @@ class TutorRepository(private val db: AppDatabase) {
                 "learningState" to db.learningState().all().map { mapOf("conceptId" to it.conceptId, "masteryEstimate" to it.masteryEstimate, "confidence" to it.confidence, "nextReviewAt" to it.nextReviewAt, "intervalDays" to it.intervalDays) },
                 "attempts" to db.attempts().all().map { mapOf("id" to it.id, "conceptId" to it.conceptId, "questionId" to it.questionId, "answer" to it.answer, "verdict" to it.verdict, "hintsUsed" to it.hintsUsed, "misconceptionTag" to it.misconceptionTag, "occurredAt" to it.occurredAt) },
                 "misconceptions" to db.misconceptions().all().map { mapOf("conceptId" to it.conceptId, "tag" to it.tag, "evidenceCount" to it.evidenceCount, "lastSeenAt" to it.lastSeenAt, "resolvedAt" to it.resolvedAt) },
+                "testResults" to db.testResults().all().map { mapOf("id" to it.id, "mode" to it.mode, "title" to it.title, "totalQuestions" to it.totalQuestions, "correctAnswers" to it.correctAnswers, "scorePercent" to it.scorePercent, "timeTakenSeconds" to it.timeTakenSeconds, "timedOut" to it.timedOut, "startedAt" to it.startedAt, "finishedAt" to it.finishedAt) },
                 "studyEvents" to db.studyEvents().all().map { mapOf("id" to it.id, "topicId" to it.topicId, "eventType" to it.eventType, "score" to it.score, "occurredAt" to it.occurredAt) }
             )
             Json.write(doc)

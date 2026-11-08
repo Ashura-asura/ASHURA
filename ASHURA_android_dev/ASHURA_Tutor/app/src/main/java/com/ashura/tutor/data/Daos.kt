@@ -63,6 +63,29 @@ interface LibraryDao {
     suspend fun bodyOf(id: String): String?
     @Query("DELETE FROM library_items WHERE id = :id")
     suspend fun delete(id: String)
+    @Query("DELETE FROM library_items WHERE title = :title")
+    suspend fun deleteByTitle(title: String)
+}
+
+@Dao
+interface TestResultDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(result: TestResultEntity)
+
+    @Query("SELECT * FROM test_results ORDER BY finishedAt DESC")
+    fun observeAll(): Flow<List<TestResultEntity>>
+
+    @Query("SELECT * FROM test_results ORDER BY finishedAt")
+    suspend fun all(): List<TestResultEntity>
+
+    @Query("SELECT * FROM test_results WHERE mode = :mode ORDER BY finishedAt DESC LIMIT 1")
+    suspend fun latestForMode(mode: String): TestResultEntity?
+
+    @Query("DELETE FROM test_results WHERE id = :id")
+    suspend fun delete(id: String)
+
+    @Query("DELETE FROM test_results")
+    suspend fun deleteAll()
 }
 
 @Dao

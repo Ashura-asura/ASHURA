@@ -76,6 +76,22 @@ interface ChunkDao {
     @Query("SELECT * FROM library_chunks WHERE itemId = :itemId ORDER BY ordinal")
     suspend fun forItem(itemId: String): List<LibraryChunkEntity>
 
+    @Query(
+        "SELECT c.itemId AS itemId, li.title AS title, c.ordinal AS ordinal, c.text AS text, " +
+            "c.startOffset AS startOffset, c.endOffset AS endOffset " +
+            "FROM library_chunks c JOIN library_items li ON li.id = c.itemId " +
+            "ORDER BY li.createdAt, c.ordinal"
+    )
+    suspend fun allWithTitle(): List<ChunkWithTitle>
+
+    @Query(
+        "SELECT c.itemId AS itemId, li.title AS title, c.ordinal AS ordinal, c.text AS text, " +
+            "c.startOffset AS startOffset, c.endOffset AS endOffset " +
+            "FROM library_chunks c JOIN library_items li ON li.id = c.itemId " +
+            "WHERE c.itemId = :itemId ORDER BY c.ordinal"
+    )
+    suspend fun withTitleForItem(itemId: String): List<ChunkWithTitle>
+
     @Query("SELECT itemId AS itemId, COUNT(*) AS passages FROM library_chunks GROUP BY itemId")
     fun observeCounts(): Flow<List<ChunkCount>>
 
@@ -96,3 +112,13 @@ interface ChunkDao {
 
 /** Passage count per imported item, used for the Library's indexed-state line. */
 data class ChunkCount(val itemId: String, val passages: Int)
+
+/** A passage plus its note title, used to build tests across several notes in one query. */
+data class ChunkWithTitle(
+    val itemId: String,
+    val title: String,
+    val ordinal: Int,
+    val text: String,
+    val startOffset: Int,
+    val endOffset: Int
+)

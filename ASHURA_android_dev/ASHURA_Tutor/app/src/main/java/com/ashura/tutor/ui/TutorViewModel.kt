@@ -14,6 +14,7 @@ import com.ashura.tutor.data.StudyLibrary
 import com.ashura.tutor.data.StudyPackRepository
 import com.ashura.tutor.data.StudySet
 import com.ashura.tutor.data.StudySubject
+import com.ashura.tutor.data.TestResultEntity
 import com.ashura.tutor.data.TutorRepository
 import com.ashura.tutor.data.model.ModelManager
 import com.ashura.tutor.data.model.ModelState
@@ -36,17 +37,22 @@ import com.ashura.tutor.domain.runtime.RamTier
 import com.ashura.tutor.domain.runtime.RuntimeMetrics
 import com.ashura.tutor.domain.runtime.TutorStreamEvent
 import com.ashura.tutor.domain.assessment.AnswerCheck
+import com.ashura.tutor.domain.assessment.ChoiceQuizBuilder
 import com.ashura.tutor.domain.assessment.HintLadder
+import com.ashura.tutor.domain.assessment.TestHistory
+import com.ashura.tutor.domain.assessment.TestMode
+import com.ashura.tutor.domain.assessment.TestResultChange
+import com.ashura.tutor.domain.assessment.TestResultSummary
+import com.ashura.tutor.domain.assessment.TestSession
 import com.ashura.tutor.domain.assessment.Verdict
 import com.ashura.tutor.domain.library.GroundingPolicy
-import com.ashura.tutor.domain.library.QuizBuilder
-import com.ashura.tutor.domain.library.QuizKind
 import com.ashura.tutor.domain.library.TextChunker
 import com.ashura.tutor.domain.curriculum.CurriculumPack
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -56,10 +62,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.UUID
 
 data class TutorUiState(
     val question: String = "", val answer: String? = null, val limitation: String? = null,
@@ -121,6 +129,27 @@ data class LibraryUiState(
     val message: String? = null
 )
 
+/** A running or finished timed test, plus the score change from the previous same-mode test. */
+data class TestUiState(
+    val session: TestSession? = null,
+    val remainingSeconds: Int = 0,
+    val saving: Boolean = false,
+    val resultDeltaMarks: Int? = null,
+    val resultDeltaPercent: Int? = null,
+    val resultIsFirstInMode: Boolean = false,
+    val error: String? = null
+) {
+    val finished: Boolean get() = session?.isFinished == true
+}
+
+private data class TestRequest(
+    val mode: TestMode,
+    val itemId: String?,
+    val title: String?,
+    /** Library-wide tests must have the exact count the mode promises; a single-note test may be shorter. */
+    val requireFull: Boolean
+)
+
 class TutorViewModel(
     private val repository: TutorRepository,
     private val engine: TutorEngine,
@@ -174,6 +203,21 @@ class TutorViewModel(
     /** Past tutor conversations, newest first, for the history list. */
     val conversations: StateFlow<List<ConversationEntity>> = repository.conversations()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val _test = MutableStateFlow(TestUiState())
+    val test: StateFlow<TestUiState> = _test.asStateFlow()
+
+    /** Finished tests, newest first; also exported and cleared from Settings/Progress. */
+    val testResults: StateFlow<List<TestResultEntity>> = repository.testResults()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Finished tests with the mark and percentage change from the previous test of the same mode. */
+    val testHistory: StateFlow<List<TestResultChange>> = testResults
+        .map { rows -> TestHistory.withChanges(rows.map { it.toSummary() }) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private var testTimer: Job? = null
+    private var lastTestRequest: TestRequest? = null
 
     // Local model state is owned by the application-scoped manager so a download or load survives
     // screen recreation and only one engine ever exists.
@@ -296,6 +340,195 @@ class TutorViewModel(
         }
     }
 
+    /** Removes a bundled study note (and its passages) after the Library's confirmation dialog. */
+    fun removeStudySet(set: StudySet) {
+        if (_library.value.busy) return
+        _library.update { it.copy(busy = true, message = null) }
+        viewModelScope.launch {
+            try {
+                repository.deleteLibraryItemByTitle(set.title)
+                updateLibraryQuery(_library.value.query)
+                _library.update { it.copy(busy = false, message = "Removed \"${set.title}\" from your library.") }
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _library.update { it.copy(busy = false, message = "Could not remove the study set: ${e.message ?: "unknown error"}") }
+            }
+        }
+    }
+
+    /** Starts a timed test over every imported note: Quick 20, Medium 35 or Long 50. */
+    fun startTest(mode: TestMode) =
+        buildTest(TestRequest(mode = mode, itemId = null, title = null, requireFull = true))
+
+    /** Starts a four-option test from one note. It may be shorter than the chosen mode. */
+    fun startNoteTest(itemId: String, title: String) =
+        buildTest(TestRequest(mode = TestMode.QUICK, itemId = itemId, title = title, requireFull = false))
+
+    private fun buildTest(request: TestRequest) {
+        if (_library.value.busy) return
+        lastTestRequest = request
+        testTimer?.cancel()
+        testTimer = null
+        _library.update { it.copy(busy = true, message = "Building your test…") }
+        viewModelScope.launch {
+            try {
+                val sources = withContext(Dispatchers.IO) { repository.testSources(request.itemId) }
+                val questions = withContext(Dispatchers.Default) {
+                    ChoiceQuizBuilder.build(sources, request.mode.questionCount)
+                }
+                if (questions.size < 4) {
+                    _test.value = TestUiState()
+                    _library.update {
+                        it.copy(
+                            busy = false,
+                            message = "These notes cannot make four-option questions yet. Import a note with " +
+                                "complete sentences such as “X is Y”, then try again."
+                        )
+                    }
+                    return@launch
+                }
+                if (request.requireFull && questions.size < request.mode.questionCount) {
+                    _test.value = TestUiState()
+                    _library.update {
+                        it.copy(
+                            busy = false,
+                            message = "Only ${questions.size} four-option questions can be built from your notes. " +
+                                "A ${request.mode.name.lowercase()} test needs ${request.mode.questionCount}. " +
+                                "Add more notes or choose a shorter test."
+                        )
+                    }
+                    return@launch
+                }
+                val count = questions.size
+                val session = TestSession(
+                    mode = request.mode,
+                    title = request.title ?: "All your notes",
+                    questions = questions,
+                    answers = List(count) { null },
+                    currentIndex = 0,
+                    startedAtMillis = System.currentTimeMillis(),
+                    durationSeconds = count * request.mode.secondsPerQuestion
+                )
+                _test.value = TestUiState(session = session, remainingSeconds = session.durationSeconds)
+                _library.update { it.copy(busy = false, message = null) }
+                startTestTimer()
+                _openTutor.tryEmit(Unit)
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _test.value = TestUiState()
+                _library.update { it.copy(busy = false, message = "Could not build the test: ${e.message ?: "unknown error"}") }
+            }
+        }
+    }
+
+    private fun startTestTimer() {
+        testTimer?.cancel()
+        testTimer = viewModelScope.launch {
+            while (true) {
+                val session = _test.value.session ?: break
+                if (session.isFinished) break
+                val remaining = session.remainingSeconds(System.currentTimeMillis())
+                _test.update { it.copy(remainingSeconds = remaining) }
+                if (remaining <= 0) {
+                    finishTest(timedOut = true)
+                    break
+                }
+                delay(500)
+            }
+        }
+    }
+
+    fun selectTestOption(option: Int) = _test.update { state ->
+        state.session?.let { state.copy(session = it.select(option)) } ?: state
+    }
+
+    fun nextTestQuestion() = _test.update { state ->
+        state.session?.let { state.copy(session = it.next()) } ?: state
+    }
+
+    fun previousTestQuestion() = _test.update { state ->
+        state.session?.let { state.copy(session = it.previous()) } ?: state
+    }
+
+    fun goToTestQuestion(index: Int) = _test.update { state ->
+        state.session?.let { state.copy(session = it.goTo(index)) } ?: state
+    }
+
+    /** Ends the test (manually or because the clock ran out) and saves marks, time and mode. */
+    fun finishTest(timedOut: Boolean = false) {
+        val session = _test.value.session ?: return
+        if (session.isFinished) return
+        val finished = session.finish(System.currentTimeMillis(), timedOut)
+        testTimer?.cancel()
+        testTimer = null
+        _test.update { it.copy(session = finished, remainingSeconds = 0, saving = true, error = null) }
+
+        val entity = TestResultEntity(
+            id = UUID.randomUUID().toString(),
+            mode = finished.mode.name,
+            title = finished.title,
+            totalQuestions = finished.total,
+            correctAnswers = finished.correctCount,
+            scorePercent = finished.scorePercent,
+            timeTakenSeconds = finished.timeTakenSeconds,
+            timedOut = finished.timedOut,
+            startedAt = finished.startedAtMillis,
+            finishedAt = finished.finishedAtMillis ?: finished.startedAtMillis
+        )
+        viewModelScope.launch {
+            try {
+                // Read the previous result before inserting, otherwise this test would compare with itself.
+                val previous = withContext(Dispatchers.IO) { repository.previousTestResult(entity.mode) }
+                withContext(Dispatchers.IO) { repository.saveTestResult(entity) }
+                _test.update { state ->
+                    if (state.session?.startedAtMillis == session.startedAtMillis) {
+                        state.copy(
+                            saving = false,
+                            resultDeltaMarks = previous?.let { entity.correctAnswers - it.correctAnswers },
+                            resultDeltaPercent = previous?.let { entity.scorePercent - it.scorePercent },
+                            resultIsFirstInMode = previous == null
+                        )
+                    } else state
+                }
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _test.update { state ->
+                    if (state.session?.startedAtMillis == session.startedAtMillis) {
+                        state.copy(saving = false, error = "The result could not be saved: ${e.message ?: "unknown error"}")
+                    } else state
+                }
+            }
+        }
+    }
+
+    fun retakeTest() {
+        val request = lastTestRequest
+        if (request == null) closeTest() else buildTest(request)
+    }
+
+    fun closeTest() {
+        testTimer?.cancel()
+        testTimer = null
+        lastTestRequest = null
+        _test.value = TestUiState()
+    }
+
+    /** Confirmed from the Progress screen; removes only finished-test history. */
+    fun clearTestHistory() {
+        viewModelScope.launch {
+            try {
+                repository.clearTestResults()
+            } catch (c: CancellationException) {
+                throw c
+            } catch (e: Exception) {
+                _settingsMessage.value = "Could not clear test history: ${e.message ?: "unknown error"}"
+            }
+        }
+    }
+
     fun importDocument(uri: Uri) {
         if (_library.value.busy) return
         _library.update { it.copy(busy = true, message = null) }
@@ -336,51 +569,6 @@ class TutorViewModel(
                 throw c
             } catch (e: Exception) {
                 _library.update { it.copy(results = emptyList(), searched = true, message = "Search failed: ${e.message ?: "unknown error"}") }
-            }
-        }
-    }
-
-    /**
-     * Builds a mixed test set (recall, definitions and explanations) from one imported document and
-     * opens the first question. Works with or without a loaded model because every item is derived
-     * from the learner's own text.
-     */
-    fun startNoteQuiz(itemId: String, title: String) {
-        viewModelScope.launch {
-            try {
-                val items = QuizBuilder.build(repository.chunksForItem(itemId), title, QuizBuilder.DEFAULT_MAX)
-                if (items.isEmpty()) {
-                    _library.update { it.copy(message = "This note has too few complete sentences with distinctive terms to make questions.") }
-                    return@launch
-                }
-                quizQueue.clear()
-                items.forEachIndexed { i, item ->
-                    val hints = listOfNotNull(item.hint)
-                    quizQueue.addLast(
-                        PracticeQuestion(
-                            id = "note:$itemId:q${i + 1}", conceptId = "note:$itemId",
-                            prompt = item.prompt,
-                            expectedAnswer = item.answer,
-                            explanation = item.explanation,
-                            hints = hints,
-                            selfAssessed = item.selfAssessed
-                        )
-                    )
-                }
-                val cloze = items.count { it.kind == QuizKind.CLOZE }
-                val written = items.count { it.kind != QuizKind.CLOZE }
-                _library.update {
-                    it.copy(
-                        message = "Built ${items.size} questions from \"$title\": " +
-                            "$cloze recall and $written explain/define."
-                    )
-                }
-                nextQuizQuestion()
-                _openTutor.tryEmit(Unit)
-            } catch (c: CancellationException) {
-                throw c
-            } catch (e: Exception) {
-                _library.update { it.copy(message = "Could not start the quiz: ${e.message ?: "unknown error"}") }
             }
         }
     }
@@ -736,6 +924,7 @@ class TutorViewModel(
         viewModelScope.launch {
             try {
                 askJob?.cancel(); searchJob?.cancel(); quizQueue.clear() // no in-flight write may target erased rows
+                testTimer?.cancel(); testTimer = null; lastTestRequest = null
                 repository.deleteAllData()
                 conversationId = null
                 _settingsMessage.value = null
@@ -743,6 +932,7 @@ class TutorViewModel(
                 _lesson.value = null
                 _practice.value = PracticeUiState()
                 _library.value = LibraryUiState()
+                _test.value = TestUiState()
                 onDone()
             } catch (c: CancellationException) {
                 throw c
@@ -752,6 +942,17 @@ class TutorViewModel(
         }
     }
 }
+
+private fun TestResultEntity.toSummary() = TestResultSummary(
+    id = id,
+    mode = mode,
+    title = title,
+    correct = correctAnswers,
+    total = totalQuestions,
+    timeTakenSeconds = timeTakenSeconds,
+    timedOut = timedOut,
+    finishedAt = finishedAt
+)
 
 class TutorViewModelFactory(
     private val repository: TutorRepository,

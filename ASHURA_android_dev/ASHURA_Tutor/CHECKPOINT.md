@@ -413,3 +413,55 @@ Artifact: `dist/ASHURA_Tutor-v0.5.6-dev-debug.apk` (~99 MB), SHA-256
 Device checks for the user: every imported item should show a passage count; Re-index should appear only
 on a genuinely unindexed item and should populate the count without changing the text. Also re-check a
 full-derivation chat question against the 120 s budget.
+
+---
+
+# Checkpoint 13 — Timed four-option tests and study-set add states (v0.5.7)
+
+Scope: the requested test modes, saved score/time history and clear added/not-added study-set states, built
+against the production rules in the supplied completion prompt. Hardware steps remain the user's to run.
+
+Added:
+- **Timed test modes** — Quick 20 questions, Medium 35, Long 50. The timer is selected automatically from
+  the mode at 60 seconds per question (20 / 35 / 50 minutes). Starting a mode from Library opens the test
+  in the Tutor tab.
+- **Four-option questions only** — `domain/assessment/ChoiceQuizBuilder.kt` produces exactly four distinct
+  options from the learner's imported definitions: “Which option best defines X?” and “Which term does this
+  description match?”. There are no fill-in-the-blank or free-text test items, no invented options, and the
+  order is seeded deterministically. If the notes cannot supply four distinct choices the test is refused
+  with an honest message instead of starting a malformed test.
+- **Session and scoring** — `TestSession` records answers, navigation, countdown, correct count, percentage,
+  time taken and whether the clock ran out. Unanswered questions count as wrong. The timer is driven by the
+  ViewModel and stops when the test finishes or is left.
+- **Saved results and score changes** — new Room table `test_results`, additive migration 4→5, and schema
+  `5.json`. Each result stores mode, title, total questions, obtained marks, percentage, time taken and timeout
+  state. Progress shows the history and the marks/percentage change from the previous test of the same mode.
+  Clearing history is confirmed; test results are exported in JSON and wiped by delete-all-data.
+- **Study-set add state** — Library subjects show “X of Y added”; added sets show a check mark and a minus
+  action (remove after confirmation), unadded sets show “+ Add”. “Add all” is disabled once the subject is
+  complete. Removing a set deletes only that note and its passages; other notes and test results stay.
+- **Single-note test** — a note row's Test action starts a shorter Quick test from that note so a learner can
+  practise one document without needing 20 facts. Library-wide modes still require their exact counts.
+
+Verification: **212 JVM tests, 0 failures** from `clean :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`.
+`lintDebug` and `assembleDebug` pass. Debug APK measured at **103,938,285 bytes (~99.1 MiB)**. No APK is committed.
+
+Status labels:
+- Four-option builder, session/scoring, history deltas, migrations and data-control semantics: **unit-tested**
+  (`ChoiceQuizBuilderTest`, `TestSessionTest`, `TestModeTest`, `TestHistoryTest`, `DataControlsTest`,
+  `MigrationTest`).
+- Timer UI, result screen, Library indicators and TalkBack/layout: **NOT VERIFIED** — no device or emulator here.
+
+Manual device checks for the user:
+1. Import at least a few notes (or add one subject), open Library, start Quick; confirm the header counts down
+   from 20:00 and the test opens in the Tutor tab.
+2. Answer some questions, navigate back and forth, finish; confirm marks, percentage, time taken and the review
+   list. Take a second Quick test and confirm Progress shows the marks change.
+3. Let a test run out; confirm it ends automatically and unanswered questions count as wrong.
+4. Expand a subject; confirm added sets show a check and minus, unadded sets show “+ Add”, and the subject line
+   counts correctly. Remove one set with confirmation and confirm other notes survive.
+5. Check English and Nepali at font scale 1.0 and 2.0, with TalkBack on the timer and options.
+6. Upgrade from the v0.5.6 APK and confirm notes, chats, attempts and settings survive; test results start empty.
+
+Known limitation: an in-progress test is held in the ViewModel, so rotation keeps it but process death loses
+it. Persisting an active session is not implemented and is recorded as missing rather than claimed.

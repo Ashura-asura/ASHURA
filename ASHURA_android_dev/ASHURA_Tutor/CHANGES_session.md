@@ -1,7 +1,7 @@
 # Session changes (gap-closing pass)
 
-Integrated into the main tree and verified here with `./gradlew :app:testDebugUnitTest :app:lintDebug
-:app:assembleDebug` (190 JVM tests, 0 failures; lint and APK assembly pass).
+Integrated into the main tree and verified here with `./gradlew clean :app:testDebugUnitTest :app:lintDebug
+:app:assembleDebug` (212 JVM tests, 0 failures; lint and APK assembly pass).
 
 1. Honest confidence labels (spec §12): `domain/ConfidenceLabel.kt`, shown under every tutor answer (EN + NE strings).
    Wording deliberately says individual claims are not checked: claim-level verification (§12.4) is still missing.
@@ -26,9 +26,21 @@ Integrated into the main tree and verified here with `./gradlew :app:testDebugUn
 9. Full derivations: the answer budget is now 512 tokens / 120 s instead of 384 / 45 s, the direct prompt
    requires the whole derivation and forbids “the question is too long”, and derivation phrases switch
    Socratic mode to a direct answer.
+10. Timed tests (spec §3.4/§3.5): Library offers Quick 20, Medium 35 and Long 50 questions. The timer is
+    chosen from the mode (60 s/question), questions are deterministic four-option “choose the best answer”
+    items built from imported notes, and there are no fill-in-the-blank or free-text items. Each result saves
+    obtained marks, percentage, time taken and timeout state; Progress lists the history with the marks change
+    from the previous test of the same mode. A single note can start a shorter Quick test.
+11. Study-set added state (spec §8): every subject shows “X of Y added”; added sets show a check mark and a
+    minus action (remove after confirmation), unadded sets show “+ Add”. “Add all” is disabled when the whole
+    subject is present. Removing a set deletes only that note and its passages; other notes and test results
+    stay.
+12. Database v5: `test_results` table with an additive 4→5 migration and a v4→v5 upgrade test; test results
+    are included in JSON export and wiped by delete-all-data.
 
-Tests added: `ImportStatusTest`, `MistakeExplainerTest`, `GenerationLimitsTest`, `ConfidenceLabelTest`,
-`HintLadderTest`.
+Tests added: `ChoiceQuizBuilderTest`, `TestSessionTest`, `TestModeTest`, `TestHistoryTest`,
+`DataControlsTest`, plus the v4→v5 migration case. `ImportStatusTest`, `MistakeExplainerTest`,
+`GenerationLimitsTest`, `ConfidenceLabelTest` and `HintLadderTest` remain.
 
-Not done: edit message, semantic search, OCR confidence/region selection, programming sandbox, everything
-hardware-dependent.
+Not done: active-test persistence across process death, edit message, semantic search, OCR confidence/region
+selection, programming sandbox, everything hardware-dependent.

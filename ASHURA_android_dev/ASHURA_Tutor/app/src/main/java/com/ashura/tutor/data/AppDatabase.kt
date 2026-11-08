@@ -18,9 +18,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         LearningStateEntity::class,
         AttemptEntity::class,
         MisconceptionEntity::class,
-        LibraryChunkEntity::class
+        LibraryChunkEntity::class,
+        TestResultEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -33,6 +34,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun attempts(): AttemptDao
     abstract fun misconceptions(): MisconceptionDao
     abstract fun chunks(): ChunkDao
+    abstract fun testResults(): TestResultDao
 
     companion object {
         private const val TAG = "AppDatabase"
@@ -91,6 +93,21 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Adds timed-test results so scores, marks and time taken survive app restarts. */
+        internal val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS test_results (" +
+                        "id TEXT NOT NULL PRIMARY KEY, mode TEXT NOT NULL, title TEXT NOT NULL, " +
+                        "totalQuestions INTEGER NOT NULL, correctAnswers INTEGER NOT NULL, " +
+                        "scorePercent INTEGER NOT NULL, timeTakenSeconds INTEGER NOT NULL, " +
+                        "timedOut INTEGER NOT NULL, startedAt INTEGER NOT NULL, finishedAt INTEGER NOT NULL)"
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_test_results_finishedAt ON test_results(finishedAt)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_test_results_mode ON test_results(mode)")
+            }
+        }
+
         internal fun createChunkFts(db: SupportSQLiteDatabase) {
             try {
                 db.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(text, content='library_chunks', content_rowid='rowid')")
@@ -140,7 +157,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun create(context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, "ashura_tutor.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) { createFts(db); createChunkFts(db) }
                 })

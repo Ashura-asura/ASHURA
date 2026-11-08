@@ -33,13 +33,16 @@ class MigrationTest {
     }
 
     @Test
-    fun migrate1To4PreservesData() = assertMigration(1)
+    fun migrate1To5PreservesData() = assertMigration(1)
 
     @Test
-    fun migrate2To4PreservesData() = assertMigration(2)
+    fun migrate2To5PreservesData() = assertMigration(2)
 
     @Test
-    fun migrate3To4PreservesData() = assertMigration(3)
+    fun migrate3To5PreservesData() = assertMigration(3)
+
+    @Test
+    fun migrate4To5PreservesData() = assertMigration(4)
 
     private fun assertMigration(fromVersion: Int) {
         createLegacyDatabase(fromVersion)
@@ -48,22 +51,30 @@ class MigrationTest {
             .addMigrations(
                 AppDatabase.MIGRATION_1_2,
                 AppDatabase.MIGRATION_2_3,
-                AppDatabase.MIGRATION_3_4
+                AppDatabase.MIGRATION_3_4,
+                AppDatabase.MIGRATION_4_5
             )
             .allowMainThreadQueries()
             .build()
 
         try {
             val support = database.openHelper.writableDatabase
-            assertEquals(4, support.version)
+            assertEquals(5, support.version)
             assertEquals(
                 "library_chunks",
                 support.query("SELECT name FROM sqlite_master WHERE type='table' AND name='library_chunks'")
                     .use { it.moveToFirst(); it.getString(0) }
             )
+            assertEquals(
+                "test_results",
+                support.query("SELECT name FROM sqlite_master WHERE type='table' AND name='test_results'")
+                    .use { it.moveToFirst(); it.getString(0) }
+            )
 
             runBlocking {
                 assertEquals("Legacy conversation", database.conversations().get("c1")?.title)
+                assertEquals("Legacy note body", database.library().bodyOf("l1"))
+                assertEquals(0, database.testResults().all().size)
                 if (fromVersion >= 2) {
                     val state = database.learningState().get("t1")
                     assertEquals(0.5, state?.masteryEstimate ?: -1.0, 0.0001)
@@ -97,6 +108,10 @@ class MigrationTest {
                 "INSERT INTO conversations (id, title, createdAt, updatedAt) " +
                     "VALUES ('c1', 'Legacy conversation', 1, 2)"
             )
+            db.execSQL(
+                "INSERT INTO library_items (id, title, body, mimeType, originUri, createdAt, updatedAt) " +
+                    "VALUES ('l1', 'Legacy note', 'Legacy note body', 'text/plain', NULL, 1, 2)"
+            )
             if (version >= 2) {
                 AppDatabase.MIGRATION_1_2.migrate(db)
                 db.version = 2
@@ -108,6 +123,10 @@ class MigrationTest {
             if (version >= 3) {
                 AppDatabase.MIGRATION_2_3.migrate(db)
                 db.version = 3
+            }
+            if (version >= 4) {
+                AppDatabase.MIGRATION_3_4.migrate(db)
+                db.version = 4
             }
         } finally {
             helper.close()

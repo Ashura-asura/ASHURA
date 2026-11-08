@@ -13,7 +13,7 @@ Legend:
 - **Not implemented** — do not advertise as available.
 
 Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
-**190 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
+**212 JVM tests, 0 failures**. No physical Android device or emulator has run this build, so every
 hardware-dependent claim below is device-pending, not proven.
 
 ## Implemented and verified on the JVM
@@ -27,7 +27,7 @@ hardware-dependent claim below is device-pending, not proven.
 | Curriculum graph: validated prerequisites, cycle/unknown detection, mastery-based recommendation (§8) | Verified (JVM) | `CurriculumTest` |
 | Seed curriculum: 4 school-mathematics topics, answers re-computed in tests (§8.2) | Verified (JVM) | `CurriculumTest`, `SpacingSchedulerTest` |
 | Lesson planner and spaced-repetition scheduler (§7.2, §7.5) | Verified (JVM) | `LessonPlannerTest`, `SpacingSchedulerTest` |
-| Room schema v1→v4 with committed schema JSON and migration tests (§19) | Verified (JVM) | `MigrationTest`, `schemas/` |
+| Room schema v1→v5 with committed schema JSON and migration tests (§19) | Verified (JVM) | `MigrationTest`, `schemas/` |
 | FTS5 passage search with LIKE fallback; quoted query builder (§10.1) | Verified (JVM) | `GroundingTest`, `FtsQuery` tests |
 | Grounding policy: bounded passages, per-source cap, de-duplication, section-aware citations (§10.2) | Verified (JVM) | `DocumentQuizTest` |
 | Text / Markdown import, strict UTF-8, control stripping, linear normalisation (§9.1, §9.4) | Verified (JVM) | `TextChunkerTest` |
@@ -38,6 +38,9 @@ hardware-dependent claim below is device-pending, not proven.
 | PDF embedded-text extraction via PdfBox-Android, page cap, encrypted-PDF refusal (§9.2) | Verified (JVM) | `PdfTextExtractorTest` (Robolectric) |
 | Provenance-preserving chunking: page/slide/sheet labels start a new chunk (§9.4) | Verified (JVM) | `TextChunkerTest`, `DocumentQuizTest` |
 | Deterministic mixed quiz builder: up to 20 items, ≤12 cloze, ≤6 definitions, explanation prompts (§9.5, §8) | Verified (JVM) | `DocumentQuizTest`, `ExportAndQuizTest` |
+| Deterministic four-option test builder: Quick 20 / Medium 35 / Long 50, four distinct options, both term→definition and definition→term shapes, seeded order, no fill-in-the-blank (§3.4, §12.2) | Verified (JVM) | `ChoiceQuizBuilderTest` |
+| Timed test session: automatic 60 s/question countdown, free navigation, obtained marks, percentage, time taken, timeout marks unanswered as wrong (§3.4) | Verified (JVM) | `TestSessionTest`, `TestModeTest` |
+| Test-result history: persisted marks/time/mode, same-mode previous-result deltas, export and confirmed clear (§3.5, §15.3) | Verified (JVM) | `TestHistoryTest`, `DataControlsTest`, `MigrationTest` |
 | Study packs: 200 assets, 10 subjects × 20 notes, manifest with URL/licence/size/SHA-256, checksum verification (§8, Phase 8) | Verified (JVM) | `StudyPackRepositoryTest` |
 | Structured `ANSWER:` / `STEPS:` / `CHECK:` parsing with plain-text fallback (§5, §7) | Verified (JVM) | `StructuredAnswerTest` |
 | Streaming contract: one `Complete` by default, deltas before completion, no delta after completion (§5.3, §25) | Verified (JVM) | `StreamingTest`, `LiteRtLmRuntimeContractTest` |
@@ -63,6 +66,8 @@ hardware-dependent claim below is device-pending, not proven.
 | Scanned-PDF path: pages with `< 24` embedded chars are OCR'd, thin embedded text + OCR both kept, per-page failures isolated, 24-page cap disclosed (§9.2, §9.3) | Written, device-pending | Quality and speed on a real multi-page scan |
 | Editable imported text: Library → edit → normalise → re-chunk → re-index in one transaction (§9.3) | Written, device-pending | Compose text-field behaviour with a long OCR body |
 | Library import status: character size, passage count, date added, “not indexed” state and Re-index (§9.4) | Written, device-pending | Wording/layout on narrow screens; re-indexing a genuinely empty note is refused |
+| Timed test screen and result review: countdown, one-question-at-a-time navigation, marks/time/delta summary, per-question review (§3.4, §3.5) | Written, device-pending | Timer behaviour under backgrounding/rotation, long option wrapping, TalkBack reading of the countdown; an in-progress test is not persisted across process death |
+| Library study-set indicators: live “X of Y added”, check mark for added sets, + add and − remove with confirmation (§8) | Written, device-pending | Row layout at large font scale, remove confirmation and the effect on imported notes |
 | Chat surface: streaming, stop, copy, citations, New chat, follow-if-at-bottom, jump-to-latest (§3.3) | Written, device-pending | IME resize, scroll feel, rendering |
 | PDF/DOCX/XLSX/PPTX/CSV import through the SAF picker (§9.1) | Written, device-pending | Vendor file-provider quirks and real-world files |
 | Study-pack import of all 200 assets with checksum verification (§8, Phase 8) | Written, device-pending | Import time and storage use on the phone |
@@ -74,15 +79,15 @@ hardware-dependent claim below is device-pending, not proven.
 |---|---|---|
 | Document import (§9) | TXT, MD, CSV/TSV, PDF, DOCX, XLSX, PPTX, PNG/JPEG/WebP | Legacy `.doc/.xls/.ppt` are deliberately rejected; no EPUB, ODT, RTF, HTML or audio/video notes |
 | OCR (§9.3) | On-device Latin + Devanagari, orientation retry, per-page isolation, editable output, OCR-labelled passages | Confidence scores are not surfaced; no language-pack picker; no manual page-region selection; no image clean-up/pre-processing |
-| Document questions (§9.5) | Cloze recall, definitions, explanation prompts, page/slide/sheet spread | No multiple-choice distractors, no table/number reasoning questions, no answer-key extraction from the document |
+| Document questions (§9.5) | Four-option timed tests from definitions, plus the older cloze/definition/explanation practice builder, page/slide/sheet spread | No table/number reasoning questions, no answer-key extraction from the document, no generated flashcards |
 | Spreadsheet behaviour (§9.6) | Sheet + `A1` coordinates, displayed value and formula | No range selection, no column-type summaries, no chart/image references |
 | Retrieval (§10) | SQLite FTS5 (BM25), LIKE fallback, per-document diversity, provenance | No embeddings or hybrid semantic retrieval; no retrieval evaluation set; no query expansion |
 | Verification (§12) | Deterministic calculator, exact answer checker, source citations, honest-confidence labels | No claim-level evidence-coverage check that every statement is supported; no independent rubric; no code-execution sandbox |
 | Teaching engine (§7) | Lesson planner, Socratic/direct prompt styles, hint ladder, stuck detection, direct-answer override, misconceptions recorded | Adaptive explanation is prompt-driven, not a full misconception taxonomy per topic |
 | Curriculum (§8) | 4 maths topics + 200 bundled study notes | No broad multi-subject curriculum graph with objectives/prerequisites per subject |
-| Assessment (§12.2) | Topic quiz, document quiz, self-assessed explanations, spaced review, hint assistance tracking, deterministic explain-my-mistake | No diagnostic exam, exam simulation, transfer-question generator or delayed-recall scheduling beyond the current scheduler |
+| Assessment (§12.2) | Topic quiz, deterministic four-option timed tests (Quick/Medium/Long), saved marks/time/score history, self-assessed explanations, spaced review, hint assistance tracking, deterministic explain-my-mistake | No diagnostic exam, formal exam simulation, transfer-question generator or delayed-recall scheduling beyond the current scheduler |
 | Data model (§19) | Conversations, messages, library items, chunks, concepts, learning state, attempts, misconceptions | No stored original file, no `file_hash`/`storage_uri`, no separate `Document`/`DocumentChunk` metadata columns for heading path or extraction method |
-| Data controls (§15.3) | Export JSON, delete one note, clear all chat history, delete one conversation, delete all data | No automatic retention/expiry policy, no selective export, no encrypted database |
+| Data controls (§15.3) | Export JSON (including test results), delete one note, remove a study set after confirmation, clear all chat history, delete one conversation, confirmed clear of test history, delete all data | No automatic retention/expiry policy, no selective export, no encrypted database |
 | Resource management (§16) | Device tiers, one-model rule, caps, memory-pressure handling removed in favour of user control | Device benchmarks and thermal measurements are unrun; no GPU backend exercised |
 | Accessibility (§3.6) | Content descriptions, headings, live regions, large touch targets | No dedicated TalkBack pass, font-scale stress test or switch-access review |
 

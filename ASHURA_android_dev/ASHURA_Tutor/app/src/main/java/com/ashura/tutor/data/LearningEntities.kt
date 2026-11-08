@@ -71,6 +71,25 @@ data class LibraryChunkEntity(
     val endOffset: Int
 )
 
+/**
+ * One finished timed test (spec §3.4 / §19 assessment result). The per-question choices are not
+ * stored, only the aggregate marks, time and mode, which is what the history and score-change view
+ * need. Deleted with the rest of the learner data by delete-all-data.
+ */
+@Entity(tableName = "test_results", indices = [Index("finishedAt"), Index("mode")])
+data class TestResultEntity(
+    @PrimaryKey val id: String,
+    val mode: String,
+    val title: String,
+    val totalQuestions: Int,
+    val correctAnswers: Int,
+    val scorePercent: Int,
+    val timeTakenSeconds: Int,
+    val timedOut: Boolean,
+    val startedAt: Long,
+    val finishedAt: Long
+)
+
 /** Search result row: a passage plus where it came from. Not a table. */
 data class ChunkHit(
     val chunkId: String,

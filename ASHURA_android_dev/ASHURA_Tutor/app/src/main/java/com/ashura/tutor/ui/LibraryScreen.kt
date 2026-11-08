@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -44,6 +47,8 @@ import com.ashura.tutor.data.LibraryItemEntity
 import com.ashura.tutor.data.StudyLibrary
 import com.ashura.tutor.data.StudySet
 import com.ashura.tutor.data.StudySubject
+import com.ashura.tutor.domain.assessment.TestMode
+import com.ashura.tutor.domain.assessment.formatClock
 import com.ashura.tutor.domain.library.ImportStatus
 
 /** Import notes, search their passages, delete them. Imported text is only ever shown as plain text. */
@@ -51,19 +56,23 @@ import com.ashura.tutor.domain.library.ImportStatus
 fun LibraryScreen(
     libraryItems: List<LibraryItemEntity>,
     chunkCounts: Map<String, Int>?,
+    addedTitles: Set<String>,
     onReindex: (String, String) -> Unit,
     state: LibraryUiState,
     studyLibrary: StudyLibrary?,
     onImport: (android.net.Uri) -> Unit,
     onQueryChange: (String) -> Unit,
     onDelete: (String) -> Unit,
-    onQuiz: (String, String) -> Unit,
+    onTestNote: (String, String) -> Unit,
+    onStartTest: (TestMode) -> Unit,
     onEditText: (String, String, String) -> Unit,
     onAddStudySet: (StudySet) -> Unit,
-    onAddStudySubject: (StudySubject) -> Unit
+    onAddStudySubject: (StudySubject) -> Unit,
+    onRemoveStudySet: (StudySet) -> Unit
 ) {
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(onImport) }
     var pendingDelete by remember { mutableStateOf<LibraryItemEntity?>(null) }
+    var pendingRemove by remember { mutableStateOf<StudySet?>(null) }
     var editing by remember { mutableStateOf<LibraryItemEntity?>(null) }
     var editText by remember { mutableStateOf("") }
     var expandedSubject by rememberSaveable { mutableStateOf<String?>(null) }
@@ -106,6 +115,39 @@ fun LibraryScreen(
             }
         }
 
+        item { SectionHeading(stringResource(R.string.library_test_title)) }
+        item {
+            Text(
+                stringResource(R.string.library_test_intro),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                TestMode.entries.forEach { mode ->
+                    OutlinedButton(
+                        onClick = { onStartTest(mode) },
+                        enabled = !state.busy,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+                            Text(testModeLabel(mode), style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                stringResource(
+                                    R.string.library_test_detail,
+                                    mode.questionCount,
+                                    formatClock(mode.durationSeconds)
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         item { SectionHeading(stringResource(R.string.study_sets_title)) }
         if (studyLibrary == null) {
             item {
@@ -125,6 +167,8 @@ fun LibraryScreen(
             }
             items(studyLibrary.subjects, key = { "study-subject:${it.id}" }) { subject ->
                 val expanded = expandedSubject == subject.id
+                val addedCount = subject.sets.count { it.title in addedTitles }
+                val allAdded = addedCount == subject.sets.size
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(
@@ -134,24 +178,38 @@ fun LibraryScreen(
                             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
                                 Text(subject.name, style = MaterialTheme.typography.titleSmall)
                                 Text(
-                                    stringResource(R.string.study_sets_level, subject.level, subject.sets.size),
+                                    stringResource(
+                                        R.string.study_sets_level_added,
+                                        subject.level, addedCount, subject.sets.size
+                                    ),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
-                        IconButton(
-                            onClick = { onAddStudySubject(subject) },
-                            enabled = !state.busy
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = stringResource(R.string.study_sets_add_all_cd, subject.name)
-                            )
+                        if (allAdded) {
+                            IconButton(onClick = {}, enabled = false) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = stringResource(R.string.study_sets_all_added_cd, subject.name),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        } else {
+                            IconButton(
+                                onClick = { onAddStudySubject(subject) },
+                                enabled = !state.busy
+                            ) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = stringResource(R.string.study_sets_add_all_cd, subject.name)
+                                )
+                            }
                         }
                     }
                     if (expanded) {
                         subject.sets.forEach { set ->
+                            val added = set.title in addedTitles
                             Row(
                                 Modifier.fillMaxWidth().padding(start = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -177,8 +235,33 @@ fun LibraryScreen(
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
-                                TextButton(onClick = { onAddStudySet(set) }, enabled = !state.busy) {
-                                    Text(stringResource(R.string.study_sets_add))
+                                if (added) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Text(
+                                            stringResource(R.string.study_sets_added),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        IconButton(
+                                            onClick = { pendingRemove = set },
+                                            enabled = !state.busy
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Remove,
+                                                contentDescription = stringResource(R.string.study_sets_remove_cd, set.title)
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    TextButton(onClick = { onAddStudySet(set) }, enabled = !state.busy) {
+                                        Text(stringResource(R.string.study_sets_add_sign))
+                                    }
                                 }
                             }
                         }
@@ -253,7 +336,7 @@ fun LibraryScreen(
                         Text(stringResource(R.string.library_reindex))
                     }
                 }
-                TextButton(onClick = { onQuiz(item.id, item.title) }) { Text(stringResource(R.string.library_quiz)) }
+                TextButton(onClick = { onTestNote(item.id, item.title) }) { Text(stringResource(R.string.library_test)) }
                 IconButton(onClick = { editText = item.body; editing = item }) {
                     Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.library_edit_cd, item.title))
                 }
@@ -307,6 +390,25 @@ fun LibraryScreen(
             },
             dismissButton = {
                 TextButton(onClick = { editing = null }) { Text(stringResource(R.string.action_cancel)) }
+            }
+        )
+    }
+
+    pendingRemove?.let { set ->
+        AlertDialog(
+            onDismissRequest = { pendingRemove = null },
+            title = { Text(stringResource(R.string.study_sets_remove_title)) },
+            text = { Text(stringResource(R.string.study_sets_remove_body, set.title)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingRemove = null
+                        onRemoveStudySet(set)
+                    }
+                ) { Text(stringResource(R.string.study_sets_remove_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingRemove = null }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }

@@ -117,6 +117,9 @@ import com.ashura.tutor.domain.ConfidenceLabel
 import com.ashura.tutor.domain.ResponseMode
 import com.ashura.tutor.domain.StructuredAnswer
 import com.ashura.tutor.domain.TutorStyle
+import com.ashura.tutor.domain.assessment.TestMode
+import com.ashura.tutor.domain.assessment.TestResultChange
+import com.ashura.tutor.domain.assessment.formatClock
 import com.ashura.tutor.domain.runtime.ModelCatalog
 import com.ashura.tutor.domain.runtime.ModelManifest
 import com.ashura.tutor.domain.runtime.RamTier
@@ -151,6 +154,8 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
     val modelState by viewModel.modelState.collectAsState()
     val profile by viewModel.profile.collectAsState()
     val runtimeMetrics by viewModel.runtimeMetrics.collectAsState()
+    val testState by viewModel.test.collectAsState()
+    val testHistory by viewModel.testHistory.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.openTutorTab.collect { selected = Destination.TUTOR.name } }
 
@@ -192,6 +197,15 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                     onOpenTutor = { selected = Destination.TUTOR.name }
                 )
                 Destination.TUTOR -> when {
+                    testState.session != null -> TestScreen(
+                        state = testState,
+                        onSelect = viewModel::selectTestOption,
+                        onNext = viewModel::nextTestQuestion,
+                        onPrevious = viewModel::previousTestQuestion,
+                        onFinish = { viewModel.finishTest() },
+                        onClose = viewModel::closeTest,
+                        onRetake = viewModel::retakeTest
+                    )
                     practice.question != null -> PracticeScreen(
                         state = practice,
                         onSubmit = viewModel::submitAnswer,
@@ -229,14 +243,17 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                 }
                 Destination.LIBRARY -> LibraryScreen(
                     libraryItems = libraryItems, chunkCounts = viewModel.chunkCounts.collectAsState().value,
+                    addedTitles = libraryItems.map { it.title }.toSet(),
                     onReindex = viewModel::reindexLibraryItem, state = libraryState, studyLibrary = studyLibrary,
                     onImport = viewModel::importDocument, onQueryChange = viewModel::updateLibraryQuery,
-                    onDelete = viewModel::deleteLibraryItem, onQuiz = viewModel::startNoteQuiz,
+                    onDelete = viewModel::deleteLibraryItem, onTestNote = viewModel::startNoteTest,
+                    onStartTest = viewModel::startTest,
                     onEditText = viewModel::updateLibraryText,
                     onAddStudySet = viewModel::importStudySet,
-                    onAddStudySubject = viewModel::importStudySubject
+                    onAddStudySubject = viewModel::importStudySubject,
+                    onRemoveStudySet = viewModel::removeStudySet
                 )
-                Destination.PROGRESS -> ProgressScreen(progress)
+                Destination.PROGRESS -> ProgressScreen(progress, testHistory, viewModel::clearTestHistory)
                 Destination.SETTINGS -> SettingsScreen(
                     message = settingsMessage,
                     modelState = modelState,
@@ -943,8 +960,13 @@ private fun TypingIndicator() {
 }
 
 @Composable
-private fun ProgressScreen(progress: ProgressUiState) {
+private fun ProgressScreen(
+    progress: ProgressUiState,
+    testHistory: List<TestResultChange>,
+    onClearTestHistory: () -> Unit
+) {
     val dateFormat = remember { DateFormat.getDateInstance(DateFormat.MEDIUM) }
+    var confirmClearTests by remember { mutableStateOf(false) }
     LazyColumn(
         Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -968,6 +990,88 @@ private fun ProgressScreen(progress: ProgressUiState) {
             item { SectionHeading(stringResource(R.string.progress_misconceptions)) }
             items(progress.misconceptions) { Text("• $it") }
         }
+
+        item { SectionHeading(stringResource(R.string.progress_tests_title)) }
+        if (testHistory.isEmpty()) {
+            item {
+                Text(
+                    stringResource(R.string.progress_tests_empty),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        items(testHistory, key = { it.result.id }) { change ->
+            val mode = TestMode.of(change.result.mode)
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    (mode?.let { testModeLabel(it) } ?: change.result.mode) + " · " + change.result.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    stringResource(
+                        R.string.progress_test_line,
+                        change.result.correct,
+                        change.result.total,
+                        change.result.percent,
+                        formatClock(change.result.timeTakenSeconds)
+                    ),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    dateFormat.format(Date(change.result.finishedAt)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                change.marksDelta?.let { delta ->
+                    Text(
+                        when {
+                            delta > 0 -> stringResource(R.string.progress_test_delta_up, delta)
+                            delta < 0 -> stringResource(R.string.progress_test_delta_down, delta)
+                            else -> stringResource(R.string.progress_test_delta_same)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = when {
+                            delta > 0 -> MaterialTheme.colorScheme.primary
+                            delta < 0 -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+                }
+                if (change.result.timedOut) {
+                    Text(
+                        stringResource(R.string.progress_test_timed_out),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+        if (testHistory.isNotEmpty()) {
+            item {
+                TextButton(onClick = { confirmClearTests = true }) {
+                    Text(stringResource(R.string.progress_tests_clear))
+                }
+            }
+        }
+    }
+
+    if (confirmClearTests) {
+        AlertDialog(
+            onDismissRequest = { confirmClearTests = false },
+            title = { Text(stringResource(R.string.progress_tests_clear_title)) },
+            text = { Text(stringResource(R.string.progress_tests_clear_body)) },
+            confirmButton = {
+                TextButton(onClick = { confirmClearTests = false; onClearTestHistory() }) {
+                    Text(stringResource(R.string.action_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmClearTests = false }) { Text(stringResource(R.string.action_cancel)) }
+            }
+        )
     }
 }
 
