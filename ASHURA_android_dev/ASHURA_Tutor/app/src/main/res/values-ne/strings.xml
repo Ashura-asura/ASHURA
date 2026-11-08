@@ -67,6 +67,8 @@
     <string name="tutor_composer_hint">ASHURA लाई लेख्नुहोस्…</string>
     <string name="tutor_send">पठाउनुहोस्</string>
     <string name="tutor_thinking">सोच्दै…</string>
+    <string name="tutor_searching_notes">तपाईंका नोट खोज्दै…</string>
+    <string name="tutor_writing">उत्तर लेख्दै…</string>
     <string name="tutor_new_chat">नयाँ कुराकानी</string>
     <string name="tutor_scroll_to_latest">पछिल्लो सन्देशमा जानुहोस्</string>
     <string name="tutor_suggestion_start">सुरु गर्नुहोस्</string>
@@ -77,7 +79,15 @@
     <string name="progress_title">तपाईंको प्रगति</string>
     <string name="progress_explainer">दक्षता तपाईंका प्रयासहरूबाट गरिएको अनुमान हो, अंक होइन।</string>
     <string name="progress_empty">अझै अभ्यास रेकर्ड गरिएको छैन। प्रगति हेर्न एउटा अभ्यास प्रश्न पूरा गर्नुहोस्।</string>
-    <string name="progress_line">दक्षता %1$d%% · प्रमाण %2$d%% · %3$s</string>
+    <string name="progress_topics_practised">अभ्यास गरिएका विषय</string>
+    <string name="progress_due_label">दोहोर्याउन बाँकी</string>
+    <string name="progress_tests_taken">दिइएका परीक्षा</string>
+    <string name="progress_topics_heading">विषयहरू</string>
+    <string name="progress_topic_line">तपाईंका उत्तरबाट अनुमान · %1$s</string>
+    <string name="progress_mastery_strong">बलियो</string>
+    <string name="progress_mastery_developing">विकासशील</string>
+    <string name="progress_mastery_started">सुरु भयो</string>
+    <string name="progress_mastery_new">सुरु भएको छैन</string>
     <string name="progress_review_due">दोहोर्याउने समय</string>
     <string name="progress_next_review">अर्को दोहोर्याउने %1$s</string>
     <string name="progress_misconceptions">दोहोरिने गलत बुझाइहरू</string>

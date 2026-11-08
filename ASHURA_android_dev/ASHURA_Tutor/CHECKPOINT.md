@@ -579,3 +579,35 @@ Manual device check:
 4. Tap an item: confirm format, size, date and index state, then use Test, Edit, Delete and (on a
    deliberately unindexed item) Re-index.
 5. TalkBack: confirm each chip reads as selected/not selected and each row reads its title and status.
+
+---
+
+# Checkpoint 17 — Tutor phases and honest Progress (v0.5.10, §3.3/§3.5)
+
+Two screens still left the learner guessing: Tutor showed an unlabelled “Thinking…” while retrieval and
+generation ran, and Progress printed two percentages per topic, which reads like false precision.
+
+Tutor:
+- `TutorUiState.phase` now carries `SEARCHING_NOTES` while passages are retrieved and `WRITING` once the
+  answer starts. The empty streaming bubble shows “Searching your notes…” or “Writing the answer…”, and
+  the phase is cleared on success, timeout, error and cancellation, so the UI never claims work that has
+  stopped (spec §3.3).
+
+Progress:
+- Three counts at the top: topics practised, due for review, tests taken.
+- Each topic no longer shows mastery and evidence percentages. It shows a qualitative band — Strong,
+  Developing, Started or Not started — a progress bar, and “Estimated from your answers · next review …”.
+  The explainer still states mastery is an estimate, not a grade (spec §3.5).
+- The progress bar has a TalkBack label equal to the mastery band.
+
+Verification: **215 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. There are no
+Compose UI tests, so both layouts remain **NOT VERIFIED** on a device.
+
+Manual device check:
+1. Ask a question with the model loaded and watch the status change from searching to writing; cancel
+   mid-answer and confirm the status disappears and the bubble says “Stopped.”
+2. Ask a deterministic question (e.g. a calculation) and confirm the busy state clears when the answer
+   appears.
+3. Open Progress after some practice: confirm the three counts, the qualitative bands, and that no raw
+   mastery percentage is shown.
+4. TalkBack: confirm the progress bar reads its band, not an unexplained percentage.

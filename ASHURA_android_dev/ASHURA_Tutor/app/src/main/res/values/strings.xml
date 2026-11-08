@@ -65,6 +65,8 @@
     <string name="tutor_composer_hint">Message ASHURA…</string>
     <string name="tutor_send">Send</string>
     <string name="tutor_thinking">Thinking…</string>
+    <string name="tutor_searching_notes">Searching your notes…</string>
+    <string name="tutor_writing">Writing the answer…</string>
     <string name="tutor_new_chat">New chat</string>
     <string name="tutor_scroll_to_latest">Scroll to the latest message</string>
     <string name="tutor_suggestion_start">Start</string>
@@ -76,7 +78,15 @@
     <string name="progress_title">Your Progress</string>
     <string name="progress_explainer">Mastery is an estimate from your recorded attempts, not a grade.</string>
     <string name="progress_empty">No practice recorded yet. Finish a practice question to see progress here.</string>
-    <string name="progress_line">Mastery %1$d%% · evidence %2$d%% · %3$s</string>
+    <string name="progress_topics_practised">Topics practised</string>
+    <string name="progress_due_label">Due for review</string>
+    <string name="progress_tests_taken">Tests taken</string>
+    <string name="progress_topics_heading">Topics</string>
+    <string name="progress_topic_line">Estimated from your answers · %1$s</string>
+    <string name="progress_mastery_strong">Strong</string>
+    <string name="progress_mastery_developing">Developing</string>
+    <string name="progress_mastery_started">Started</string>
+    <string name="progress_mastery_new">Not started</string>
     <string name="progress_review_due">review due</string>
     <string name="progress_next_review">next review %1$s</string>
     <string name="progress_misconceptions">Recurring misunderstandings</string>

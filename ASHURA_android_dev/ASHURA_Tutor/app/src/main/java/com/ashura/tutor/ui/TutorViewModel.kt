@@ -74,9 +74,14 @@ data class TutorUiState(
     val citations: List<String> = emptyList(),
     val isBusy: Boolean = false, val error: String? = null,
     val mode: ResponseMode? = null,
+    /** What the tutor is doing while busy, so the UI never shows a bare spinner (spec §3.3). */
+    val phase: TutorPhase? = null,
     /** Full chat transcript for the tutor screen. */
     val messages: List<ChatMessage> = emptyList()
 )
+
+/** Busy sub-states for the tutor: searching notes first, then writing the answer. */
+enum class TutorPhase { SEARCHING_NOTES, WRITING }
 
 enum class ChatRole { USER, ASSISTANT }
 
@@ -668,7 +673,7 @@ class TutorViewModel(
         _state.update {
             it.copy(
                 isBusy = true, answer = "", limitation = null, citations = emptyList(),
-                error = null, mode = null, question = "",
+                error = null, mode = null, phase = TutorPhase.SEARCHING_NOTES, question = "",
                 messages = it.messages +
                     ChatMessage("u${System.nanoTime()}", ChatRole.USER, question) +
                     ChatMessage(assistantId, ChatRole.ASSISTANT, "", streaming = true)
@@ -688,6 +693,7 @@ class TutorViewModel(
                 } catch (e: Exception) {
                     GroundingPolicy.select(emptyList())
                 }
+                _state.update { it.copy(phase = TutorPhase.WRITING) }
                 val profile = learnerProfile.profile.value
                 // Socratic guidance must not become an obstacle (spec §1.2C): "just tell me" switches
                 // this one answer to direct explanation without changing the saved preference.
@@ -723,7 +729,8 @@ class TutorViewModel(
                             _state.update {
                                 it.copy(
                                     answer = result.answer, limitation = result.limitation,
-                                    citations = result.citations, isBusy = false, mode = result.mode
+                                    citations = result.citations, isBusy = false, mode = result.mode,
+                                    phase = null
                                 )
                             }
                         }
@@ -733,18 +740,20 @@ class TutorViewModel(
                 failAssistant(assistantId)
                 _state.update {
                     it.copy(
-                        isBusy = false,
+                        isBusy = false, phase = null,
                         error = "The model ran out of time before finishing. Try again, or ask for the " +
                             "derivation one step at a time."
                     )
                 }
             } catch (cancelled: CancellationException) {
                 finishStopped(assistantId)
-                _state.update { it.copy(isBusy = false) }
+                _state.update { it.copy(isBusy = false, phase = null) }
                 throw cancelled
             } catch (failure: Exception) {
                 failAssistant(assistantId)
-                _state.update { it.copy(isBusy = false, error = failure.message ?: "Something went wrong.") }
+                _state.update {
+                    it.copy(isBusy = false, phase = null, error = failure.message ?: "Something went wrong.")
+                }
             }
         }
     }
@@ -756,6 +765,7 @@ class TutorViewModel(
         _state.update { s ->
             s.copy(
                 isBusy = false,
+                phase = null,
                 messages = s.messages.map { message ->
                     if (message.id in streaming) message.copy(
                         text = message.text.ifBlank { "Stopped." },

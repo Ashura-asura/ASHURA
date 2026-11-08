@@ -98,6 +98,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -239,7 +240,7 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                     else -> TutorScreen(
                         messages = state.messages,
                         question = state.question,
-                        isBusy = state.isBusy, error = state.error,
+                        isBusy = state.isBusy, error = state.error, phase = state.phase,
                         modelLoaded = (modelState as? ModelState.Ready)?.loaded == true,
                         style = profile.style,
                         onToggleStyle = {
@@ -523,7 +524,7 @@ private fun HomeAction(
 @Composable
 private fun TutorScreen(
     messages: List<ChatMessage>, question: String,
-    isBusy: Boolean, error: String?, modelLoaded: Boolean,
+    isBusy: Boolean, error: String?, phase: TutorPhase?, modelLoaded: Boolean,
     style: TutorStyle, onToggleStyle: () -> Unit,
     topics: List<TopicSummary>, recommendedId: String?,
     onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit,
@@ -616,6 +617,8 @@ private fun TutorScreen(
                     items(messages, key = { it.id }) { message ->
                         ChatBubble(
                             message,
+                            // Only the empty, still-streaming answer needs the phase label.
+                            phase = if (message.streaming && message.text.isBlank()) phase else null,
                             onRegenerate = if (!isBusy && message.id == messages.lastOrNull()?.id) onRegenerate else null
                         )
                     }
@@ -893,7 +896,11 @@ private fun ChatComposer(
 }
 
 @Composable
-private fun ChatBubble(message: ChatMessage, onRegenerate: (() -> Unit)? = null) {
+private fun ChatBubble(
+    message: ChatMessage,
+    phase: TutorPhase? = null,
+    onRegenerate: (() -> Unit)? = null
+) {
     if (message.role == ChatRole.USER) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             Surface(
@@ -910,7 +917,7 @@ private fun ChatBubble(message: ChatMessage, onRegenerate: (() -> Unit)? = null)
             }
         }
     } else {
-        AssistantMessage(message, onRegenerate)
+        AssistantMessage(message, phase, onRegenerate)
     }
 }
 
@@ -919,7 +926,11 @@ private fun ChatBubble(message: ChatMessage, onRegenerate: (() -> Unit)? = null)
  * no second speech bubble. Actions sit quietly underneath the answer.
  */
 @Composable
-private fun AssistantMessage(message: ChatMessage, onRegenerate: (() -> Unit)? = null) {
+private fun AssistantMessage(
+    message: ChatMessage,
+    phase: TutorPhase? = null,
+    onRegenerate: (() -> Unit)? = null
+) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Surface(
             shape = CircleShape,
@@ -939,7 +950,7 @@ private fun AssistantMessage(message: ChatMessage, onRegenerate: (() -> Unit)? =
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SelectionContainer {
                 if (message.streaming && message.text.isBlank()) {
-                    TypingIndicator()
+                    TypingIndicator(phase)
                 } else {
                     AssistantContent(message.text, message.streaming)
                 }
@@ -1110,7 +1121,7 @@ private fun FormattedText(text: String, modifier: Modifier = Modifier, showCaret
 }
 
 @Composable
-private fun TypingIndicator() {
+private fun TypingIndicator(phase: TutorPhase? = null) {
     val transition = rememberInfiniteTransition(label = "typing")
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         repeat(3) { index ->
@@ -1132,7 +1143,13 @@ private fun TypingIndicator() {
         }
         Spacer(Modifier.size(8.dp))
         Text(
-            stringResource(R.string.tutor_thinking),
+            stringResource(
+                when (phase) {
+                    TutorPhase.SEARCHING_NOTES -> R.string.tutor_searching_notes
+                    TutorPhase.WRITING -> R.string.tutor_writing
+                    null -> R.string.tutor_thinking
+                }
+            ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -1153,16 +1170,58 @@ private fun ProgressScreen(
     ) {
         item { ScreenHeading(stringResource(R.string.progress_title)) }
         item { Text(stringResource(R.string.progress_explainer), style = MaterialTheme.typography.bodySmall) }
-        if (progress.topics.isEmpty()) item { Text(stringResource(R.string.progress_empty)) }
+        if (progress.topics.isEmpty()) {
+            item { Text(stringResource(R.string.progress_empty)) }
+        } else {
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    ProgressStat(
+                        value = progress.topics.count { it.mastery > 0.0 }.toString(),
+                        label = stringResource(R.string.progress_topics_practised),
+                        modifier = Modifier.weight(1f)
+                    )
+                    ProgressStat(
+                        value = progress.dueCount.toString(),
+                        label = stringResource(R.string.progress_due_label),
+                        modifier = Modifier.weight(1f)
+                    )
+                    ProgressStat(
+                        value = testHistory.size.toString(),
+                        label = stringResource(R.string.progress_tests_taken),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            item { SectionHeading(stringResource(R.string.progress_topics_heading)) }
+        }
         items(progress.topics, key = { it.topicId }) { t ->
+            val label = masteryLabel(t.mastery)
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(t.title, style = MaterialTheme.typography.titleMedium)
-                LinearProgressIndicator(progress = { t.mastery.toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(t.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (t.due) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                LinearProgressIndicator(
+                    progress = { t.mastery.toFloat().coerceIn(0f, 1f) },
+                    modifier = Modifier.fillMaxWidth().semantics {
+                        contentDescription = label
+                    }
+                )
                 val review = if (t.due) stringResource(R.string.progress_review_due)
                 else stringResource(R.string.progress_next_review, dateFormat.format(Date(t.nextReviewAt)))
                 Text(
-                    stringResource(R.string.progress_line, (t.mastery * 100).toInt(), (t.confidence * 100).toInt(), review),
-                    style = MaterialTheme.typography.bodySmall
+                    stringResource(R.string.progress_topic_line, review),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -1254,6 +1313,37 @@ private fun ProgressScreen(
         )
     }
 }
+
+/** One at-a-glance count on Progress. Labels stay words, never a false-precision score. */
+@Composable
+private fun ProgressStat(value: String, label: String, modifier: Modifier = Modifier) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier
+    ) {
+        Column(Modifier.padding(vertical = 12.dp, horizontal = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(value, style = MaterialTheme.typography.headlineSmall)
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/** Qualitative mastery band (spec §3.5 avoids showing a precise-looking percentage). */
+@Composable
+private fun masteryLabel(mastery: Double): String = stringResource(
+    when {
+        mastery >= 0.85 -> R.string.progress_mastery_strong
+        mastery >= 0.6 -> R.string.progress_mastery_developing
+        mastery > 0.0 -> R.string.progress_mastery_started
+        else -> R.string.progress_mastery_new
+    }
+)
 
 @Composable
 private fun levelLabel(level: LearnerLevel): String = stringResource(

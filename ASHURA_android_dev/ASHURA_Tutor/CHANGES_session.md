@@ -46,6 +46,9 @@ Integrated into the main tree and verified here with `./gradlew clean :app:testD
 15. Library (P4.7/§3.4): split into Material / Study sets / Tests; Material filters All/Recent/Documents/Notes;
     tapping an item opens a detail dialog with format, size, date, index state, test, edit, re-index and
     delete. Removed the long single scroll. Device layout and TalkBack remain unverified.
+16. Tutor phases (§3.3): “Searching your notes…” then “Writing the answer…” in the streaming bubble, cleared
+    on success/error/cancel. Progress (§3.5): practised/due/tests counts and qualitative mastery bands instead
+    of mastery/evidence percentages. Device layout and TalkBack remain unverified.
 
 Tests added: `ChoiceQuizBuilderTest`, `TestSessionTest`, `TestModeTest`, `TestHistoryTest`,
 `DataControlsTest`, plus the v4→v5 migration case. `ImportStatusTest`, `MistakeExplainerTest`,
