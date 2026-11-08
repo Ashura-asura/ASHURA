@@ -40,6 +40,9 @@ Integrated into the main tree and verified here with `./gradlew clean :app:testD
 13. Diagnostics export (P1.2, partial): Settings can save `ashura-diagnostics.json` containing measured
     runtime counters and device/RAM/storage metadata. It contains no learner text and has an exact-key test.
     p50/p95, battery drain, thermal status and peak-RAM sampling still need a real device run.
+14. Home screen (P4.6/§3.2): continue card, Ask/Learn/Import/Review tiles, three recent items, model and
+    offline status, privacy line. Import now shares one MIME list with Library and switches to Library so
+    progress is visible. Device layout and TalkBack remain unverified.
 
 Tests added: `ChoiceQuizBuilderTest`, `TestSessionTest`, `TestModeTest`, `TestHistoryTest`,
 `DataControlsTest`, plus the v4→v5 migration case. `ImportStatusTest`, `MistakeExplainerTest`,

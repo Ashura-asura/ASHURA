@@ -112,6 +112,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.ashura.tutor.R
 import com.ashura.tutor.data.ConversationEntity
+import com.ashura.tutor.data.LibraryItemEntity
 import com.ashura.tutor.data.model.ModelState
 import com.ashura.tutor.data.profile.LearnerProfile
 import com.ashura.tutor.domain.LearnerLevel
@@ -192,12 +193,24 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
         Surface(Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets), color = MaterialTheme.colorScheme.background) {
             when (Destination.valueOf(selected)) {
                 Destination.HOME -> HomeScreen(
-                    recommendedTitle = progress.recommendedTitle, dueCount = progress.dueCount,
+                    recommendedTitle = progress.recommendedTitle,
+                    dueCount = progress.dueCount,
+                    recentItems = libraryItems.take(3),
+                    modelReady = (modelState as? ModelState.Ready)?.loaded == true,
+                    modelBusy = modelState is ModelState.Downloading || modelState is ModelState.Verifying ||
+                        modelState is ModelState.Loading || modelState is ModelState.Importing,
                     onContinue = {
                         progress.recommendedTopicId?.let(viewModel::startTopic)
                         selected = Destination.TUTOR.name
                     },
-                    onOpenTutor = { selected = Destination.TUTOR.name }
+                    onAsk = { selected = Destination.TUTOR.name },
+                    onLearn = { selected = Destination.TUTOR.name },
+                    onReview = { selected = Destination.PROGRESS.name },
+                    onImport = { uri ->
+                        viewModel.importDocument(uri)
+                        selected = Destination.LIBRARY.name
+                    },
+                    onOpenLibrary = { selected = Destination.LIBRARY.name }
                 )
                 Destination.TUTOR -> when {
                     testState.session != null -> TestScreen(
@@ -324,23 +337,186 @@ private fun BrandSplash() {
 }
 
 @Composable
-private fun HomeScreen(recommendedTitle: String?, dueCount: Int, onContinue: () -> Unit, onOpenTutor: () -> Unit) {
+private fun HomeScreen(
+    recommendedTitle: String?,
+    dueCount: Int,
+    recentItems: List<LibraryItemEntity>,
+    modelReady: Boolean,
+    modelBusy: Boolean,
+    onContinue: () -> Unit,
+    onAsk: () -> Unit,
+    onLearn: () -> Unit,
+    onReview: () -> Unit,
+    onImport: (android.net.Uri) -> Unit,
+    onOpenLibrary: () -> Unit
+) {
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(onImport) }
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, modifier = Modifier.semantics { heading() })
-        Text(stringResource(R.string.home_tagline), style = MaterialTheme.typography.titleMedium)
-        Text(stringResource(R.string.home_description))
-        if (recommendedTitle != null) {
-            Button(onClick = onContinue, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.home_next_lesson, recommendedTitle))
-            }
-        } else {
-            Text(stringResource(R.string.home_all_mastered))
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            ScreenHeading(stringResource(R.string.app_name))
+            Text(
+                stringResource(R.string.home_tagline),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        if (dueCount > 0) Text(pluralStringResource(R.plurals.home_due, dueCount, dueCount))
-        OutlinedButton(onClick = onOpenTutor, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.home_ask)) }
+
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    stringResource(R.string.home_continue_heading),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    recommendedTitle ?: stringResource(R.string.home_all_mastered),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                if (recommendedTitle != null) {
+                    Button(onClick = onContinue) {
+                        Text(stringResource(R.string.home_continue_button))
+                    }
+                }
+            }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            HomeAction(
+                icon = Icons.Default.School,
+                title = stringResource(R.string.home_ask),
+                subtitle = stringResource(R.string.home_ask_hint),
+                onClick = onAsk,
+                modifier = Modifier.weight(1f)
+            )
+            HomeAction(
+                icon = Icons.Default.Book,
+                title = stringResource(R.string.home_learn),
+                subtitle = stringResource(R.string.home_learn_hint),
+                onClick = onLearn,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            HomeAction(
+                icon = Icons.Default.Add,
+                title = stringResource(R.string.home_import),
+                subtitle = stringResource(R.string.home_import_hint),
+                onClick = { picker.launch(importMimeTypes) },
+                modifier = Modifier.weight(1f)
+            )
+            HomeAction(
+                icon = Icons.Default.Insights,
+                title = stringResource(R.string.home_review),
+                subtitle = if (dueCount > 0) {
+                    pluralStringResource(R.plurals.home_due, dueCount, dueCount)
+                } else {
+                    stringResource(R.string.home_review_hint)
+                },
+                onClick = onReview,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SectionHeading(stringResource(R.string.home_recent), Modifier.weight(1f))
+            TextButton(onClick = onOpenLibrary) { Text(stringResource(R.string.home_open_library)) }
+        }
+        if (recentItems.isEmpty()) {
+            Text(
+                stringResource(R.string.home_no_recent),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            recentItems.forEach { item ->
+                Surface(
+                    onClick = onOpenLibrary,
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Book,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                item.title,
+                                style = MaterialTheme.typography.titleSmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                pluralStringResource(R.plurals.library_chars, item.body.length, item.body.length),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Text(
+            stringResource(
+                when {
+                    modelReady -> R.string.home_model_ready
+                    modelBusy -> R.string.home_model_busy
+                    else -> R.string.home_model_missing
+                }
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = if (modelReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            stringResource(R.string.home_private),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun HomeAction(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier.heightIn(min = 118.dp)
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 

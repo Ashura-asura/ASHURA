@@ -516,3 +516,35 @@ Manual device check:
 2. Load a model, ask one question, export again; confirm backend/timing/tokens-per-second values appear.
 3. Open the file in a text editor and confirm no note title, question or answer text is present.
 4. Optionally share the file when reporting performance.
+
+---
+
+# Checkpoint 15 — Home screen now states the next action (v0.5.8, P4.6/§3.2)
+
+The old Home screen was a tagline, a description and two buttons. It did not show recent material,
+import, review or whether the app was offline-ready, so the first screen did not answer “what do I do
+now?”. It now follows §3.2 directly.
+
+Changed:
+- **Continue learning card** shows the recommended topic and a single Continue action; it keeps the
+  “all mastered” message when the pack is complete.
+- **Four quick actions**: Ask a question, Learn a topic, Import material, Today's review. Import opens the
+  same SAF picker as Library (one shared MIME list in `UiCommon.kt`) and switches to Library so the busy
+  state and result are visible. Review opens Progress, where due topics live.
+- **Recent material** lists up to three imported items with their size; tapping opens Library. It shows a
+  clear empty state instead of a blank area.
+- **Model/offline status** says whether the on-device model is ready, being prepared, or still missing,
+  and a privacy line states that notes and history stay on the device.
+- Removed the now-unused `home_description` and `home_next_lesson` strings.
+
+Verification: **215 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. There are no
+Compose UI tests in this project (adding them would need a new dependency), so the layout itself is
+**NOT VERIFIED** until it runs on a phone.
+
+Manual device check:
+1. Fresh Home: confirm Continue card, four tiles, recent empty state and model status are all visible
+   without scrolling on a small phone, and all are reachable at font scale 1.0 and 2.0.
+2. Tap Import, pick a PDF; confirm the app switches to Library and shows importing/result.
+3. Import three notes; confirm Home lists the three most recent by title and size.
+4. Load the model, return Home; confirm the status changes to “On-device model ready · works offline”.
+5. TalkBack: confirm the tiles read as buttons with their title and hint, and the headings are announced.

@@ -13,14 +13,28 @@
     <string name="nav_settings">सेटिङ</string>
 
     <string name="home_tagline">बुझेर सिक्नुहोस्, रटेर होइन।</string>
-    <string name="home_description">अफलाइन-पहिलो अध्ययन स्थान। तपाईंका नोट र अध्ययन इतिहास यही उपकरणमा रहन्छन्।</string>
-    <string name="home_next_lesson">अर्को पाठ: %1$s</string>
     <string name="home_all_mastered">तपाईंले हालको प्याकका सबै विषयमा दक्षता हासिल गर्नुभयो। अभ्यास जारी राख्न शिक्षक प्रयोग गर्नुहोस्।</string>
     <plurals name="home_due">
-        <item quantity="one">%1$d विषय दोहोर्याउने समय भयो — प्रगति खोल्नुहोस्।</item>
-        <item quantity="other">%1$d विषय दोहोर्याउने समय भयो — प्रगति खोल्नुहोस्।</item>
+        <item quantity="one">%1$d विषय दोहोर्याउने समय भयो</item>
+        <item quantity="other">%1$d विषय दोहोर्याउने समय भयो</item>
     </plurals>
     <string name="home_ask">प्रश्न सोध्नुहोस्</string>
+    <string name="home_ask_hint">विषय, तपाईंका नोट वा समस्याबारे सोध्नुहोस्</string>
+    <string name="home_learn">विषय सिक्नुहोस्</string>
+    <string name="home_learn_hint">विषय छानेर निर्देशित पाठ पछ्याउनुहोस्</string>
+    <string name="home_import">सामग्री आयात गर्नुहोस्</string>
+    <string name="home_import_hint">PDF, Word, Excel, PowerPoint, फोटो वा पाठ</string>
+    <string name="home_review">आजको दोहोर्याइ</string>
+    <string name="home_review_hint">बिर्सनु अघि दोहोर्याउनुहोस्</string>
+    <string name="home_continue_heading">सिकाइ जारी राख्नुहोस्</string>
+    <string name="home_continue_button">जारी राख्नुहोस्</string>
+    <string name="home_recent">हालका सामग्री</string>
+    <string name="home_open_library">पुस्तकालय खोल्नुहोस्</string>
+    <string name="home_no_recent">अझै कुनै सामग्री आयात गरिएको छैन। शिक्षकसँग अध्ययन गर्न PDF, फोटो वा नोट थप्नुहोस्।</string>
+    <string name="home_model_ready">उपकरणमै मोडेल तयार · अफलाइन चल्छ</string>
+    <string name="home_model_busy">मोडेल तयार हुँदैछ…</string>
+    <string name="home_model_missing">मोडेल अझै लोड भएको छैन — सेटिङमा सेट गर्नुहोस्</string>
+    <string name="home_private">पूर्वनिर्धारित रूपमा निजी · तपाईंका नोट र इतिहास यही उपकरणमा रहन्छन्</string>
 
     <string name="tutor_title">शिक्षक</string>
     <string name="tutor_intro">यो संस्करणले अंकगणित र एकाइ रूपान्तरण ठ्याक्कै गणना गर्छ, र स्थानीय मोडेल लोड भएको छ भने त्यसको प्रयोग गर्छ। मोडेल नभए इमानदार अफलाइन अध्ययन ढाँचा दिन्छ र त्यो स्पष्ट बताउँछ।</string>

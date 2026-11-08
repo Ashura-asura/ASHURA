@@ -86,21 +86,7 @@ fun LibraryScreen(
 
         item {
             Button(
-                onClick = {
-                    picker.launch(
-                        arrayOf(
-                            "text/plain", "text/markdown", "text/x-markdown",
-                            "text/csv", "text/comma-separated-values", "text/tab-separated-values",
-                            "application/pdf", "image/png", "image/jpeg", "image/webp",
-                            "application/msword",
-                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            "application/vnd.ms-excel",
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            "application/vnd.ms-powerpoint",
-                            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                        )
-                    )
-                },
+                onClick = { picker.launch(importMimeTypes) },
                 enabled = !state.busy, modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(if (state.busy) R.string.library_importing else R.string.library_import))

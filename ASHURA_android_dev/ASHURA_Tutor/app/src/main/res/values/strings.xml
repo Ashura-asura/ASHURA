@@ -10,14 +10,28 @@
 
     <!-- Home -->
     <string name="home_tagline">Learn with understanding, not memorisation.</string>
-    <string name="home_description">An offline-first study space. Your notes and study history stay on this device.</string>
-    <string name="home_next_lesson">Next lesson: %1$s</string>
     <string name="home_all_mastered">You have mastered every topic in the current pack. Use the tutor to keep practising.</string>
     <plurals name="home_due">
-        <item quantity="one">%1$d topic due for review — open Progress.</item>
-        <item quantity="other">%1$d topics due for review — open Progress.</item>
+        <item quantity="one">%1$d topic due for review</item>
+        <item quantity="other">%1$d topics due for review</item>
     </plurals>
     <string name="home_ask">Ask a question</string>
+    <string name="home_ask_hint">Ask about a topic, your notes or a problem</string>
+    <string name="home_learn">Learn a topic</string>
+    <string name="home_learn_hint">Pick a subject and follow a guided lesson</string>
+    <string name="home_import">Import material</string>
+    <string name="home_import_hint">PDF, Word, Excel, PowerPoint, images or text</string>
+    <string name="home_review">Today\'s review</string>
+    <string name="home_review_hint">Review what is due before it fades</string>
+    <string name="home_continue_heading">Continue learning</string>
+    <string name="home_continue_button">Continue</string>
+    <string name="home_recent">Recent material</string>
+    <string name="home_open_library">Open Library</string>
+    <string name="home_no_recent">Nothing imported yet. Add a PDF, photo or note to study it with the tutor.</string>
+    <string name="home_model_ready">On-device model ready · works offline</string>
+    <string name="home_model_busy">Model is being prepared…</string>
+    <string name="home_model_missing">No model loaded yet — set it up in Settings</string>
+    <string name="home_private">Private by default · your notes and history stay on this device</string>
 
     <!-- Tutor -->
     <string name="tutor_title">Tutor</string>
