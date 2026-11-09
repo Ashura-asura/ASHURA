@@ -13,7 +13,7 @@ Legend:
 - **Not implemented** — do not advertise as available.
 
 Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
-**234 JVM tests, 0 failures**. The same tasks pass in GitHub Actions (`android-ci`, JDK 21). No physical
+**238 JVM tests, 0 failures**. The same tasks pass in GitHub Actions (`android-ci`, JDK 21). No physical
 Android device or emulator has run this build, so every hardware-dependent claim below is
 device-pending, not proven.
 
@@ -60,7 +60,7 @@ device-pending, not proven.
 | Error with recovery action: a failed request offers Try again (§3.3) | Written, device-pending | `TutorScreen` error row, `tutor_retry` |
 | Continue a truncated derivation from the previous answer without retyping (§3.3) | Written, device-pending | `TutorViewModel.continueAnswer`, `TutorScreen`; real-model resumption is untested |
 | Conversation memory: the current chat window (last ten turns) is replayed with each request so follow-ups keep context (§3.3) | Verified (JVM) | `PromptBuilderPartsTest`, `PromptBuilder.boundedHistory` |
-| Answer sanitisation: leaked `[n]`/`[Ref]` placeholders, fake `EVIDENCE:` headings, prompt provenance wording, chat-template tokens and ` thinking` blocks are removed; real `[1]`/`[2]` citations survive (§12.4, §18.1) | Verified (JVM) | `AnswerSanitizerTest`, `GroundingTest` |
+| Answer sanitisation: leaked `[n]`/`[Ref]` placeholders, fake `EVIDENCE:` headings, prompt provenance wording, chat-template tokens and ` thinking` blocks are removed; `[1]`/`[2]` citations survive only when that many passages were retrieved (§12.4, §18.1) | Verified (JVM) | `AnswerSanitizerTest`, `GroundingTest` |
 | Maths display: dependency-free LaTeX-lite conversion to Unicode for fractions, roots, Greek letters, operators, accents and super/subscripts (§3.3) | Verified (JVM) | `LatexLiteTest`; on-device layout remains untested |
 | Copy actions: per-question, per-answer and whole-conversation copy (§3.3) | Written | `TutorScreen` / `CopyAnswerButton`; clipboard behaviour is device-pending |
 | Same-subject test options: distractors are drawn from the question's own note before the wider library (§3.4) | Verified (JVM) | `ChoiceQuizBuilderTest` |

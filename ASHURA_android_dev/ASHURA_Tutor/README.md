@@ -2,7 +2,7 @@
 
 Offline-first, Android-first adaptive learning platform.
 
-**Status:** v0.5.18 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
+**Status:** v0.5.19 — offline learning core with a persistent local model, a ChatGPT/Claude-style tutor chat,
 chat history with reopen/delete, regenerate, timed four-option tests (Quick 20 / Medium 35 / Long 50) with
 saved marks, time taken and score change, on-device OCR with editable text, honest confidence labels, a hint
 ladder, explain-my-mistake, Library import status with re-index, clear added/not-added study-set states, and
@@ -16,7 +16,8 @@ moving when system animations are off. Tutor now replays the recent conversation
 their context, strips leaked prompt placeholders and hidden reasoning, renders common LaTeX as readable
 Unicode maths, and lets you copy a question, an answer or the whole conversation. Test distractors are drawn
 from the same note before other subjects, and a truncated derivation can be resumed with one tap. A failed request offers Try again, and regenerating
-replaces the stored answer instead of duplicating it in chat history.
+replaces the stored answer instead of duplicating it in chat history. Citations that do not match a
+retrieved note are removed, so the model cannot invent a source number.
 See `CHECKPOINT.md`, `docs/ARCHITECTURE_STATUS.md` and `docs/RUNTIME_INTEGRATION.md`.
 **Spec:** `docs/PRODUCT_SPEC.md` (architecture v5.0).  
 **Target:** 4 GB RAM Android phones (primary), 6 GB (standard), 8 GB+ (enhanced).

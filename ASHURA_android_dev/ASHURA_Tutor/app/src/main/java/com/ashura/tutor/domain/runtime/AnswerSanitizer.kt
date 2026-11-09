@@ -54,7 +54,10 @@ object AnswerSanitizer {
         setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE, RegexOption.DOT_MATCHES_ALL)
     )
 
-    fun clean(answer: String): String {
+    /** Real numeric citations such as `[1]` that point at a retrieved passage. */
+    private val numericCitation = Regex("""\[(\d{1,2})]""")
+
+    fun clean(answer: String, availableCitations: Int = Int.MAX_VALUE): String {
         var text = answer
         text = thinkingBlock.replace(text, "")
         text = controlToken.replace(text, "")
@@ -64,6 +67,7 @@ object AnswerSanitizer {
         text = trustedSource.replace(text, "")
         text = usingAsReference.replace(text, "")
         text = stripEvidenceSections(text)
+        text = stripUnbackedCitations(text, availableCitations)
         text = echoedUncertainty.replace(text, "")
         return text.lines()
             .map { it.trimEnd() }
@@ -72,6 +76,17 @@ object AnswerSanitizer {
             .replace(Regex("""\n{3,}"""), "\n\n")
             .trim()
     }
+
+    /**
+     * A small model sometimes invents `[3]` even when only two passages were retrieved. Those look
+     * like real citations, so anything outside the available range is removed. `[1]`/`[2]` survive
+     * when they correspond to actual notes (spec §12.4).
+     */
+    private fun stripUnbackedCitations(text: String, available: Int): String =
+        numericCitation.replace(text) { match ->
+            val index = match.groupValues[1].toIntOrNull() ?: return@replace ""
+            if (index in 1..available) match.value else ""
+        }
 
     /**
      * Drops a hallucinated `EVIDENCE:` block, including the quoted “source” lines under it, until the

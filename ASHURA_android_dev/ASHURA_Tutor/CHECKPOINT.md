@@ -775,3 +775,26 @@ Manual device check:
 2. Tap Try again and confirm one new answer appears, not two.
 3. Regenerate a normal answer, close the chat, reopen it from History and confirm there is no duplicate.
 4. Regenerate a Continue turn and confirm it resumes rather than restarting.
+
+---
+
+# Checkpoint 25 — Only cite notes that were actually retrieved (v0.5.19, §12.4)
+
+The answer cleaner kept every `[number]` citation, so a small model could invent `[7]` when only one note
+passage had been retrieved. The learner would see a citation that pointed at nothing.
+
+Changed:
+- `AnswerSanitizer.clean` now takes the number of retrieved passages. Citations inside `1..n` remain;
+  anything outside that range is removed, and all numeric citations are removed when no notes were found.
+- Both the streaming and one-shot model paths pass the real citation count, after the app has attached the
+  sources it actually has.
+- The prompt still asks the model to cite with `[1]`, `[2]`; this is a safety net, not a replacement.
+
+Verification: **238 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. Real-model
+citation behaviour on a phone remains **NOT VERIFIED**.
+
+Manual device check:
+1. Ask a question with one imported note that supports the answer; confirm `[1]` appears only if a source is
+   listed under the answer.
+2. Ask a general question with no matching note; confirm no `[number]` citation appears in the answer.
+3. Reopen a saved chat and confirm citations are not shown as if they were restored (they are per-answer).

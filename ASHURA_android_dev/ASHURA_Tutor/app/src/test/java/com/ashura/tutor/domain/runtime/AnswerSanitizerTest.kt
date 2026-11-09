@@ -73,6 +73,16 @@ class AnswerSanitizerTest {
         assertEquals(raw, AnswerSanitizer.clean(raw))
     }
 
+    @Test fun removesCitationsBeyondTheRetrievedPassageCount() {
+        val raw = "See [1] and [7], but not [2]."
+        assertEquals("See [1] and , but not [2].", AnswerSanitizer.clean(raw, availableCitations = 2))
+    }
+
+    @Test fun removesEveryNumericCitationWhenNoPassagesWereRetrieved() {
+        val raw = "The result follows [1] from the notes [2]."
+        assertEquals("The result follows from the notes .", AnswerSanitizer.clean(raw, availableCitations = 0))
+    }
+
     @Test fun leavesOrdinaryAnswerUnchanged() {
         val raw = "The derivative of sin x is cos x.\n\nSTEPS:\n1. Apply the limit definition."
         assertEquals(raw, AnswerSanitizer.clean(raw))

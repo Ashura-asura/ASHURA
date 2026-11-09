@@ -100,6 +100,34 @@ class GroundingTest {
         override fun unload() = Unit
     }
 
+    private class AnsweringModel(private val answer: String) : ModelRuntime {
+        override val isAvailable = true
+        override suspend fun generate(request: TutorRequest, limits: GenerationLimits) =
+            TutorResponse(answer, ResponseMode.LOCAL_MODEL)
+        override fun unload() = Unit
+    }
+
+    @Test fun inventedCitationBeyondRetrievedNotesIsRemoved() {
+        val ctx = GroundingPolicy.select(listOf(PassageRef("Bio", 0, "Mitochondria make ATP."))).snippets
+        val req = TutorRequest("Where is ATP made?", retrievedContext = ctx, notesSearched = true)
+        val r = runSuspend {
+            controller(AnsweringModel("ATP is made in mitochondria [1] and also [7]."))
+                .let { it.execute(it.route(req.question), req) }
+        }
+        assertEquals("ATP is made in mitochondria [1] and also .", r.answer)
+        assertEquals(1, r.citations.size)
+    }
+
+    @Test fun citationsAreRemovedWhenNothingWasRetrieved() {
+        val req = TutorRequest("What is entropy?")
+        val r = runSuspend {
+            controller(AnsweringModel("Entropy grows [1] in closed systems."))
+                .let { it.execute(it.route(req.question), req) }
+        }
+        assertEquals("Entropy grows in closed systems.", r.answer)
+        assertTrue(r.citations.isEmpty())
+    }
+
     @Test fun modelPathGetsBoundedContextAndCitationsAreAttached() {
         val model = FakeModel()
         val ctx = GroundingPolicy.select(listOf(PassageRef("Bio", 0, "Mitochondria make ATP."))).snippets

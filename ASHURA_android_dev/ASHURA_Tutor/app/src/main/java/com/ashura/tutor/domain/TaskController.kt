@@ -102,17 +102,20 @@ class TaskController(
             modelRuntime.generateStream(bounded, limits).collect { event ->
                 when (event) {
                     is TutorStreamEvent.Delta -> emit(event)
-                    is TutorStreamEvent.Complete -> emit(
-                        TutorStreamEvent.Complete(
-                            event.response.copy(
-                                answer = AnswerSanitizer.clean(event.response.answer),
-                                mode = ResponseMode.LOCAL_MODEL,
-                                citations = event.response.citations.ifEmpty { citationsFor(bounded) },
-                                limitation = event.response.limitation
-                                    ?: "Model-generated explanation; not independently verified."
+                    is TutorStreamEvent.Complete -> {
+                        val citations = event.response.citations.ifEmpty { citationsFor(bounded) }
+                        emit(
+                            TutorStreamEvent.Complete(
+                                event.response.copy(
+                                    answer = AnswerSanitizer.clean(event.response.answer, citations.size),
+                                    mode = ResponseMode.LOCAL_MODEL,
+                                    citations = citations,
+                                    limitation = event.response.limitation
+                                        ?: "Model-generated explanation; not independently verified."
+                                )
                             )
                         )
-                    )
+                    }
                 }
             }
         } catch (e: CancellationException) {
@@ -137,10 +140,11 @@ class TaskController(
             )
             try {
                 val generated = modelRuntime.generate(bounded, limits)
+                val citations = generated.citations.ifEmpty { citationsFor(bounded) }
                 return generated.copy(
-                    answer = AnswerSanitizer.clean(generated.answer),
+                    answer = AnswerSanitizer.clean(generated.answer, citations.size),
                     mode = ResponseMode.LOCAL_MODEL,
-                    citations = generated.citations.ifEmpty { citationsFor(bounded) },
+                    citations = citations,
                     limitation = generated.limitation
                         ?: "Model-generated explanation; not independently verified."
                 )
