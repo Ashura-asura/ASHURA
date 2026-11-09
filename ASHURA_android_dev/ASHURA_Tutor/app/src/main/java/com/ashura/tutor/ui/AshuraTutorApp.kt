@@ -263,6 +263,7 @@ fun AshuraTutorApp(viewModel: TutorViewModel) {
                         onCancel = viewModel::cancelAsk, onStartTopic = viewModel::startTopic,
                         onNewChat = viewModel::newChat,
                         onRegenerate = viewModel::regenerate,
+                        onContinue = viewModel::continueAnswer,
                         onOpenSettings = { selected = Destination.SETTINGS.name },
                         conversations = viewModel.conversations.collectAsState().value,
                         onOpenConversation = viewModel::openConversation,
@@ -561,7 +562,7 @@ private fun TutorScreen(
     topics: List<TopicSummary>, recommendedId: String?,
     onQuestionChange: (String) -> Unit, onAsk: () -> Unit, onCancel: () -> Unit,
     onStartTopic: (String) -> Unit, onNewChat: () -> Unit,
-    onRegenerate: () -> Unit,
+    onRegenerate: () -> Unit, onContinue: () -> Unit,
     onOpenSettings: () -> Unit,
     conversations: List<ConversationEntity>,
     onOpenConversation: (String) -> Unit, onDeleteConversation: (String) -> Unit
@@ -701,7 +702,8 @@ private fun TutorScreen(
                             message,
                             // Only the empty, still-streaming answer needs the phase label.
                             phase = if (message.streaming && message.text.isBlank()) phase else null,
-                            onRegenerate = if (!isBusy && message.id == messages.lastOrNull()?.id) onRegenerate else null
+                            onRegenerate = if (!isBusy && message.id == messages.lastOrNull()?.id) onRegenerate else null,
+                            onContinue = if (!isBusy && message.id == messages.lastOrNull()?.id) onContinue else null
                         )
                     }
                     error?.let { message ->
@@ -992,7 +994,8 @@ private fun ChatComposer(
 private fun ChatBubble(
     message: ChatMessage,
     phase: TutorPhase? = null,
-    onRegenerate: (() -> Unit)? = null
+    onRegenerate: (() -> Unit)? = null,
+    onContinue: (() -> Unit)? = null
 ) {
     if (message.role == ChatRole.USER) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
@@ -1013,7 +1016,7 @@ private fun ChatBubble(
             CopyAnswerButton(message.text, R.string.tutor_copy_question)
         }
     } else {
-        AssistantMessage(message, phase, onRegenerate)
+        AssistantMessage(message, phase, onRegenerate, onContinue)
     }
 }
 
@@ -1025,7 +1028,8 @@ private fun ChatBubble(
 private fun AssistantMessage(
     message: ChatMessage,
     phase: TutorPhase? = null,
-    onRegenerate: (() -> Unit)? = null
+    onRegenerate: (() -> Unit)? = null,
+    onContinue: (() -> Unit)? = null
 ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Surface(
@@ -1103,6 +1107,18 @@ private fun AssistantMessage(
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CopyAnswerButton(message.text)
+                    if (onContinue != null) {
+                        TextButton(
+                            onClick = onContinue,
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Text(
+                                stringResource(R.string.tutor_continue),
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
                     if (onRegenerate != null) {
                         TextButton(
                             onClick = onRegenerate,

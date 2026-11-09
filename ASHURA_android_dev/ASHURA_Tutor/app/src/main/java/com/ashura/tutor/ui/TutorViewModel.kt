@@ -670,6 +670,26 @@ class TutorViewModel(
     fun ask() {
         val question = _state.value.question.trim()
         if (question.isEmpty() || _state.value.isBusy) return
+        askWith(displayQuestion = question, requestQuestion = question)
+    }
+
+    /**
+     * Asks the model to finish an answer that stopped at the output limit, using the replayed
+     * conversation instead of restarting the whole derivation (spec §3.3).
+     */
+    fun continueAnswer() {
+        val state = _state.value
+        if (state.isBusy) return
+        if (state.messages.lastOrNull()?.role != ChatRole.ASSISTANT) return
+        askWith(
+            displayQuestion = "Continue",
+            requestQuestion = "Continue your previous answer from exactly where it stopped. " +
+                "Do not repeat text you already wrote. Finish the remaining steps and the check question."
+        )
+    }
+
+    private fun askWith(displayQuestion: String, requestQuestion: String) {
+        if (requestQuestion.isBlank() || _state.value.isBusy) return
         // The runtime has no session memory, so replay the current conversation window with the
         // request. New chat and history loading both start from an empty messages list / stored text.
         val history = _state.value.messages
@@ -682,17 +702,17 @@ class TutorViewModel(
                 isBusy = true, answer = "", limitation = null, citations = emptyList(),
                 error = null, mode = null, phase = TutorPhase.SEARCHING_NOTES, question = "",
                 messages = it.messages +
-                    ChatMessage("u${System.nanoTime()}", ChatRole.USER, question) +
+                    ChatMessage("u${System.nanoTime()}", ChatRole.USER, displayQuestion) +
                     ChatMessage(assistantId, ChatRole.ASSISTANT, "", streaming = true)
             )
         }
         askJob = viewModelScope.launch {
             try {
-                val id = conversationId ?: repository.createConversation(question.replace("\n", " ").take(48)).also { conversationId = it }
-                repository.appendMessage(id, "user", question)
+                val id = conversationId ?: repository.createConversation(displayQuestion.replace("\n", " ").take(48)).also { conversationId = it }
+                repository.appendMessage(id, "user", displayQuestion)
                 // Retrieval is best-effort: a search failure must never block the answer.
                 val grounded = try {
-                    GroundingPolicy.select(repository.searchPassagesForQuestion(question).map {
+                    GroundingPolicy.select(repository.searchPassagesForQuestion(requestQuestion).map {
                         PassageRef(it.title, it.ordinal, it.text, SectionLabel.forChunk(it.text))
                     })
                 } catch (c: CancellationException) {
@@ -705,10 +725,10 @@ class TutorViewModel(
                 // Socratic guidance must not become an obstacle (spec §1.2C): "just tell me" switches
                 // this one answer to direct explanation without changing the saved preference.
                 val effectiveStyle = if (
-                    profile.style == TutorStyle.SOCRATIC && HintLadder.asksForDirectAnswer(question)
+                    profile.style == TutorStyle.SOCRATIC && HintLadder.asksForDirectAnswer(requestQuestion)
                 ) TutorStyle.DIRECT else profile.style
                 val request = TutorRequest(
-                    question = question,
+                    question = requestQuestion,
                     learnerLevel = profile.level,
                     language = profile.language,
                     style = effectiveStyle,

@@ -729,3 +729,26 @@ Manual device check:
 3. Confirm `$...$`, `\frac`, `\dot`/`\ddot` and `\omega` render as readable symbols.
 4. Copy a question, an answer and the whole conversation from their respective actions.
 5. Start a library-wide test and confirm a question from one note offers options from that same note.
+
+---
+
+# Checkpoint 23 — Resume a truncated answer (v0.5.17, §3.3)
+
+A 1024-token answer can still stop mid-derivation on a slow phone. Previously the only option was to retype
+“continue”, which lost the exact stopping point.
+
+Changed:
+- The latest answer now has a compact **Continue** action next to Copy and Regenerate.
+- It sends a continuation request with the replayed conversation, asking the model to resume from the last
+  line, finish the remaining steps and add the check question.
+- The visible conversation keeps a small “Continue” turn, so the transcript still reads naturally and the
+  action can be repeated if the model stops again.
+
+Verification: **232 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. Whether a real
+model resumes cleanly, and the button's layout at large font scale, remain **NOT VERIFIED**.
+
+Manual device check:
+1. Ask for a long derivation that stops before the end.
+2. Tap **Continue** and confirm the new answer resumes instead of repeating the whole derivation.
+3. Tap Continue twice and confirm it still follows on.
+4. Confirm Continue is absent while an answer is streaming and on older answers.

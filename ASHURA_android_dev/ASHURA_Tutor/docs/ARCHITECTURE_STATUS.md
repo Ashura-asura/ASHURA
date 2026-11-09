@@ -57,6 +57,7 @@ device-pending, not proven.
 | Deterministic explain-my-mistake: comparison, known misconception or provable numeric pattern, method, next step (§3.4) | Verified (JVM) | `MistakeExplainerTest` |
 | Chat history: conversations listed newest-first, reopened, individually deleted; titles from first question (§15.3) | Written | `TutorViewModel.openConversation`, `deleteConversation`, `TutorRepository.loadConversation` |
 | Regenerate the latest answer in place; the previous turn stays in stored history (§3.3) | Written | `TutorViewModel.regenerate` |
+| Continue a truncated derivation from the previous answer without retyping (§3.3) | Written, device-pending | `TutorViewModel.continueAnswer`, `TutorScreen`; real-model resumption is untested |
 | Conversation memory: the current chat window (last ten turns) is replayed with each request so follow-ups keep context (§3.3) | Verified (JVM) | `PromptBuilderPartsTest`, `PromptBuilder.boundedHistory` |
 | Answer sanitisation: leaked `[n]`/`[Ref]` placeholders, fake `EVIDENCE:` headings, prompt provenance wording, chat-template tokens and ` thinking` blocks are removed; real `[1]`/`[2]` citations survive (§12.4, §18.1) | Verified (JVM) | `AnswerSanitizerTest`, `GroundingTest` |
 | Maths display: dependency-free LaTeX-lite conversion to Unicode for fractions, roots, Greek letters, operators, accents and super/subscripts (§3.3) | Verified (JVM) | `LatexLiteTest`; on-device layout remains untested |

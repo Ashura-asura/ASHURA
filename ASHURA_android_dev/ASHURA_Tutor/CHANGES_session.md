@@ -64,3 +64,4 @@ Not done: active-test persistence across process death, edit message, semantic s
 selection, programming sandbox, everything hardware-dependent.
 22. Tutor: conversation memory, sanitized answers (no prompt placeholders or hidden reasoning), Unicode maths
     rendering, question/answer/conversation copy, longer derivations, and same-note test distractors.
+23. Tutor: a Continue action resumes a truncated derivation from the replayed conversation.
