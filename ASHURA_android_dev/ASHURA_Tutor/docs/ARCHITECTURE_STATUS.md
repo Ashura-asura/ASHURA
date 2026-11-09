@@ -13,7 +13,7 @@ Legend:
 - **Not implemented** — do not advertise as available.
 
 Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
-**238 JVM tests, 0 failures**. The same tasks pass in GitHub Actions (`android-ci`, JDK 21). No physical
+**239 JVM tests, 0 failures**. The same tasks pass in GitHub Actions (`android-ci`, JDK 21). No physical
 Android device or emulator has run this build, so every hardware-dependent claim below is
 device-pending, not proven.
 

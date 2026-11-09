@@ -798,3 +798,18 @@ Manual device check:
    listed under the answer.
 2. Ask a general question with no matching note; confirm no `[number]` citation appears in the answer.
 3. Reopen a saved chat and confirm citations are not shown as if they were restored (they are per-answer).
+
+---
+
+# Checkpoint 26 — Keep array indexes when cleaning citations (v0.5.20)
+
+The citation guard from checkpoint 25 treated any `[number]` as a citation, so code such as `a[1]` lost its
+index. A citation now has to start after whitespace, punctuation or the beginning of a line; an index directly
+after an identifier is left alone.
+
+Verification: **239 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. Real answers on a
+phone remain **NOT VERIFIED**.
+
+Manual device check:
+1. Ask a programming question that uses `a[1]` and confirm the index survives.
+2. Ask a note question with one source and confirm `[1]` still appears as a citation.

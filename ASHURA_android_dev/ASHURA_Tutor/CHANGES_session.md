@@ -67,3 +67,4 @@ selection, programming sandbox, everything hardware-dependent.
 23. Tutor: a Continue action resumes a truncated derivation from the replayed conversation.
 24. Tutor: Try again recovery, stored-history rewind on regenerate/retry, and correct retry of a Continue turn.
 25. Tutor: citations beyond the retrieved-note count are stripped from model answers.
+26. Tutor: citation cleaning no longer removes array indexes such as `a[1]`.

@@ -55,7 +55,7 @@ object AnswerSanitizer {
     )
 
     /** Real numeric citations such as `[1]` that point at a retrieved passage. */
-    private val numericCitation = Regex("""\[(\d{1,2})]""")
+    private val numericCitation = Regex("""(?<![A-Za-z0-9_])\[(\d{1,2})]""")
 
     fun clean(answer: String, availableCitations: Int = Int.MAX_VALUE): String {
         var text = answer

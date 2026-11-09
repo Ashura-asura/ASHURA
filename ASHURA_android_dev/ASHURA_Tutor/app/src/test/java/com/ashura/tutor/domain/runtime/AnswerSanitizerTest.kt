@@ -83,6 +83,12 @@ class AnswerSanitizerTest {
         assertEquals("The result follows from the notes .", AnswerSanitizer.clean(raw, availableCitations = 0))
     }
 
+    @Test fun keepsArrayIndexesThatAreNotCitations() {
+        val raw = "Read a[1] and b[9]; the source is [1]."
+        assertEquals("Read a[1] and b[9]; the source is [1].", AnswerSanitizer.clean(raw, availableCitations = 1))
+        assertEquals("Read a[1] and b[9]; the source is .", AnswerSanitizer.clean(raw, availableCitations = 0))
+    }
+
     @Test fun leavesOrdinaryAnswerUnchanged() {
         val raw = "The derivative of sin x is cos x.\n\nSTEPS:\n1. Apply the limit definition."
         assertEquals(raw, AnswerSanitizer.clean(raw))
