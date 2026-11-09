@@ -87,4 +87,29 @@ class DataControlsTest {
         assertEquals(listOf("Chemistry"), db.library().all().map { it.title })
         assertEquals(1, db.testResults().all().size)
     }
+
+    @Test
+    fun rewindLastExchangeRemovesOnlyTheReplacedQuestionAndAnswer() = runBlocking {
+        val id = repository.createConversation("Damping")
+        repository.appendMessage(id, "user", "What is damping?")
+        repository.appendMessage(id, "assistant", "First answer.")
+        repository.appendMessage(id, "user", "Continue")
+        repository.appendMessage(id, "assistant", "Replaced continuation.")
+
+        val rewound = repository.rewindLastExchange(id)
+
+        assertEquals(true, rewound)
+        assertEquals(
+            listOf("What is damping?", "First answer."),
+            repository.loadConversation(id).map { it.content }
+        )
+    }
+
+    @Test
+    fun rewindLastExchangeKeepsAnEmptyConversationUntouched() = runBlocking {
+        val id = repository.createConversation("Empty")
+
+        assertEquals(false, repository.rewindLastExchange(id))
+        assertEquals(0, repository.loadConversation(id).size)
+    }
 }

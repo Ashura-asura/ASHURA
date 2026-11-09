@@ -677,18 +677,21 @@ class TutorViewModel(
      * Asks the model to finish an answer that stopped at the output limit, using the replayed
      * conversation instead of restarting the whole derivation (spec §3.3).
      */
-    fun continueAnswer() {
+    fun continueAnswer() = continueAnswer(rewindStored = false)
+
+    private fun continueAnswer(rewindStored: Boolean) {
         val state = _state.value
         if (state.isBusy) return
         if (state.messages.lastOrNull()?.role != ChatRole.ASSISTANT) return
         askWith(
             displayQuestion = "Continue",
             requestQuestion = "Continue your previous answer from exactly where it stopped. " +
-                "Do not repeat text you already wrote. Finish the remaining steps and the check question."
+                "Do not repeat text you already wrote. Finish the remaining steps and the check question.",
+            rewindStored = rewindStored
         )
     }
 
-    private fun askWith(displayQuestion: String, requestQuestion: String) {
+    private fun askWith(displayQuestion: String, requestQuestion: String, rewindStored: Boolean = false) {
         if (requestQuestion.isBlank() || _state.value.isBusy) return
         // The runtime has no session memory, so replay the current conversation window with the
         // request. New chat and history loading both start from an empty messages list / stored text.
@@ -708,6 +711,7 @@ class TutorViewModel(
         }
         askJob = viewModelScope.launch {
             try {
+                if (rewindStored) conversationId?.let { repository.rewindLastExchange(it) }
                 val id = conversationId ?: repository.createConversation(displayQuestion.replace("\n", " ").take(48)).also { conversationId = it }
                 repository.appendMessage(id, "user", displayQuestion)
                 // Retrieval is best-effort: a search failure must never block the answer.
@@ -810,8 +814,14 @@ class TutorViewModel(
         if (s.isBusy) return
         val lastAssistant = s.messages.lastOrNull()?.takeIf { it.role == ChatRole.ASSISTANT } ?: return
         val lastUser = s.messages.dropLast(1).lastOrNull()?.takeIf { it.role == ChatRole.USER } ?: return
-        _state.update { it.copy(messages = it.messages.dropLast(2), question = lastUser.text, error = null) }
-        ask()
+        _state.update { it.copy(messages = it.messages.dropLast(2), question = "", error = null) }
+        // "Continue" is a synthetic turn; retrying it must send the continuation instruction again,
+        // not the bare word, or the model would restart instead of resuming.
+        if (lastUser.text.equals("Continue", ignoreCase = true)) {
+            continueAnswer(rewindStored = true)
+        } else {
+            askWith(lastUser.text, lastUser.text, rewindStored = true)
+        }
     }
 
     /** Re-opens a stored conversation (text only: source citations are not persisted per message). */

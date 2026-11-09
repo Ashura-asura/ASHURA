@@ -36,8 +36,8 @@ android {
         applicationId = "com.ashura.tutor"
         minSdk = 26
         targetSdk = 35
-        versionCode = 22
-        versionName = "0.5.17"
+        versionCode = 23
+        versionName = "0.5.18"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += listOf("en", "ne")
 

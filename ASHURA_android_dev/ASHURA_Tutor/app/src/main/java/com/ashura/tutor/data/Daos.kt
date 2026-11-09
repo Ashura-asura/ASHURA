@@ -40,6 +40,8 @@ interface MessageDao {
     suspend fun listForConversation(conversationId: String): List<MessageEntity>
     @Query("DELETE FROM messages WHERE conversationId = :conversationId")
     suspend fun deleteForConversation(conversationId: String)
+    @Query("DELETE FROM messages WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<String>)
 }
 
 @Dao

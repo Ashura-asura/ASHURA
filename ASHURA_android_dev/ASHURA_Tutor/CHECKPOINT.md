@@ -752,3 +752,26 @@ Manual device check:
 2. Tap **Continue** and confirm the new answer resumes instead of repeating the whole derivation.
 3. Tap Continue twice and confirm it still follows on.
 4. Confirm Continue is absent while an answer is streaming and on older answers.
+
+---
+
+# Checkpoint 24 — Recover from a failed answer without duplicating history (v0.5.18, §3.3)
+
+Spec §3.3 requires an error state with a recovery action. The error was plain red text, and the existing
+Regenerate action only changed the visible messages: the replaced question and answer stayed in the stored
+conversation, so reopening the chat showed duplicates.
+
+Changed:
+- A failed request now shows **Try again** beside the error; it re-asks the last question.
+- Regenerate and retry rewind the stored conversation to just before the last question, so the saved history
+  matches what is on screen.
+- Retrying a synthetic **Continue** turn re-sends the continuation instruction instead of the bare word.
+
+Verification: **234 JVM tests, 0 failures**; `:app:lintDebug` and `:app:assembleDebug` pass. The button layout,
+real-model retry behaviour and history sync on a physical device remain **NOT VERIFIED**.
+
+Manual device check:
+1. Force an answer to fail (for example unload the model mid-answer), confirm Try again appears.
+2. Tap Try again and confirm one new answer appears, not two.
+3. Regenerate a normal answer, close the chat, reopen it from History and confirm there is no duplicate.
+4. Regenerate a Continue turn and confirm it resumes rather than restarting.

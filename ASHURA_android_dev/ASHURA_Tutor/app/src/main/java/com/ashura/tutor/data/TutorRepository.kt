@@ -44,6 +44,20 @@ class TutorRepository(private val db: AppDatabase) {
 
     suspend fun loadConversation(id: String): List<MessageEntity> = db.messages().listForConversation(id)
 
+    /**
+     * Deletes the stored last question and everything after it. Regenerate uses this so the stored
+     * conversation matches the visible one; otherwise reopening a chat shows the replaced answer too.
+     * Returns false when there is no stored question to rewind.
+     */
+    suspend fun rewindLastExchange(conversationId: String): Boolean = db.withTransaction {
+        val stored = db.messages().listForConversation(conversationId)
+        val lastUser = stored.indexOfLast { it.role == "user" }
+        if (lastUser < 0) return@withTransaction false
+        db.messages().deleteByIds(stored.drop(lastUser).map { it.id })
+        db.conversations().touch(conversationId, System.currentTimeMillis())
+        true
+    }
+
     suspend fun deleteConversation(id: String) {
         db.withTransaction {
             db.messages().deleteForConversation(id)

@@ -80,6 +80,7 @@
     <string name="tutor_copy_question">प्रश्न प्रतिलिपि गर्नुहोस्</string>
     <string name="tutor_copy_all">कुराकानी प्रतिलिपि गर्नुहोस्</string>
     <string name="tutor_continue">जारी राख्नुहोस्</string>
+    <string name="tutor_retry">फेरि प्रयास गर्नुहोस्</string>
     <string name="tutor_disclaimer">ASHURA ले गल्ती गर्न सक्छ। महत्त्वपूर्ण तथ्य जाँच्नुहोस्।</string>
 
     <string name="progress_title">तपाईंको प्रगति</string>

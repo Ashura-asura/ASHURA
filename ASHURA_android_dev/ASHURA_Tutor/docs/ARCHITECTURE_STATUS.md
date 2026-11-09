@@ -13,7 +13,7 @@ Legend:
 - **Not implemented** — do not advertise as available.
 
 Last verified build: `:app:testDebugUnitTest`, `:app:lintDebug` and `:app:assembleDebug` pass;
-**232 JVM tests, 0 failures**. The same tasks pass in GitHub Actions (`android-ci`, JDK 21). No physical
+**234 JVM tests, 0 failures**. The same tasks pass in GitHub Actions (`android-ci`, JDK 21). No physical
 Android device or emulator has run this build, so every hardware-dependent claim below is
 device-pending, not proven.
 
@@ -56,7 +56,8 @@ device-pending, not proven.
 | “Just tell me” overrides Socratic style for that one answer without changing the saved preference (§1.2C) | Verified (JVM) | `HintLadderTest`, `TutorViewModel.ask` |
 | Deterministic explain-my-mistake: comparison, known misconception or provable numeric pattern, method, next step (§3.4) | Verified (JVM) | `MistakeExplainerTest` |
 | Chat history: conversations listed newest-first, reopened, individually deleted; titles from first question (§15.3) | Written | `TutorViewModel.openConversation`, `deleteConversation`, `TutorRepository.loadConversation` |
-| Regenerate the latest answer in place; the previous turn stays in stored history (§3.3) | Written | `TutorViewModel.regenerate` |
+| Regenerate the latest answer in place; the replaced question/answer is rewound from stored history (§3.3) | Verified (JVM storage), device-pending UI | `TutorViewModel.regenerate`, `TutorRepository.rewindLastExchange`, `DataControlsTest` |
+| Error with recovery action: a failed request offers Try again (§3.3) | Written, device-pending | `TutorScreen` error row, `tutor_retry` |
 | Continue a truncated derivation from the previous answer without retyping (§3.3) | Written, device-pending | `TutorViewModel.continueAnswer`, `TutorScreen`; real-model resumption is untested |
 | Conversation memory: the current chat window (last ten turns) is replayed with each request so follow-ups keep context (§3.3) | Verified (JVM) | `PromptBuilderPartsTest`, `PromptBuilder.boundedHistory` |
 | Answer sanitisation: leaked `[n]`/`[Ref]` placeholders, fake `EVIDENCE:` headings, prompt provenance wording, chat-template tokens and ` thinking` blocks are removed; real `[1]`/`[2]` citations survive (§12.4, §18.1) | Verified (JVM) | `AnswerSanitizerTest`, `GroundingTest` |

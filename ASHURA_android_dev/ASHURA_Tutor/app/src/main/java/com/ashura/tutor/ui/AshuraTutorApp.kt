@@ -708,12 +708,33 @@ private fun TutorScreen(
                     }
                     error?.let { message ->
                         item {
-                            Text(
-                                message,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(horizontal = 4.dp)
-                            )
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    message,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                val canRetry = !isBusy && messages.size >= 2 &&
+                                    messages.last().role == ChatRole.ASSISTANT &&
+                                    messages.dropLast(1).last().role == ChatRole.USER
+                                if (canRetry) {
+                                    TextButton(
+                                        onClick = onRegenerate,
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                        modifier = Modifier.height(30.dp)
+                                    ) {
+                                        Text(
+                                            stringResource(R.string.tutor_retry),
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                     item(key = "end-anchor") { Spacer(Modifier.height(1.dp)) }
